@@ -11,25 +11,13 @@ import {
 } from 'lucide-react';
 import { TAILOR_PARTNERS } from '../data/catalogData';
 import { OrderLifecycleStage, OrderRecord } from '../types';
+import { getNextValidStage, validateOrderTransition } from '../utils/matchingRules';
 
 interface PartnerPortalPageProps {
   orders: OrderRecord[];
   onAdvanceOrderStage: (orderId: string, nextStage: OrderLifecycleStage) => void;
   onNotifyToast: (msg: string) => void;
 }
-
-const STAGE_SEQUENCE: OrderLifecycleStage[] = [
-  'Booking Created',
-  'Tailor Accepted',
-  'Visit Scheduled',
-  'Measurements Completed',
-  'Quotation Submitted',
-  'Customer Approved',
-  'Stitching Started',
-  'Quality Check',
-  'Ready for Delivery',
-  'Delivered',
-];
 
 export const PartnerPortalPage: React.FC<PartnerPortalPageProps> = ({
   orders,
@@ -54,11 +42,8 @@ export const PartnerPortalPage: React.FC<PartnerPortalPageProps> = ({
     onNotifyToast(`Partner application for ${shopName} submitted! Free pilot onboarding activated.`);
   };
 
-  const getNextStage = (current: OrderLifecycleStage): OrderLifecycleStage | null => {
-    const idx = STAGE_SEQUENCE.indexOf(current);
-    if (idx === -1 || idx >= STAGE_SEQUENCE.length - 1) return null;
-    return STAGE_SEQUENCE[idx + 1];
-  };
+  const getNextStage = (current: OrderLifecycleStage): OrderLifecycleStage | null =>
+    getNextValidStage(current);
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-7">
@@ -145,8 +130,8 @@ export const PartnerPortalPage: React.FC<PartnerPortalPageProps> = ({
             <div className="space-y-3">
               {orders.map((ord) => {
                 const next = getNextStage(ord.stage);
-                const blockedByQuote =
-                  ord.stage === 'Quotation Submitted' && !ord.quoteApproved;
+                const ruleCheck = next ? validateOrderTransition(ord, next) : null;
+                const blockedByQuote = ruleCheck !== null && !ruleCheck.allowed;
                 return (
                   <div
                     key={ord.id}

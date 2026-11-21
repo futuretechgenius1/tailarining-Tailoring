@@ -152,6 +152,14 @@ export const Footer: React.FC<FooterProps> = ({
                   >
                     Free Measurements
                   </button>
+                  <span className="text-[#E7E5E4]">|</span>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('nearby-shops')}
+                    className="font-semibold text-[#047857] hover:underline cursor-pointer"
+                  >
+                    Nearby Tailor Shops
+                  </button>
                 </div>
               </div>
 

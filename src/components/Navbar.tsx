@@ -170,6 +170,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Measurements
           </button>
+          <button
+            type="button"
+            onClick={() => onNavigate('nearby-shops')}
+            className={navLinkClass('nearby-shops')}
+          >
+            Nearby Shops
+          </button>
         </nav>
 
         {/* Right: Search, Wishlist, Bag, Login */}
@@ -297,14 +304,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="truncate font-semibold">{locality}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={onOpenLocationModal}
-            className="inline-flex items-center gap-0.5 text-[#EA580C] font-semibold bg-white border border-[#FED7AA] hover:bg-[#FFF7ED] px-2.5 py-0.5 rounded-full text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            Change
-            <ChevronRight className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => onNavigate('nearby-shops')}
+              className="inline-flex items-center gap-1 text-[#9A3412] font-semibold bg-[#FFF7ED] border border-[#FED7AA] hover:bg-[#FFEDD5] px-2.5 py-0.5 rounded-full text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <MapPin className="w-3 h-3 text-[#EA580C]" />
+              Live Map
+            </button>
+            <button
+              type="button"
+              onClick={onOpenLocationModal}
+              className="inline-flex items-center gap-0.5 text-[#EA580C] font-semibold bg-white border border-[#FED7AA] hover:bg-[#FFF7ED] px-2.5 py-0.5 rounded-full text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              Change
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -338,6 +355,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     { label: 'Doorstep Alterations', route: 'alterations' },
                     { label: 'Institutional Uniforms', route: 'uniforms' },
                     { label: 'Saved Measurements', route: 'measurements' },
+                    { label: 'Nearby Tailor Shops (Live Map)', route: 'nearby-shops' },
                     { label: 'Tailor Partner Portal', route: 'partner' },
                   ] as { label: string; route: PageRoute }[]
                 ).map((item) => (

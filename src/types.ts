@@ -5,6 +5,7 @@ export type PageRoute =
   | 'alterations'
   | 'uniforms'
   | 'measurements'
+  | 'nearby-shops'
   | 'auth'
   | 'partner';
 

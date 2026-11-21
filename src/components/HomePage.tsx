@@ -231,14 +231,24 @@ export const HomePage: React.FC<HomePageProps> = ({
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => onNavigate('designs')}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#EA580C] hover:text-[#C2410C] cursor-pointer"
-            >
-              Browse 724+ Designs
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => onNavigate('designs')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA580C] hover:text-[#C2410C] cursor-pointer"
+              >
+                Browse 724+ Designs
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('nearby-shops')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#047857] hover:text-[#065F46] cursor-pointer"
+              >
+                Find Nearest Tailor Shop (Live Map)
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
             {/* Search Bar inside Hero */}
             <form

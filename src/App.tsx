@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { INITIAL_MEASUREMENTS, INITIAL_ORDERS } from './data/catalogData';
 import {
@@ -22,6 +22,8 @@ import { DesignsCatalogPage } from './components/DesignsCatalogPage';
 import { CustomStitchingPage } from './components/CustomStitchingPage';
 import { MeasurementsPage } from './components/MeasurementsPage';
 import { PartnerPortalPage } from './components/PartnerPortalPage';
+import { NearbyShopsPage } from './components/NearbyShopsPage';
+import { validateOrderTransition } from './utils/matchingRules';
 import {
   CartDrawer,
   DesignDetailModal,
@@ -53,6 +55,13 @@ export default function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [selectedDesign, setSelectedDesign] = useState<DesignProduct | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [mapsQuotaExceeded, setMapsQuotaExceeded] = useState(false);
+
+  useEffect(() => {
+    const onQuotaExceeded = () => setMapsQuotaExceeded(true);
+    window.addEventListener('gmp-quota-exceeded', onQuotaExceeded);
+    return () => window.removeEventListener('gmp-quota-exceeded', onQuotaExceeded);
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -178,12 +187,19 @@ export default function App() {
 
   const handleAdvanceOrderStage = useCallback(
     (orderId: string, nextStage: OrderLifecycleStage) => {
+      const targetOrder = orders.find((o) => o.id === orderId);
+      if (!targetOrder) return;
+      const check = validateOrderTransition(targetOrder, nextStage);
+      if (!check.allowed) {
+        showToast(check.reason);
+        return;
+      }
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, stage: nextStage } : o)),
       );
       showToast(`Order ${orderId} updated to "${nextStage}".`);
     },
-    [showToast],
+    [orders, showToast],
   );
 
   // Measurement Actions
@@ -238,6 +254,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FDFBF9] text-[#1C1917]">
+      {mapsQuotaExceeded && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+          <span>
+            Google Maps Platform quota reached. If you are the app owner, visit{' '}
+            <a
+              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-amber-950 hover:text-amber-800"
+            >
+              maps developer site
+            </a>{' '}
+            for instructions to update your account.
+          </span>
+        </div>
+      )}
       <Navbar
         activePage={activePage}
         onNavigate={handleNavigate}
@@ -320,6 +352,15 @@ export default function App() {
             onDeleteProfile={handleDeleteMeasurement}
             onToggleConsent={handleToggleMeasurementConsent}
             onNavigate={handleNavigate}
+            onNotifyToast={showToast}
+          />
+        )}
+
+        {activePage === 'nearby-shops' && (
+          <NearbyShopsPage
+            locality={locality}
+            onUpdateLocality={setLocality}
+            onCreateOrder={handleAddOrder}
             onNotifyToast={showToast}
           />
         )}
