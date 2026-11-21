@@ -45,6 +45,9 @@ export interface LiveTailorPlace {
   openingHoursText: string[];
   googleMapsURI?: string;
   primaryType?: string;
+  photoUri?: string;
+  photoAttribution?: string;
+  phoneNumber?: string;
 }
 
 export interface RuleCheckOutcome {
