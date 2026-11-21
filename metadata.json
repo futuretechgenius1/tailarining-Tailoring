@@ -1,0 +1,6 @@
+{
+  "name": "StitchMate",
+  "description": "StitchMate — Hyderabad's trusted doorstep tailoring marketplace for custom stitching, bridal maggam work, doorstep alterations, institutional uniforms, and precision measurements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
