@@ -11,9 +11,10 @@ import {
   X,
   Briefcase,
   LogOut,
+  Compass,
 } from 'lucide-react';
 import { PageRoute, UserSession } from '../types';
-import { StitchMateLogo } from './StitchMateLogo';
+import { TaileringLogo } from './TaileringLogo';
 
 interface NavbarProps {
   activePage: PageRoute;
@@ -71,42 +72,41 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinkClass = (page: PageRoute) =>
-    `relative py-1 text-[13.5px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+    `relative py-1 text-[13.5px] font-semibold transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B7285] rounded ${
       activePage === page
-        ? 'text-[#EA580C] after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-[2px] after:bg-[#EA580C] after:rounded-full'
-        : 'text-[#44403C] hover:text-[#EA580C]'
+        ? 'text-[#0B7285] after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-[2px] after:bg-[#C8922A] after:rounded-full'
+        : 'text-[#334155] hover:text-[#0B1F3A]'
     }`;
 
   return (
-    <div className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(28,25,23,0.06)]">
-      {/* Main Top Navigation Row */}
-      <header className="max-w-[1280px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Left: Mobile Menu Button + StitchMate Brand Logo */}
+    <div className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#E2E8F0]">
+      {/* Primary Single-Row Header */}
+      <header className="max-w-[1280px] mx-auto px-4 sm:px-6 h-16 sm:h-[68px] flex items-center justify-between gap-6">
+        {/* Zone 1: Brand Wordmark Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open navigation menu"
-            className="lg:hidden p-2 -ml-1 rounded-lg text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] transition-colors"
+            className="lg:hidden p-2 -ml-1.5 rounded-lg text-[#0B1F3A] hover:bg-[#F1F5F9] transition-colors cursor-pointer"
           >
             <Menu className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => onNavigate('home')}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-lg cursor-pointer"
+            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B7285] rounded-lg cursor-pointer"
           >
-            <StitchMateLogo compact={false} />
+            <TaileringLogo compact={false} />
           </button>
         </div>
 
-        {/* Center: Desktop Nav Links */}
+        {/* Zone 2: Clean Single-Line Navigation Links */}
         <nav className="hidden lg:flex items-center gap-7" aria-label="Primary Navigation">
           <button type="button" onClick={() => onNavigate('home')} className={navLinkClass('home')}>
             Home
           </button>
 
-          {/* Designs Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
@@ -117,13 +117,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               Designs
               <ChevronDown
                 className={`w-3.5 h-3.5 transition-transform duration-150 ${
-                  designsOpen ? 'rotate-180 text-[#EA580C]' : ''
+                  designsOpen ? 'rotate-180 text-[#0B7285]' : ''
                 }`}
               />
             </button>
 
             {designsOpen && (
-              <div className="absolute left-0 top-full mt-3 w-64 bg-white rounded-xl border border-[#F3E8DC] shadow-xl py-2 z-50">
+              <div className="absolute left-0 top-full mt-3 w-64 bg-white rounded-xl border border-[#E2E8F0] shadow-xl py-2 z-50">
                 {DESIGN_DROPDOWN_ITEMS.map((item) => (
                   <button
                     key={item.categoryId}
@@ -132,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setDesignsOpen(false);
                       onNavigate('designs', { categoryId: item.categoryId });
                     }}
-                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#292524] hover:bg-[#FFF7ED] hover:text-[#EA580C] transition-colors flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#1E293B] hover:bg-[#F0F9FA] hover:text-[#0B7285] transition-colors flex items-center justify-between cursor-pointer"
                   >
                     <span>{item.label}</span>
                     <ChevronRight className="w-3.5 h-3.5 opacity-50" />
@@ -179,13 +179,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
-        {/* Right: Search, Wishlist, Bag, Login */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Zone 3: Functional Actions & Account */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={onOpenSearch}
             aria-label="Search designs and services"
-            className="p-2 rounded-full text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] transition-colors cursor-pointer"
+            className="p-2 rounded-lg text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0B1F3A] transition-colors cursor-pointer"
           >
             <Search className="w-[18px] h-[18px]" />
           </button>
@@ -193,12 +193,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={onOpenWishlist}
-            aria-label="Wishlist"
-            className="relative p-2 rounded-full text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] transition-colors cursor-pointer"
+            aria-label="Saved designs"
+            className="relative p-2 rounded-lg text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0B1F3A] transition-colors cursor-pointer"
           >
             <Heart className="w-[18px] h-[18px]" />
             {wishlistCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#E11D48] text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+              <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#C8922A] text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
                 {wishlistCount}
               </span>
             )}
@@ -208,10 +208,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onOpenCart}
             aria-label="Shopping bag"
-            className="relative p-2 rounded-full text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] transition-colors cursor-pointer"
+            className="relative p-2 rounded-lg text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0B1F3A] transition-colors cursor-pointer"
           >
             <ShoppingBag className="w-[18px] h-[18px]" />
-            <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#1C1917] text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+            <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#0B1F3A] text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
               {cartCount}
             </span>
           </button>
@@ -221,17 +221,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] hover:bg-[#FFEDD5] px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-[#F0F9FA] border border-[#CBE7EC] text-[#0B7285] hover:bg-[#E1F4F7] px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <User className="w-3.5 h-3.5" />
                 <span className="max-w-[90px] truncate">{user.name.split(' ')[0]}</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#F3E8DC] shadow-xl py-2 z-50">
-                  <div className="px-4 py-2 border-b border-[#F5F5F4]">
-                    <p className="text-xs font-bold text-[#1C1917] truncate">{user.name}</p>
-                    <p className="text-[11px] text-[#78716C] capitalize">{user.role} Account</p>
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#E2E8F0] shadow-xl py-2 z-50">
+                  <div className="px-4 py-2 border-b border-[#F1F5F9]">
+                    <p className="text-xs font-bold text-[#0B1F3A] truncate">{user.name}</p>
+                    <p className="text-[11px] text-[#64748B] capitalize">{user.role} Account</p>
                   </div>
                   <button
                     type="button"
@@ -239,7 +239,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setUserMenuOpen(false);
                       onNavigate('measurements');
                     }}
-                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F0F9FA] hover:text-[#0B7285] cursor-pointer"
                   >
                     Saved Measurements
                   </button>
@@ -249,9 +249,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setUserMenuOpen(false);
                       onNavigate('alterations');
                     }}
-                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F0F9FA] hover:text-[#0B7285] cursor-pointer"
                   >
-                    My Bookings & Orders
+                    My Bookings &amp; Orders
                   </button>
                   <button
                     type="button"
@@ -259,10 +259,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setUserMenuOpen(false);
                       onNavigate('partner');
                     }}
-                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#44403C] hover:bg-[#FFF7ED] hover:text-[#EA580C] flex items-center gap-1.5 cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F0F9FA] hover:text-[#0B7285] flex items-center gap-1.5 cursor-pointer"
                   >
                     <Briefcase className="w-3.5 h-3.5" />
-                    Partner / Admin Portal
+                    Partner &amp; Admin Portal
                   </button>
                   <button
                     type="button"
@@ -270,7 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setUserMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-[#DC2626] hover:bg-red-50 flex items-center gap-1.5 border-t border-[#F5F5F4] mt-1 pt-2 cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-[#DC2626] hover:bg-red-50 flex items-center gap-1.5 border-t border-[#F1F5F9] mt-1 pt-2 cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     Sign Out
@@ -282,41 +282,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('auth')}
-              className="bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white text-xs sm:text-[13px] font-bold px-4 sm:px-5 py-2 rounded-full shadow-sm transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs sm:text-[13px] font-semibold px-4 sm:px-5 py-2 rounded-lg shadow-xs transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Login
+              Sign In
             </button>
           )}
         </div>
       </header>
 
-      {/* Location Sub-bar (Matching Screenshots 1, 2, 3) */}
-      <div className="bg-[#FFF9F2] border-y border-[#F3E8DC]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-9 flex items-center justify-between gap-2 text-xs">
+      {/* Slim Service Locality Bar */}
+      <div className="bg-[#F8FAFC] border-t border-[#E2E8F0]">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-8 flex items-center justify-between gap-3 text-xs">
           <button
             type="button"
             onClick={onOpenLocationModal}
-            className="inline-flex items-center gap-1.5 text-[#292524] font-medium hover:text-[#EA580C] transition-colors truncate cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[#334155] hover:text-[#0B7285] transition-colors truncate cursor-pointer"
           >
-            <span className="w-5 h-5 rounded-full bg-[#FFEDD5] text-[#EA580C] inline-flex items-center justify-center shrink-0">
-              <MapPin className="w-3 h-3" />
-            </span>
-            <span className="truncate font-semibold">{locality}</span>
+            <MapPin className="w-3.5 h-3.5 text-[#0B7285] shrink-0" />
+            <span className="text-[#64748B] hidden sm:inline">Serving:</span>
+            <span className="truncate font-semibold text-[#0B1F3A]">{locality}</span>
           </button>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => onNavigate('nearby-shops')}
-              className="inline-flex items-center gap-1 text-[#9A3412] font-semibold bg-[#FFF7ED] border border-[#FED7AA] hover:bg-[#FFEDD5] px-2.5 py-0.5 rounded-full text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1 text-[#0B7285] hover:text-[#085463] font-semibold text-[11.5px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <MapPin className="w-3 h-3 text-[#EA580C]" />
+              <Compass className="w-3.5 h-3.5" />
               Live Map
             </button>
+            <span className="text-[#CBD5E1]" aria-hidden="true">|</span>
             <button
               type="button"
               onClick={onOpenLocationModal}
-              className="inline-flex items-center gap-0.5 text-[#EA580C] font-semibold bg-white border border-[#FED7AA] hover:bg-[#FFF7ED] px-2.5 py-0.5 rounded-full text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-0.5 text-[#475569] hover:text-[#0B1F3A] font-semibold text-[11.5px] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Change
               <ChevronRight className="w-3 h-3" />
@@ -329,18 +329,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-[#0B1F3A]/45 backdrop-blur-[2px]"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative w-[82%] max-w-[320px] bg-white h-full shadow-2xl flex flex-col justify-between z-10">
+          <div className="relative w-[84%] max-w-[320px] bg-white h-full shadow-2xl flex flex-col justify-between z-10">
             <div>
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#F3E8DC]">
-                <StitchMateLogo compact />
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+                <TaileringLogo compact />
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
                   aria-label="Close navigation menu"
-                  className="p-2 rounded-lg text-[#57534E] hover:bg-[#FFF7ED]"
+                  className="p-2 rounded-lg text-[#475569] hover:bg-[#F1F5F9]"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -356,7 +356,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     { label: 'Institutional Uniforms', route: 'uniforms' },
                     { label: 'Saved Measurements', route: 'measurements' },
                     { label: 'Nearby Tailor Shops (Live Map)', route: 'nearby-shops' },
-                    { label: 'Tailor Partner Portal', route: 'partner' },
+                    { label: 'Partner & Admin Portal', route: 'partner' },
                   ] as { label: string; route: PageRoute }[]
                 ).map((item) => (
                   <button
@@ -368,8 +368,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between transition-colors ${
                       activePage === item.route
-                        ? 'bg-[#FFF7ED] text-[#EA580C]'
-                        : 'text-[#292524] hover:bg-[#FAF7F5]'
+                        ? 'bg-[#F0F9FA] text-[#0B7285]'
+                        : 'text-[#1E293B] hover:bg-[#F8FAFC]'
                     }`}
                   >
                     <span>{item.label}</span>
@@ -379,9 +379,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            <div className="p-4 border-t border-[#F3E8DC] bg-[#FFF9F2] space-y-2.5">
-              <div className="flex items-center gap-2 text-xs text-[#57534E]">
-                <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
+            <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] space-y-3">
+              <div className="flex items-center gap-2 text-xs text-[#475569]">
+                <MapPin className="w-3.5 h-3.5 text-[#0B7285] shrink-0" />
                 <span className="truncate font-medium">{locality}</span>
               </div>
               {!user ? (
@@ -391,9 +391,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setMobileMenuOpen(false);
                     onNavigate('auth');
                   }}
-                  className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white py-2.5 rounded-xl text-sm font-bold shadow-sm"
+                  className="w-full bg-[#0B1F3A] hover:bg-[#15325B] text-white py-2.5 rounded-lg text-sm font-semibold shadow-xs"
                 >
-                  Login / Join StitchMate
+                  Sign In / Join Tailering
                 </button>
               ) : (
                 <button
@@ -402,7 +402,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setMobileMenuOpen(false);
                     onLogout();
                   }}
-                  className="w-full bg-white border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold"
+                  className="w-full bg-white border border-red-200 text-red-600 py-2.5 rounded-lg text-sm font-semibold"
                 >
                   Sign Out ({user.name.split(' ')[0]})
                 </button>

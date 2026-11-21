@@ -103,7 +103,7 @@ export default function App() {
           },
         ];
       });
-      showToast(`Added "${srv.title}" to your StitchMate bag!`);
+      showToast(`Added "${srv.title}" to your Tailering bag.`);
     },
     [showToast],
   );
@@ -130,7 +130,7 @@ export default function App() {
           },
         ];
       });
-      showToast(`Added "${design.title}" to your StitchMate bag!`);
+      showToast(`Added "${design.title}" to your Tailering bag.`);
     },
     [showToast],
   );
@@ -161,7 +161,7 @@ export default function App() {
     (designId: string) => {
       setWishlistIds((prev) => {
         const exists = prev.includes(designId);
-        showToast(exists ? 'Removed from saved designs.' : 'Saved to your StitchMate wishlist!');
+        showToast(exists ? 'Removed from saved designs.' : 'Saved to your Tailering wishlist.');
         return exists ? prev.filter((id) => id !== designId) : [...prev, designId];
       });
     },
@@ -236,15 +236,15 @@ export default function App() {
           locality={locality}
           onLoginSuccess={(session, redirectTo) => {
             setUser(session);
-            showToast(`Welcome to StitchMate, ${session.name}!`);
+            showToast(`Welcome to Tailering, ${session.name}!`);
             handleNavigate(redirectTo || 'home');
           }}
           onBackHome={() => handleNavigate('home')}
           onNotifyToast={showToast}
         />
         {toastMsg && (
-          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#1C1917] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
-            <CheckCircle2 className="w-4 h-4 text-[#22C55E] shrink-0" />
+          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0B1F3A] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
+            <CheckCircle2 className="w-4 h-4 text-[#5EEAD4] shrink-0" />
             <span className="truncate">{toastMsg}</span>
           </div>
         )}
@@ -253,7 +253,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDFBF9] text-[#1C1917]">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0B1F3A]">
       {mapsQuotaExceeded && (
         <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
           <span>
@@ -279,23 +279,31 @@ export default function App() {
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setCartOpen(true)}
         onOpenWishlist={() => setWishlistOpen(true)}
-        onOpenSearch={() => handleNavigate('designs', { categoryId: 'all' })}
+        onOpenSearch={() => {
+          if (activePage !== 'home') {
+            handleNavigate('home');
+            setTimeout(() => {
+              document.getElementById('homepage-tailor-search')?.focus();
+            }, 120);
+          } else {
+            document.getElementById('homepage-tailor-search')?.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }}
         user={user}
         onLogout={() => {
           setUser(null);
-          showToast('Signed out of StitchMate.');
+          showToast('Signed out of Tailering.');
         }}
       />
 
       <main className="flex-1">
         {activePage === 'home' && (
           <HomePage
+            locality={locality}
+            onOpenLocationModal={() => setLocationModalOpen(true)}
             onNavigate={handleNavigate}
-            onSelectDesign={setSelectedDesign}
-            wishlistIds={wishlistIds}
-            onToggleWishlist={handleToggleWishlist}
-            onOpenReferral={() => setReferralOpen(true)}
-            onOpenSupport={() => setSupportOpen(true)}
+            onCreateOrder={handleAddOrder}
             onNotifyToast={showToast}
           />
         )}
@@ -433,8 +441,8 @@ export default function App() {
 
       {/* Global Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#1C1917] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
-          <CheckCircle2 className="w-4 h-4 text-[#22C55E] shrink-0" />
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0B1F3A] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
+          <CheckCircle2 className="w-4 h-4 text-[#5EEAD4] shrink-0" />
           <span className="truncate">{toastMsg}</span>
         </div>
       )}

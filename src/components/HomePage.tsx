@@ -1,1299 +1,1052 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
+  ArrowLeftRight,
   ArrowRight,
-  Award,
+  BadgeCheck,
+  Calendar,
   Check,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
-  Copy,
-  Gift,
-  Heart,
-  Home,
-  Mail,
-  MessageCircle,
-  Ruler,
+  Eye,
+  MapPin,
+  Navigation,
+  Play,
+  RotateCcw,
   Scissors,
   Search,
   ShieldCheck,
-  Sparkles,
+  SlidersHorizontal,
   Star,
+  Store,
   Truck,
-  Users,
-  Wallet,
-  Briefcase,
+  X,
 } from 'lucide-react';
+import { TAILOR_PARTNERS } from '../data/catalogData';
 import {
-  ASSETS,
-  CATEGORIES,
-  DESIGNS_CATALOG,
-  FESTIVE_DEALS,
-  OTHER_SERVICES,
-  PROMO_OFFERS,
-  VERIFIED_REVIEWS,
-} from '../data/catalogData';
-import { DesignProduct, PageRoute } from '../types';
+  OrderRecord,
+  PageRoute,
+  TailorPartner,
+  TailorPortfolioWork,
+  TailorServiceItem,
+} from '../types';
 import { SafeImage } from './SafeImage';
+import { QuickBookModal, TailorCompareModal, TailorProfileModal } from './TailorModals';
+import {
+  CRAFT_REEL_SCENES,
+  CraftReelModal,
+  StitchingReelStrip,
+} from './StitchingReelShowcase';
 
 interface HomePageProps {
+  locality: string;
+  onOpenLocationModal: () => void;
   onNavigate: (page: PageRoute, opts?: { categoryId?: string; searchQuery?: string }) => void;
-  onSelectDesign: (design: DesignProduct) => void;
-  wishlistIds: string[];
-  onToggleWishlist: (designId: string) => void;
-  onOpenReferral: () => void;
-  onOpenSupport: () => void;
+  onCreateOrder: (order: OrderRecord) => void;
   onNotifyToast: (msg: string) => void;
 }
 
-const HERO_POPULAR_TAGS = [
-  { label: 'Designer Blouses', route: 'designs' as PageRoute, categoryId: 'blouse' },
-  { label: 'Saree Fall & Pico', route: 'alterations' as PageRoute },
-  { label: 'Saree Pre-Pleating', route: 'alterations' as PageRoute },
-  { label: 'Bridal Maggam', route: 'designs' as PageRoute, categoryId: 'maggam' },
-  { label: 'Pant Alterations', route: 'alterations' as PageRoute },
-];
+type SortOption = 'relevance' | 'distance' | 'rating' | 'price' | 'turnaround';
 
-const TICKER_ITEMS = [
-  '7-DAY FIT GUARANTEE',
-  'FREE DOORSTEP MEASUREMENTS',
-  '724+ CUSTOM DESIGNS',
-  '29+ TAILOR PARTNERS',
-  '22 STYLE CATEGORIES',
-  'FIXED TRANSPARENT PRICING',
-];
+interface ServiceIntent {
+  id: string;
+  label: string;
+  keywords: string[];
+}
 
-const BANNER_SLIDES = [
+const SERVICE_INTENTS: ServiceIntent[] = [
+  { id: 'all', label: 'All Services', keywords: [] },
   {
-    id: 'festival',
-    kicker: 'FESTIVE COLLECTION 2026',
-    titleLine1: 'Festival',
-    titleLine2: 'Looks for Everyone',
-    subtitle: 'Custom-stitched outfits for the whole family',
-    desc: 'From kurtas and shirts to ethnic sets — celebrate in style with perfectly stitched outfits at your doorstep.',
-    cta: "Explore Men's & Family Collection",
-    targetRoute: 'designs' as PageRoute,
-    categoryId: 'men-kurta-set',
-    image: ASSETS.bannerFestive,
-    bgClass: 'from-[#FFF4F6] via-[#FFF8F2] to-[#FCE7F3]',
-  },
-  {
-    id: 'bridal',
-    kicker: 'BRIDAL ATELIER · HYDERABAD',
-    titleLine1: 'Bespoke',
-    titleLine2: 'Bridal & Maggam Work',
-    subtitle: 'Handcrafted zardosi blouses & royal lehengas',
-    desc: 'Verified boutique master artisans stitch your bridal trousseau with complimentary doorstep trial fittings.',
-    cta: 'Explore Bridal & Maggam',
-    targetRoute: 'designs' as PageRoute,
-    categoryId: 'maggam',
-    image: ASSETS.bridalBlouse,
-    bgClass: 'from-[#FFF7ED] via-[#FEF3C7] to-[#FFEDD5]',
+    id: 'blouses',
+    label: 'Blouses & Maggam',
+    keywords: ['blouse', 'maggam', 'bridal', 'embroidery', 'zardosi', 'keyhole', 'trousseau'],
   },
   {
     id: 'alterations',
-    kicker: 'EXPRESS 48-HOUR SERVICE',
-    titleLine1: 'Doorstep',
-    titleLine2: 'Alterations from ₹49',
-    subtitle: 'Zero shop visits · Pickup & delivery included',
-    desc: 'Waist fitting, original denim hem finish, zip replacement, and 1-minute saree pleating handled from home.',
-    cta: 'Book Doorstep Alteration',
-    targetRoute: 'alterations' as PageRoute,
-    categoryId: undefined,
-    image: ASSETS.sareePleating,
-    bgClass: 'from-[#F5F3FF] via-[#FFF7ED] to-[#FEF2F2]',
+    label: 'Alterations',
+    keywords: ['alteration', 'waist', 'length', 'jeans', 'zip', 'hem', 'pant', 'repair', 'fit'],
+  },
+  {
+    id: 'menswear',
+    label: "Men's Suits & Sherwani",
+    keywords: ['suit', 'sherwani', 'blazer', 'shirt', 'trouser', 'kurta', 'men', 'jodhpuri', 'tuxedo'],
+  },
+  {
+    id: 'saree',
+    label: 'Saree Finishing',
+    keywords: ['saree', 'pleat', 'pleating', 'fall', 'pico', 'half saree', 'pattu'],
+  },
+  {
+    id: 'ethnic',
+    label: 'Kurtis & Lehengas',
+    keywords: ['kurti', 'palazzo', 'lehenga', 'salwar', 'chudidar', 'festive', 'family'],
+  },
+  {
+    id: 'gowns',
+    label: 'Gowns & Western',
+    keywords: ['gown', 'evening', 'western', 'dress', 'cocktail'],
+  },
+  {
+    id: 'uniforms',
+    label: 'Uniforms & Bulk',
+    keywords: ['uniform', 'school', 'corporate', 'clinic', 'bulk', 'hospital'],
   },
 ];
 
+interface ScoredTailor {
+  tailor: TailorPartner;
+  score: number;
+  rankedServices: TailorServiceItem[];
+  rankedPortfolio: TailorPortfolioWork[];
+}
+
+function scoreText(text: string, terms: string[]): number {
+  const lower = text.toLowerCase();
+  let hits = 0;
+  for (const term of terms) {
+    if (lower.includes(term)) hits += 1;
+  }
+  return hits;
+}
+
 export const HomePage: React.FC<HomePageProps> = ({
+  locality,
+  onOpenLocationModal,
   onNavigate,
-  onSelectDesign,
-  wishlistIds,
-  onToggleWishlist,
-  onOpenReferral,
-  onOpenSupport,
+  onCreateOrder,
   onNotifyToast,
 }) => {
-  const [heroSearch, setHeroSearch] = useState('');
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [categoryGender, setCategoryGender] = useState<'all' | 'women' | 'men'>('all');
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [notifyContact, setNotifyContact] = useState('');
-  const [notifyArea, setNotifyArea] = useState('');
-  const [notifySubmitted, setNotifySubmitted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeIntent, setActiveIntent] = useState<string>('all');
+  const [pickupOnly, setPickupOnly] = useState(false);
+  const [openNowOnly, setOpenNowOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('relevance');
 
+  // Cinematic Stitching Reel State
+  const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+  const [isReelPlaying, setIsReelPlaying] = useState(true);
+  const [filmModalOpen, setFilmModalOpen] = useState(false);
+  const [filmModalStartIndex, setFilmModalStartIndex] = useState(0);
+
+  // Compare & Modals State
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+  const [profileState, setProfileState] = useState<{
+    tailor: TailorPartner;
+    tab: 'services' | 'portfolio' | 'reviews';
+  } | null>(null);
+  const [bookingState, setBookingState] = useState<{
+    tailor: TailorPartner;
+    serviceId?: string;
+    note?: string;
+  } | null>(null);
+
+  const resultsRef = useRef<HTMLElement | null>(null);
+
+  // Auto-advance cinematic stitching reel scenes
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
-    }, 6500);
-    return () => clearInterval(timer);
-  }, []);
+    if (!isReelPlaying || filmModalOpen) return;
+    const current = CRAFT_REEL_SCENES[activeSceneIndex];
+    const timer = window.setTimeout(() => {
+      setActiveSceneIndex((prev) => (prev + 1) % CRAFT_REEL_SCENES.length);
+    }, current.durationSec * 1000);
+    return () => window.clearTimeout(timer);
+  }, [activeSceneIndex, isReelPlaying, filmModalOpen]);
 
-  const filteredCategories =
-    categoryGender === 'all'
-      ? CATEGORIES
-      : CATEGORIES.filter((c) => c.gender === categoryGender);
+  const activeScene = CRAFT_REEL_SCENES[activeSceneIndex];
 
-  const trendingDesigns = DESIGNS_CATALOG.filter((d) => d.isTrending).slice(0, 6);
+  const activeIntentObj = useMemo(
+    () => SERVICE_INTENTS.find((item) => item.id === activeIntent) || SERVICE_INTENTS[0],
+    [activeIntent],
+  );
 
-  const handleHeroSearchSubmit = (e: React.FormEvent) => {
+  const queryTerms = useMemo(() => {
+    return searchQuery
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+  }, [searchQuery]);
+
+  const effectiveTerms = useMemo(() => {
+    return Array.from(new Set([...queryTerms, ...activeIntentObj.keywords]));
+  }, [queryTerms, activeIntentObj]);
+
+  const scoredTailors = useMemo<ScoredTailor[]>(() => {
+    const hasSearch = queryTerms.length > 0;
+    const hasIntent = activeIntentObj.keywords.length > 0;
+
+    const evaluated: ScoredTailor[] = [];
+
+    for (const tailor of TAILOR_PARTNERS) {
+      if (pickupOnly && !tailor.pickupAvailable) continue;
+      if (openNowOnly && !tailor.openNow) continue;
+
+      const haystack = [
+        tailor.shopName,
+        tailor.masterTailor,
+        tailor.locality,
+        tailor.bio,
+        ...tailor.specialties,
+        ...tailor.services.map((s) => `${s.name} ${s.category} ${s.description}`),
+        ...tailor.portfolio.map((p) => `${p.title} ${p.category} ${p.tags.join(' ')}`),
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      if (hasSearch && !queryTerms.some((term) => haystack.includes(term))) {
+        continue;
+      }
+
+      if (hasIntent && !activeIntentObj.keywords.some((kw) => haystack.includes(kw))) {
+        continue;
+      }
+
+      const rankedServices = [...tailor.services].sort((a, b) => {
+        if (effectiveTerms.length === 0) return 0;
+        const sa =
+          scoreText(`${a.name} ${a.category} ${a.description}`, queryTerms) * 3 +
+          scoreText(`${a.name} ${a.category} ${a.description}`, activeIntentObj.keywords);
+        const sb =
+          scoreText(`${b.name} ${b.category} ${b.description}`, queryTerms) * 3 +
+          scoreText(`${b.name} ${b.category} ${b.description}`, activeIntentObj.keywords);
+        return sb - sa;
+      });
+
+      const rankedPortfolio = [...tailor.portfolio].sort((a, b) => {
+        if (effectiveTerms.length === 0) return 0;
+        const pa =
+          scoreText(`${a.title} ${a.category} ${a.tags.join(' ')}`, queryTerms) * 3 +
+          scoreText(`${a.title} ${a.category} ${a.tags.join(' ')}`, activeIntentObj.keywords);
+        const pb =
+          scoreText(`${b.title} ${b.category} ${b.tags.join(' ')}`, queryTerms) * 3 +
+          scoreText(`${b.title} ${b.category} ${b.tags.join(' ')}`, activeIntentObj.keywords);
+        return pb - pa;
+      });
+
+      const queryScore = scoreText(haystack, queryTerms) * 20;
+      const intentScore = scoreText(haystack, activeIntentObj.keywords) * 8;
+      const proximityBonus = Math.max(0, 10 - tailor.distanceKm * 2);
+      const ratingBonus = tailor.rating * 3;
+      const pickupBonus = tailor.pickupAvailable ? 2 : 0;
+
+      evaluated.push({
+        tailor,
+        score: queryScore + intentScore + proximityBonus + ratingBonus + pickupBonus,
+        rankedServices,
+        rankedPortfolio,
+      });
+    }
+
+    evaluated.sort((a, b) => {
+      switch (sortBy) {
+        case 'distance':
+          return a.tailor.distanceKm - b.tailor.distanceKm;
+        case 'rating':
+          return b.tailor.rating - a.tailor.rating || b.tailor.reviewCount - a.tailor.reviewCount;
+        case 'price':
+          return a.tailor.startingPrice - b.tailor.startingPrice;
+        case 'turnaround':
+          return a.tailor.turnaroundDays - b.tailor.turnaroundDays;
+        case 'relevance':
+        default:
+          return b.score - a.score;
+      }
+    });
+
+    return evaluated;
+  }, [queryTerms, activeIntentObj, effectiveTerms, pickupOnly, openNowOnly, sortBy]);
+
+  const comparedTailors = useMemo(
+    () =>
+      compareIds
+        .map((id) => TAILOR_PARTNERS.find((t) => t.id === id))
+        .filter((t): t is TailorPartner => Boolean(t)),
+    [compareIds],
+  );
+
+  const handleToggleCompare = (tailorId: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(tailorId)) {
+        return prev.filter((id) => id !== tailorId);
+      }
+      if (prev.length >= 3) {
+        onNotifyToast('You can compare up to 3 tailors at once. Remove one to add another.');
+        return prev;
+      }
+      return [...prev, tailorId];
+    });
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const q = heroSearch.trim();
-    if (!q) {
-      onNavigate('designs');
-      return;
-    }
-    if (
-      q.toLowerCase().includes('alter') ||
-      q.toLowerCase().includes('zip') ||
-      q.toLowerCase().includes('pico') ||
-      q.toLowerCase().includes('pleat')
-    ) {
-      onNavigate('alterations', { searchQuery: q });
-    } else {
-      onNavigate('designs', { searchQuery: q });
-    }
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleCopyPromo = (code: string) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code).catch(() => {});
-    }
-    setCopiedCode(code);
-    onNotifyToast(`Promo code ${code} copied! Apply it in your StitchMate bag.`);
-    setTimeout(() => setCopiedCode(null), 2400);
+  const handleFilterFromReel = (intentId: string) => {
+    setActiveIntent(intentId);
+    setSearchQuery('');
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
   };
 
-  const handleNotifySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!notifyContact.trim() || !notifyArea.trim()) {
-      onNotifyToast('Please enter your phone/email and area pincode.');
-      return;
-    }
-    setNotifySubmitted(true);
-    onNotifyToast(`We'll notify you as soon as StitchMate launches in ${notifyArea}!`);
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setActiveIntent('all');
+    setPickupOnly(false);
+    setOpenNowOnly(false);
+    setSortBy('relevance');
   };
 
-  const currentSlide = BANNER_SLIDES[activeSlide];
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 || activeIntent !== 'all' || pickupOnly || openNowOnly;
 
   return (
-    <div className="space-y-9 sm:space-y-11 pb-8">
-      {/* 1. HERO SECTION */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 pt-4">
-        <div className="relative rounded-2xl overflow-hidden border border-[#F2E6D8] bg-[#FFF8F0] shadow-sm">
-          {/* Background Studio Image on Right */}
-          <div className="absolute inset-0 pointer-events-none">
-            <SafeImage
-              src={ASSETS.heroStudio}
-              alt="StitchMate heritage tailoring studio"
-              className="w-full h-full object-cover object-right opacity-95"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FFF9F2] via-[#FFF9F2]/95 lg:via-[#FFF9F2]/88 to-[#FFF9F2]/25 lg:to-transparent" />
-          </div>
-
-          {/* Hero Foreground Content */}
-          <div className="relative z-10 px-5 sm:px-9 lg:px-12 py-8 sm:py-11 lg:py-12 max-w-[680px]">
-            <div className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase text-[#EA580C] bg-[#FFF7ED] border border-[#FED7AA] px-3 py-1 rounded-full mb-4">
-              <span>STITCHMATE</span>
-              <span className="text-[#78716C] font-semibold">PREMIUM TAILORING — HYDERABAD</span>
-            </div>
-
-            <h1 className="text-[28px] sm:text-[38px] lg:text-[44px] font-extrabold text-[#1C1917] leading-[1.12] tracking-tight text-balance">
-              Tailoring at your fingertips,{' '}
-              <span className="text-[#EA580C]">Stitched by Hyderabad&apos;s finest.</span>
-            </h1>
-
-            <p className="mt-3.5 text-sm sm:text-[15px] text-[#57534E] leading-relaxed max-w-xl">
-              Experience bespoke custom stitching right from your home. We send certified master
-              tailors to your doorstep for precision measurements, stitch with boutique perfection,
-              and deliver with dedicated fit assurance.
-            </p>
-
-            {/* Primary CTA Buttons */}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onNavigate('custom-stitching')}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md shadow-[#EA580C]/20 transition-all cursor-pointer"
-              >
-                <Scissors className="w-4 h-4" />
-                Book Stitching
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('alterations')}
-                className="inline-flex items-center gap-2 bg-white hover:bg-[#FFF7ED] text-[#1C1917] font-semibold text-sm px-5 py-3 rounded-xl border border-[#E7DDD2] shadow-xs transition-colors cursor-pointer"
-              >
-                <Ruler className="w-4 h-4 text-[#EA580C]" />
-                Doorstep Alterations from ₹49
-              </button>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                onClick={() => onNavigate('designs')}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA580C] hover:text-[#C2410C] cursor-pointer"
-              >
-                Browse 724+ Designs
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('nearby-shops')}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#047857] hover:text-[#065F46] cursor-pointer"
-              >
-                Find Nearest Tailor Shop (Live Map)
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Search Bar inside Hero */}
-            <form
-              onSubmit={handleHeroSearchSubmit}
-              className="mt-4 flex items-center bg-white rounded-xl border border-[#E7DDD2] p-1.5 shadow-sm max-w-[560px]"
+    <div className="min-h-screen bg-[#F8FAFC] pb-16">
+      {/* SECTION 1: CINEMATIC CENTERED LUXURY HERO WITH ANIMATED STITCHING BACKDROP */}
+      <section className="relative bg-[#0B1F3A] text-white overflow-hidden">
+        {/* Live Crossfading Ken-Burns Stitching Backdrop */}
+        <div className="absolute inset-0 pointer-events-none select-none">
+          <AnimatePresence mode="sync">
+            <motion.div
+              key={activeScene.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+              className="absolute inset-0"
             >
-              <Search className="w-4 h-4 text-[#A8A29E] ml-2.5 shrink-0" />
-              <input
-                type="text"
-                value={heroSearch}
-                onChange={(e) => setHeroSearch(e.target.value)}
-                placeholder="Search blouse, kurta, lehenga, pant alteration..."
-                className="w-full px-3 py-2 text-xs sm:text-sm text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none bg-transparent"
-              />
-              <button
-                type="submit"
-                className="bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 rounded-lg transition-colors shrink-0 cursor-pointer"
-              >
-                Search
-              </button>
-            </form>
-
-            {/* Popular Quick Links */}
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[#78716C]">
-              <span className="font-bold uppercase tracking-wider text-[#A8A29E]">POPULAR:</span>
-              {HERO_POPULAR_TAGS.map((tag) => (
-                <button
-                  key={tag.label}
-                  type="button"
-                  onClick={() => onNavigate(tag.route, { categoryId: tag.categoryId })}
-                  className="text-[#44403C] hover:text-[#EA580C] font-medium underline-offset-2 hover:underline cursor-pointer"
-                >
-                  {tag.label}
-                </button>
-              ))}
-            </div>
-
-            {/* 4 Trust Metrics Row */}
-            <div className="mt-6 pt-5 border-t border-[#EFE5D8] grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917] tabular-nums">724+ Designs</p>
-                  <p className="text-[10.5px] text-[#78716C]">Curated Catalog</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Home className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">Home Visit</p>
-                  <p className="text-[10.5px] text-[#78716C]">Free Measurement</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">5-Day Delivery</p>
-                  <p className="text-[10.5px] text-[#78716C]">Free Refit Guarantee</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Star className="w-4 h-4 fill-[#EA580C]" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917] tabular-nums">4.9★ Rating</p>
-                  <p className="text-[10.5px] text-[#78716C]">Verified Tailors</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. HORIZONTAL TRUST TICKER STRIP */}
-      <section className="w-full bg-[#FFF7ED] border-y border-[#FFEDD5] overflow-hidden py-2.5">
-        <div className="animate-ticker flex items-center gap-10">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
-            <div
-              key={`${item}-${idx}`}
-              className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.09em] text-[#9A3412] whitespace-nowrap"
-            >
-              <Scissors className="w-3.5 h-3.5 text-[#EA580C]" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 3. FESTIVE PROMOTIONAL BANNER CAROUSEL */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div
-          className={`relative rounded-2xl overflow-hidden border border-[#F2E4D9] bg-gradient-to-r ${currentSlide.bgClass} shadow-sm`}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[340px] sm:min-h-[380px]">
-            {/* Left Campaign Content */}
-            <div className="lg:col-span-7 p-6 sm:p-9 lg:p-11 flex flex-col justify-center relative z-10">
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest uppercase text-[#9F1239] mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#EA580C]" />
-                <span>StitchMate · {currentSlide.kicker}</span>
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold leading-[1.08] tracking-tight text-[#881337]">
-                <span className="font-serif-accent">{currentSlide.titleLine1}</span>{' '}
-                <span className="block text-[#9F1239]">{currentSlide.titleLine2}</span>
-              </h2>
-
-              <p className="mt-2.5 text-sm sm:text-base font-bold text-[#44403C]">
-                {currentSlide.subtitle}
-              </p>
-              <p className="mt-1 text-xs sm:text-sm text-[#57534E] max-w-lg leading-relaxed">
-                {currentSlide.desc}
-              </p>
-
-              {/* Mini Garment Highlights */}
-              {activeSlide === 0 && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-lg">
-                  {[
-                    { name: 'Kurtas', sub: 'Traditional & Modern' },
-                    { name: 'Shirts', sub: 'Festive Styles' },
-                    { name: 'Ethnic Sets', sub: 'For All Ages' },
-                    { name: 'Family Combos', sub: 'Matching Styles' },
-                  ].map((pill) => (
-                    <div
-                      key={pill.name}
-                      className="bg-white/85 backdrop-blur-xs border border-[#F5D0D8] rounded-xl px-2.5 py-2 text-center"
-                    >
-                      <p className="text-xs font-bold text-[#881337]">{pill.name}</p>
-                      <p className="text-[10px] text-[#78716C]">{pill.sub}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Offer Strip */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-xl">
-                <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#F3E1D8] flex items-center gap-2">
-                  <Gift className="w-4 h-4 text-[#E11D48] shrink-0" />
-                  <div>
-                    <p className="text-xs font-extrabold text-[#E11D48]">₹150</p>
-                    <p className="text-[10px] text-[#57534E]">Welcome Offer</p>
-                  </div>
-                </div>
-                <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#F3E1D8] flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                  <div>
-                    <p className="text-xs font-extrabold text-[#6D28D9]">5–7 Days</p>
-                    <p className="text-[10px] text-[#57534E]">Expected Delivery</p>
-                  </div>
-                </div>
-                <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#F3E1D8] flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
-                  <div>
-                    <p className="text-xs font-extrabold text-[#047857]">Zero Fee</p>
-                    <p className="text-[10px] text-[#57534E]">Pickup & Measurement</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    onNavigate(currentSlide.targetRoute, { categoryId: currentSlide.categoryId })
-                  }
-                  className="inline-flex items-center gap-2 bg-[#881337] hover:bg-[#9F1239] text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-full shadow-md transition-colors cursor-pointer"
-                >
-                  {currentSlide.cta}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Right Campaign Visual */}
-            <div className="lg:col-span-5 relative min-h-[240px] lg:min-h-full">
               <SafeImage
-                src={currentSlide.image}
-                alt={currentSlide.titleLine2}
-                className="w-full h-full object-cover object-top lg:object-center"
-              />
-              <div className="hidden lg:block absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FFF8F2] to-transparent pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Carousel Controls */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-black/25 backdrop-blur-xs px-2.5 py-1 rounded-full">
-            {BANNER_SLIDES.map((s, idx) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-label={`Slide ${idx + 1}`}
-                onClick={() => setActiveSlide(idx)}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  idx === activeSlide ? 'w-5 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                src={activeScene.image}
+                alt=""
+                className={`w-full h-full object-cover object-center ${
+                  isReelPlaying
+                    ? activeScene.motionVariant === 'zoom'
+                      ? 'animate-ken-burns'
+                      : 'animate-ken-burns-pan'
+                    : ''
                 }`}
               />
-            ))}
-          </div>
+            </motion.div>
+          </AnimatePresence>
+          {/* Measured Luxury Navy Contrast Scrim */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#071529]/82 via-[#0B1F3A]/72 to-[#0B1F3A]/95" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(11,114,133,0.18)_0%,transparent_65%)]" />
+        </div>
 
-          <button
-            type="button"
-            aria-label="Previous slide"
-            onClick={() =>
-              setActiveSlide((prev) => (prev - 1 + BANNER_SLIDES.length) % BANNER_SLIDES.length)
-            }
-            className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-[#1C1917] shadow-md items-center justify-center cursor-pointer"
+        {/* Centered Hero Foreground Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 sm:pt-16 sm:pb-16 text-center">
+          {/* Animated Gold Stitched Thread Accent */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center"
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            aria-label="Next slide"
-            onClick={() => setActiveSlide((prev) => (prev + 1) % BANNER_SLIDES.length)}
-            className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-[#1C1917] shadow-md items-center justify-center cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </section>
-
-      {/* 4. EXPLORE CATEGORIES */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="flex items-end justify-between gap-4 mb-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917]">Explore Categories</h2>
-            <p className="text-xs font-semibold text-[#EA580C]">Stitch from below</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('designs', { categoryId: 'all' })}
-            className="inline-flex items-center gap-0.5 text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
-          >
-            All categories
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* All / Women / Men Filter Pills */}
-        <div className="flex items-center gap-2 mb-5">
-          {(['all', 'women', 'men'] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setCategoryGender(tab)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all cursor-pointer ${
-                categoryGender === tab
-                  ? 'bg-[#18181B] text-white shadow-sm'
-                  : 'bg-white text-[#57534E] border border-[#E7E5E4] hover:border-[#EA580C] hover:text-[#EA580C]'
-              }`}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 220 16"
+              className="w-40 h-3.5 mb-3 opacity-85"
             >
-              {tab === 'all' ? 'All' : tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Category Tiles Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-3 sm:gap-4">
-          {filteredCategories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => onNavigate('designs', { categoryId: cat.id })}
-              className="group flex flex-col items-center text-center focus:outline-none cursor-pointer"
-            >
-              <div className="w-full aspect-square rounded-2xl overflow-hidden border border-[#F0E6DC] bg-[#FFF7ED] shadow-2xs group-hover:border-[#EA580C] group-hover:-translate-y-0.5 transition-all">
-                <SafeImage
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <span className="mt-1.5 text-[11px] font-semibold text-[#292524] group-hover:text-[#EA580C] leading-tight line-clamp-2">
-                {cat.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* 5. FESTIVE DEALS & COLLECTIONS */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 mb-4">
-          <h2 className="text-base sm:text-lg font-extrabold text-[#1C1917]">
-            Festive Deals & Collections
-          </h2>
-          <p className="text-xs text-[#78716C] italic">Explore top celebration cuts crafted for you</p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          {FESTIVE_DEALS.map((deal) => (
-            <button
-              key={deal.id}
-              type="button"
-              onClick={() => onNavigate('designs', { categoryId: deal.categoryId })}
-              className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#F0E4D8] shadow-sm text-left cursor-pointer"
-            >
-              <SafeImage
-                src={deal.image}
-                alt={deal.title}
-                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+              <path
+                d="M 4 8 Q 55 2, 110 8 T 216 8"
+                fill="none"
+                stroke="#E2B14B"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                className="animate-stitch-flow"
               />
-              <div className={`absolute inset-0 bg-gradient-to-t ${deal.accentBg}`} />
-              <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs text-[#881337] text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full">
-                StitchMate
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                <p className="text-xs sm:text-[13px] font-extrabold leading-tight font-serif-accent">
-                  {deal.title}
-                </p>
-                <p className="text-[10px] text-white/85 mt-0.5">{deal.subtitle}</p>
-                <div className="mt-1.5 inline-flex items-baseline gap-1 bg-white/95 text-[#9F1239] px-2 py-0.5 rounded-md">
-                  <span className="text-[9px] font-semibold uppercase">{deal.tag}</span>
-                  <span className="text-xs font-extrabold tabular-nums">{deal.priceText}</span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* 6. OTHER SERVICES */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="flex items-end justify-between gap-4 mb-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917]">Other Services</h2>
-            <p className="text-xs text-[#78716C]">
-              Saree finishing, maggam embroidery & doorstep alterations
+            </svg>
+            <p className="text-xs sm:text-[13px] font-medium tracking-wide text-[#5EEAD4]">
+              Bespoke Tailoring · Handcrafted Maggam · Doorstep Pickup &amp; Alterations
             </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('alterations')}
-            className="inline-flex items-center gap-0.5 text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="font-serif-accent text-3xl sm:text-5xl lg:text-[54px] font-bold leading-[1.12] tracking-[-0.01em] text-balance mt-3 max-w-3xl mx-auto"
           >
-            View All
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
+            Find, Compare &amp; Book Your Nearest Master Tailor
+          </motion.h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {OTHER_SERVICES.map((srv) => (
-            <button
-              key={srv.id}
-              type="button"
-              onClick={() => onNavigate(srv.targetRoute)}
-              className="group bg-white rounded-2xl border border-[#EFE6DC] hover:border-[#FED7AA] hover:shadow-md p-3.5 flex items-center gap-3 text-left transition-all cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#FFF7ED] border border-[#F5E6D6] shrink-0">
-                <SafeImage src={srv.image} alt={srv.title} className="w-full h-full object-cover" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xs sm:text-[13px] font-bold text-[#1C1917] group-hover:text-[#EA580C] truncate">
-                  {srv.title}
-                </h3>
-                <p className="text-[11px] text-[#78716C] line-clamp-1 mt-0.5">{srv.description}</p>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className={`text-[10.5px] font-extrabold whitespace-nowrap ${srv.accent}`}>
-                  {srv.priceLabel}
-                </span>
-                <span className="w-6 h-6 rounded-full bg-[#FFF7ED] text-[#EA580C] group-hover:bg-[#EA580C] group-hover:text-white flex items-center justify-center transition-colors">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm sm:text-base text-white/80 mt-3.5 max-w-2xl mx-auto leading-relaxed"
+          >
+            Search any garment or alteration to explore verified neighborhood ateliers, inspect
+            their previous work, compare transparent rates, and schedule a convenient pickup slot.
+          </motion.p>
 
-      {/* 7. HOW STITCHMATE WORKS */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl border border-[#EFE6DC] p-6 sm:p-8 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-6 border-b border-[#F5EFE8]">
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917]">
-                How StitchMate Works
-              </h2>
-              <p className="text-xs sm:text-sm text-[#78716C] mt-0.5">
-                From doorstep measurement to perfect fit in 4 simple steps
-              </p>
+          {/* CENTERED FLOATING LUXURY SEARCH COMMAND BAR */}
+          <motion.form
+            onSubmit={handleSearchSubmit}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-7 max-w-3xl mx-auto bg-white rounded-2xl p-2 shadow-2xl ring-1 ring-white/25 flex flex-col md:flex-row items-stretch md:items-center gap-1.5"
+          >
+            <div className="relative flex-1 flex items-center">
+              <Search className="w-4 h-4 text-[#0B7285] absolute left-4 pointer-events-none" />
+              <input
+                id="homepage-tailor-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Maggam blouse, suit, pant alteration, saree pleating..."
+                className="w-full pl-11 pr-9 py-3.5 rounded-xl text-sm text-[#0B1F3A] placeholder:text-[#64748B] focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="absolute right-2.5 p-1 text-[#64748B] hover:text-[#0B1F3A] cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            <span className="self-start sm:self-auto text-[11px] font-bold text-[#EA580C] bg-[#FFF7ED] border border-[#FED7AA] px-3 py-1 rounded-full">
-              Doorstep Tailoring
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 py-7">
-            {[
-              {
-                num: '1',
-                title: 'Browse Design',
-                desc: 'Select from curated styles, upload a reference picture, or request custom styling for your outfit.',
-                icon: Search,
-                badgeBg: 'bg-[#F97316]',
-                iconBg: 'bg-[#FFF7ED] text-[#EA580C]',
-              },
-              {
-                num: '2',
-                title: 'Doorstep Measurement & Pickup',
-                desc: 'Our certified master tailor visits your home to take precision measurements and safely collect your fabric.',
-                icon: Home,
-                badgeBg: 'bg-[#EC4899]',
-                iconBg: 'bg-[#FDF2F8] text-[#DB2777]',
-              },
-              {
-                num: '3',
-                title: 'Stitching by Experts',
-                desc: 'Stitched with high-grade lining, precision seam finishing, and heritage boutique craftsmanship.',
-                icon: Scissors,
-                badgeBg: 'bg-[#8B5CF6]',
-                iconBg: 'bg-[#F5F3FF] text-[#7C3AED]',
-              },
-              {
-                num: '4',
-                title: 'Doorstep Delivery',
-                desc: 'Delivered to your home within 5 days with complimentary doorstep alteration & refit assurance.',
-                icon: Truck,
-                badgeBg: 'bg-[#10B981]',
-                iconBg: 'bg-[#ECFDF5] text-[#059669]',
-              },
-            ].map((step) => {
-              const Icon = step.icon;
+            <div className="hidden md:block w-px h-8 bg-[#E2E8F0]" aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={onOpenLocationModal}
+              className="flex items-center justify-between md:justify-start gap-2 px-3.5 py-3 rounded-xl hover:bg-[#F8FAFC] text-left transition-colors md:max-w-[235px] cursor-pointer"
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <MapPin className="w-4 h-4 text-[#C8922A] shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold text-[#0B1F3A] truncate">
+                  {locality}
+                </span>
+              </span>
+              <span className="text-[11px] font-semibold text-[#0B7285] shrink-0">Change</span>
+            </button>
+
+            <button
+              type="submit"
+              className="px-6 py-3.5 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer shadow-sm"
+            >
+              Search Tailors
+            </button>
+          </motion.form>
+
+          {/* CENTERED QUICK-INTENT SERVICE FILTER TABS */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto"
+          >
+            {SERVICE_INTENTS.map((intent) => {
+              const active = activeIntent === intent.id;
               return (
-                <div key={step.num} className="flex flex-col items-center text-center px-2">
-                  <div className="relative mb-3.5">
-                    <div
-                      className={`w-12 h-12 rounded-2xl ${step.iconBg} flex items-center justify-center`}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span
-                      className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full ${step.badgeBg} text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs`}
-                    >
-                      {step.num}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-bold text-[#1C1917]">{step.title}</h3>
-                  <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">{step.desc}</p>
-                </div>
+                <button
+                  key={intent.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveIntent(intent.id);
+                    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
+                    active
+                      ? 'bg-[#C8922A] border-[#C8922A] text-white shadow-sm'
+                      : 'bg-white/10 border-white/15 text-white/90 hover:bg-white/20 hover:text-white backdrop-blur-xs'
+                  }`}
+                >
+                  {intent.label}
+                </button>
               );
             })}
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-[#F5EFE8]">
-            <div className="flex items-center justify-center gap-2 bg-[#FFF7ED] text-[#9A3412] py-2.5 rounded-xl text-xs font-bold">
-              <Home className="w-4 h-4 text-[#EA580C]" />
-              Doorstep Service
-            </div>
-            <div className="flex items-center justify-center gap-2 bg-[#ECFDF5] text-[#065F46] py-2.5 rounded-xl text-xs font-bold">
-              <ShieldCheck className="w-4 h-4 text-[#059669]" />
-              Fit Assurance
-            </div>
-            <div className="flex items-center justify-center gap-2 bg-[#F5F3FF] text-[#5B21B6] py-2.5 rounded-xl text-xs font-bold">
-              <Clock className="w-4 h-4 text-[#7C3AED]" />
-              Fast Delivery
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. OFFERS & PROMO CODES */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-3.5">
-          <h2 className="text-base sm:text-lg font-extrabold text-[#1C1917]">Offers & Promo Codes</h2>
-          <span className="text-[11px] font-semibold text-[#EA580C]">Tap to Copy</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PROMO_OFFERS.map((offer) => {
-            const isCopied = copiedCode === offer.code;
-            return (
-              <div
-                key={offer.code}
-                onClick={() => handleCopyPromo(offer.code)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') handleCopyPromo(offer.code);
-                }}
-                className={`rounded-2xl bg-gradient-to-r ${offer.gradient} p-5 text-white shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4`}
-              >
-                <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
-                  <Gift className="w-5 h-5 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-base font-extrabold tracking-wide">{offer.title}</p>
-                  <p className="text-[11.5px] text-white/90 leading-snug mt-0.5">
-                    {offer.description}
-                  </p>
-                  <div className="mt-2.5 flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold bg-black/20 px-2.5 py-0.5 rounded-full">
-                      {offer.tag}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[10.5px] font-bold bg-white/25 hover:bg-white/35 px-2.5 py-0.5 rounded-full">
-                      {isCopied ? (
-                        <>
-                          <Check className="w-3 h-3" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          Copy
-                        </>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 9. TRENDING THIS WEEK */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="flex items-end justify-between gap-4 mb-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917] flex items-center gap-1.5">
-              Trending This Week
-              <Sparkles className="w-4 h-4 text-[#F97316]" />
-            </h2>
-            <p className="text-xs text-[#78716C]">Popular bespoke designs curated across styles</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('designs')}
-            className="inline-flex items-center gap-0.5 text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
-          >
-            View all
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          {trendingDesigns.map((design) => {
-            const isFav = wishlistIds.includes(design.id);
-            return (
-              <div
-                key={design.id}
-                className="group bg-white rounded-2xl border border-[#EFE6DC] hover:border-[#FED7AA] hover:shadow-md overflow-hidden flex flex-col transition-all"
-              >
-                <div
-                  onClick={() => onSelectDesign(design)}
-                  className="relative aspect-[3/4] bg-[#F8F6F4] overflow-hidden cursor-pointer"
-                >
-                  <SafeImage
-                    src={design.image}
-                    alt={design.title}
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2 left-2 bg-[#1E293B]/85 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md max-w-[78%] truncate">
-                    {design.category}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Toggle wishlist"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleWishlist(design.id);
-                    }}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-xs cursor-pointer"
-                  >
-                    <Heart
-                      className={`w-3.5 h-3.5 ${
-                        isFav ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#57534E]'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="p-3 flex flex-col flex-1 justify-between">
-                  <div>
-                    <h3
-                      onClick={() => onSelectDesign(design)}
-                      className="text-xs font-bold text-[#1C1917] line-clamp-1 hover:text-[#EA580C] cursor-pointer"
-                    >
-                      {design.title}
-                    </h3>
-                    <p className="text-[10.5px] text-[#78716C] truncate mt-0.5">
-                      by {design.boutique}
-                    </p>
-                  </div>
-                  <div className="mt-2.5 pt-2 border-t border-[#F5EFE8] flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-extrabold text-[#1C1917] tabular-nums">
-                      ₹{design.price.toLocaleString('en-IN')}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onSelectDesign(design)}
-                      className="text-[11px] font-bold text-[#EA580C] hover:underline inline-flex items-center cursor-pointer"
-                    >
-                      Details
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 10. RELAX AT HOME. WE'LL HANDLE THE REST. */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="relative rounded-2xl overflow-hidden border border-[#F2E4D9] bg-[#FFF8F1] shadow-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
-            {/* Left Copy & 5-Step Journey */}
-            <div className="lg:col-span-7 p-6 sm:p-9 lg:p-11 flex flex-col justify-center">
-              <h2 className="text-2xl sm:text-3xl lg:text-[38px] font-extrabold leading-tight tracking-tight text-[#1E293B]">
-                Relax at Home.
-                <span className="block text-[#9A3412]">We&apos;ll Handle the Rest.</span>
-              </h2>
-              <p className="mt-2.5 text-xs sm:text-sm text-[#57534E] max-w-lg">
-                From browsing to doorstep delivery,{' '}
-                <span className="font-bold text-[#EA580C]">StitchMate</span> manages every step of
-                your <span className="font-semibold text-[#9A3412]">tailoring journey.</span>
-              </p>
-
-              {/* 5 Circular Journey Icons */}
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {[
-                  { num: '01', title: 'Browse', desc: 'Explore fabrics, styles & designs you love.' },
-                  { num: '02', title: 'Measure & Pickup', desc: 'We measure you precisely at your location.' },
-                  { num: '03', title: 'Stitching', desc: 'Expert tailors stitch your outfit with care.' },
-                  { num: '04', title: 'Delivery', desc: 'Your fitted outfit delivered safely to doorstep.' },
-                  { num: '05', title: 'Wear & Happy', desc: 'Wear with pride and enjoy compliments.' },
-                ].map((item) => (
-                  <div
-                    key={item.num}
-                    className="bg-white/90 rounded-xl border border-[#F3E5D8] p-2.5 text-center"
-                  >
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FFF7ED] border border-[#FED7AA] text-[10px] font-extrabold text-[#EA580C] mb-1">
-                      {item.num}
-                    </span>
-                    <p className="text-[11px] font-extrabold text-[#1C1917] leading-tight">
-                      {item.title}
-                    </p>
-                    <p className="text-[9.5px] text-[#78716C] mt-1 leading-snug">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] font-semibold text-[#57534E]">
-                <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" /> Trusted Tailoring
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" /> Premium Finishing
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" /> On-Time Delivery
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" /> 100% Fit Guarantee
-                </span>
-              </div>
-            </div>
-
-            {/* Right Lifestyle Photo */}
-            <div className="lg:col-span-5 relative min-h-[240px] lg:min-h-full">
-              <SafeImage
-                src={ASSETS.bannerRelax}
-                alt="Customer relaxing at home while StitchMate handles tailoring"
-                className="w-full h-full object-cover object-center"
-              />
-              <div className="hidden lg:block absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FFF8F1] to-transparent pointer-events-none" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 11. REFER & EARN REAL CASH BANNER */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="rounded-2xl bg-gradient-to-r from-[#064E3B] via-[#065F46] to-[#047857] p-6 sm:p-8 text-white shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="max-w-xl">
-            <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold tracking-widest uppercase text-[#A7F3D0] bg-white/10 px-3 py-1 rounded-full">
-              <Gift className="w-3.5 h-3.5" />
-              REFER & EARN REAL CASH
+          {/* Quiet Centered Proof Line + Film Reel Launcher */}
+          <div className="mt-7 pt-5 border-t border-white/15 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 tabular-nums">
+            <span>{TAILOR_PARTNERS.length} Verified Local Ateliers</span>
+            <span className="text-white/35" aria-hidden="true">
+              ·
             </span>
-            <h2 className="mt-3 text-xl sm:text-2xl font-extrabold leading-tight">
-              Gift ₹50 to friends, earn ₹50 cash per referral!
-            </h2>
-            <p className="mt-1.5 text-xs sm:text-sm text-[#D1FAE5] leading-relaxed">
-              Share your link with friends &amp; family. Once their first outfit is stitched, cash
-              rewards are credited directly to your StitchMate account.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <div className="bg-white/10 border border-white/15 rounded-xl px-4 py-2.5 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#A7F3D0]">
-                THEY GET
-              </p>
-              <p className="text-sm font-extrabold text-white">₹50 OFF</p>
-            </div>
-            <div className="bg-white/10 border border-white/15 rounded-xl px-4 py-2.5 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#A7F3D0]">
-                YOU GET
-              </p>
-              <p className="text-sm font-extrabold text-[#FDE047]">₹50 CASH</p>
-            </div>
+            <span>4.9★ Average Fit Rating</span>
+            <span className="text-white/35" aria-hidden="true">
+              ·
+            </span>
+            <span>Doorstep Pickup &amp; Quote Protection</span>
+            <span className="text-white/35 hidden sm:inline" aria-hidden="true">
+              ·
+            </span>
             <button
               type="button"
-              onClick={onOpenReferral}
-              className="inline-flex items-center gap-2 bg-[#F59E0B] hover:bg-[#D97706] text-[#1C1917] font-extrabold text-xs sm:text-sm px-5 py-3.5 rounded-xl shadow-sm transition-colors cursor-pointer"
+              onClick={() => {
+                setFilmModalStartIndex(activeSceneIndex);
+                setFilmModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-[#E2B14B] hover:text-white font-semibold transition-colors cursor-pointer"
             >
-              Start Earning Cash
-              <ArrowRight className="w-4 h-4" />
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Watch Craft Film ({activeScene.title})
             </button>
           </div>
         </div>
       </section>
 
-      {/* 12. STITCHMATE TRUST & SAFETY */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 text-center">
-        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold uppercase tracking-widest text-[#E11D48] bg-[#FFF1F2] border border-[#FECDD3] px-3 py-1 rounded-full">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          STITCHMATE TRUST & SAFETY
-        </span>
-        <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-[#1C1917]">
-          Stitch With <span className="text-[#EA580C]">Total Confidence</span>
-        </h2>
-        <p className="mt-1.5 text-xs sm:text-sm text-[#78716C] max-w-xl mx-auto">
-          Hyderabad&apos;s trusted doorstep tailoring service with doorstep fit and fabric assurance
-        </p>
+      {/* SECTION 2: ANIMATED STITCHING CRAFTSMANSHIP REEL STRIP */}
+      <StitchingReelStrip
+        activeSceneIndex={activeSceneIndex}
+        isPlaying={isReelPlaying}
+        onSelectScene={(idx) => setActiveSceneIndex(idx)}
+        onTogglePlay={() => setIsReelPlaying((p) => !p)}
+        onOpenFilmModal={(idx) => {
+          setFilmModalStartIndex(idx);
+          setFilmModalOpen(true);
+        }}
+        onFilterByIntent={handleFilterFromReel}
+      />
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#FFF1F2] text-[#E11D48] flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-[#1C1917]">Fabric Safety Insured</h3>
-              <p className="text-[11px] font-bold text-[#E11D48] mt-0.5">Certified Boutiques</p>
-              <p className="text-xs text-[#57534E] mt-1.5 leading-relaxed">
-                Fabrics are fully insured and crafted exclusively by verified local boutique experts.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
-              <Wallet className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-[#1C1917]">Book Now, Pay at Pickup</h3>
-              <p className="text-[11px] font-bold text-[#D97706] mt-0.5">Zero Advance Required</p>
-              <p className="text-xs text-[#57534E] mt-1.5 leading-relaxed">
-                No advance payment needed. Approve your final quote and pay securely when your tailor visits.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-[#1C1917]">7-Day Free Doorstep Refit</h3>
-              <p className="text-[11px] font-bold text-[#059669] mt-0.5">Fit Assurance</p>
-              <p className="text-xs text-[#57534E] mt-1.5 leading-relaxed">
-                If your outfit doesn&apos;t fit perfectly, we pick up and alter it for free within 7 days.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 13. LOVED ACROSS HYDERABAD (REVIEWS) */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="mb-4">
-          <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917]">
-            Loved Across Hyderabad
-          </h2>
-          <p className="text-xs text-[#78716C]">Real experiences from verified customers</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {VERIFIED_REVIEWS.map((review) => (
-            <div
-              key={review.id}
-              className="bg-white rounded-2xl border border-[#EFE6DC] p-5 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center gap-0.5 text-[#F59E0B] mb-2.5">
-                  {Array.from({ length: review.rating }).map((_, idx) => (
-                    <Star key={idx} className="w-4 h-4 fill-[#F59E0B]" />
-                  ))}
-                </div>
-                <p className="text-sm text-[#292524] italic leading-relaxed">
-                  &ldquo;{review.quote}&rdquo;
-                </p>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-[#F5EFE8] flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">{review.name}</p>
-                  <p className="text-[10.5px] text-[#78716C]">{review.locality}</p>
-                </div>
-                <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#059669] bg-[#ECFDF5] px-2.5 py-0.5 rounded-full">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Verified
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 14. PARTNER WITH STITCHMATE (FOR ALL TAILORS & BOUTIQUES) */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl border border-[#EFE6DC] overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-r from-[#EA580C] to-[#F97316] px-6 py-3.5 text-center text-white">
-            <p className="text-xs sm:text-sm font-extrabold uppercase tracking-widest">
-              FOR ALL TAILORS &amp; BOUTIQUES
+      {/* SECTION 3: VISUAL NEARBY TAILORS DIRECTORY (3-COLUMN LUXURY GRID) */}
+      <section
+        id="tailor-results"
+        ref={resultsRef}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10"
+      >
+        {/* Filter & Sort Controls Header */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
+          <div>
+            <p className="text-xs font-semibold text-[#0B7285]">
+              Handpicked Neighborhood Boutiques &amp; Master Studios
             </p>
-            <p className="text-[11px] text-white/90 mt-0.5">
-              Hyderabad&apos;s Dedicated Doorstep Tailoring &amp; Boutique Network
-            </p>
-          </div>
-
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#1C1917]">
-              Partner with StitchMate and{' '}
-              <span className="text-[#EA580C]">Grow Your Business to the Next Level</span>
+            <h2 className="font-serif-accent text-2xl sm:text-3xl font-bold text-[#0B1F3A] mt-0.5">
+              {searchQuery.trim()
+                ? `Tailors Matching “${searchQuery.trim()}”`
+                : activeIntent !== 'all'
+                  ? `${activeIntentObj.label} Specialists Near You`
+                  : 'Top-Rated Tailors Serving Your Area'}
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#57534E] max-w-3xl leading-relaxed">
-              You focus on stitching from your boutique — doorstep measurements, pickup, delivery
-              &amp; customer support are coordinated seamlessly by StitchMate. Grow your tailoring
-              business without leaving your shop!
+            <p className="text-xs sm:text-sm text-[#475569] mt-1 tabular-nums">
+              Showing <span className="font-semibold text-[#0B1F3A]">{scoredTailors.length}</span>{' '}
+              verified {scoredTailors.length === 1 ? 'atelier' : 'ateliers'} near {locality}
+              {compareIds.length > 0 && (
+                <span>
+                  {' '}
+                  · <strong className="text-[#0B7285]">{compareIds.length} selected</strong> for
+                  side-by-side comparison
+                </span>
+              )}
             </p>
+          </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              <div className="bg-[#FFF9F2] border border-[#F5E6D6] rounded-xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#FFEDD5] text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Briefcase className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">Steady Orders</p>
-                  <p className="text-[11px] text-[#78716C]">Daily stitching &amp; alterations</p>
-                </div>
-              </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPickupOnly((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                pickupOnly
+                  ? 'bg-[#0B7285] border-[#0B7285] text-white'
+                  : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0B7285]'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              Doorstep Pickup
+            </button>
 
-              <div className="bg-[#FFF9F2] border border-[#F5E6D6] rounded-xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
-                  <Truck className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">Zero Delivery Hassle</p>
-                  <p className="text-[11px] text-[#78716C]">Pickup, measurements &amp; drop</p>
-                </div>
-              </div>
+            <button
+              type="button"
+              onClick={() => setOpenNowOnly((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                openNowOnly
+                  ? 'bg-[#0B7285] border-[#0B7285] text-white'
+                  : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0B7285]'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              Open Now
+            </button>
 
-              <div className="bg-[#ECFDF5] border border-[#D1FAE5] rounded-xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#D1FAE5] text-[#059669] flex items-center justify-center shrink-0">
-                  <Wallet className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-[#1C1917]">Weekly Payouts</p>
-                  <p className="text-[11px] text-[#78716C]">Guaranteed direct bank transfers</p>
-                </div>
-              </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#CBD5E1] text-xs">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#64748B]" />
+              <label htmlFor="tailor-sort" className="text-[#64748B] font-medium">
+                Sort:
+              </label>
+              <select
+                id="tailor-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="font-semibold text-[#0B1F3A] bg-transparent focus:outline-none cursor-pointer"
+              >
+                <option value="relevance">Best Match</option>
+                <option value="distance">Nearest First</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price">Lowest Price</option>
+                <option value="turnaround">Fastest Delivery</option>
+              </select>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-[#F5EFE8] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <p className="text-xs font-medium text-[#57534E] flex items-center gap-1.5">
-                <Star className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]" />
-                Trusted by tailors &amp; boutiques across Hyderabad · Free pilot registration
-              </p>
+            <button
+              type="button"
+              onClick={() => onNavigate('nearby-shops')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#F0F9FA] border border-[#CBE7EC] text-[#0B7285] hover:bg-[#E1F3F6] transition-colors cursor-pointer"
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              Live GPS Map
+            </button>
+
+            {hasActiveFilters && (
               <button
                 type="button"
-                onClick={() => onNavigate('partner')}
-                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-sm transition-all cursor-pointer"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-[#64748B] hover:text-[#0B1F3A] cursor-pointer"
               >
-                Register as Partner
-                <ArrowRight className="w-4 h-4" />
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset
               </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 15. CUSTOMER & TAILOR SUPPORT */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl border border-[#EFE6DC] p-6 sm:p-7">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-full bg-[#FFF7ED] border border-[#FED7AA] text-[#EA580C] flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-extrabold text-[#1C1917]">
-                Do You Want to Know About Stitching &amp; Orders?
-              </h2>
-              <p className="text-xs font-bold text-[#EA580C]">Customer &amp; Tailor Support</p>
-              <p className="mt-1.5 text-xs sm:text-sm text-[#57534E] leading-relaxed">
-                Have questions about your custom stitching, alterations, doorstep measurement visit,
-                or order status? Our dedicated Hyderabad support team and master tailor advisors are
-                here to assist you every step of the way.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-[#FFF9F2] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#44403C]">
-              Order Tracking
-            </div>
-            <div className="bg-[#ECFDF5] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#065F46]">
-              Tailor Support
-            </div>
-            <div className="bg-[#EFF6FF] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#1D4ED8]">
-              Doorstep Help
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <button
-              type="button"
-              onClick={onOpenSupport}
-              className="sm:col-span-3 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-sm py-3 rounded-xl transition-colors cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Chat
-            </button>
-            <button
-              type="button"
-              onClick={() => onNotifyToast('Support email ready: support@stitchmate.in')}
-              className="sm:col-span-9 inline-flex items-center justify-center gap-2 bg-white hover:bg-[#FFF7ED] text-[#1C1917] font-bold text-sm py-3 rounded-xl border border-[#EFE6DC] hover:border-[#FED7AA] transition-colors cursor-pointer"
-            >
-              <Mail className="w-4 h-4 text-[#EA580C]" />
-              Email Support
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 16. EMPOWERING INDIA */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden shadow-xs">
-          <div className="bg-gradient-to-r from-[#3B0764] via-[#4C1D95] to-[#5B21B6] px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-white">
-            <span className="text-xs font-extrabold uppercase tracking-widest">
-              EMPOWERING INDIA
-            </span>
-            <span className="text-[11px] font-semibold bg-white/15 px-3 py-0.5 rounded-full">
-              Vision 2026 · Skill India (Coming Soon)
-            </span>
-          </div>
-
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#3B0764]">
-              Empowering Women Tailors &amp; Boutique Artisans Across Every Pin Code
-            </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#57534E] max-w-3xl leading-relaxed">
-              Our core mission is to bring steady earning opportunities and financial independence
-              to talented women creators throughout India — connecting certified skill development
-              with world-class doorstep tailoring.
-            </p>
-
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl p-4">
-                <h3 className="text-xs sm:text-sm font-extrabold text-[#4C1D95]">All-India Reach</h3>
-                <p className="mt-1 text-xs text-[#57534E]">
-                  Reaching women artisans in every pin code with direct client orders.
-                </p>
-              </div>
-              <div className="bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl p-4">
-                <h3 className="text-xs sm:text-sm font-extrabold text-[#4C1D95]">
-                  Financial Independence
-                </h3>
-                <p className="mt-1 text-xs text-[#57534E]">
-                  Empowering home tailors with steady income &amp; economic dignity.
-                </p>
-              </div>
-              <div className="bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl p-4">
-                <h3 className="text-xs sm:text-sm font-extrabold text-[#4C1D95]">Skill India 2026</h3>
-                <p className="mt-1 text-xs text-[#57534E]">
-                  Upcoming certified collaboration for professional bespoke training.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 17. STITCHMATE IN YOUR AREA (NOTIFY ME) */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6">
-        <div className="rounded-2xl bg-gradient-to-r from-[#FFF7ED] to-[#FFEDD5]/60 border border-[#FDE6CE] p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          <div className="lg:col-span-5">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1C1917]">
-              StitchMate in{' '}
-              <span className="font-serif-accent italic text-[#EA580C]">Your Area</span>
-            </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#57534E] leading-relaxed">
-              Want to know when we expand into your neighborhood? Provide your details and
-              we&apos;ll notify you as soon as we start serving your pin code.
-            </p>
-          </div>
-
-          <div className="lg:col-span-7">
-            {notifySubmitted ? (
-              <div className="bg-white rounded-xl border border-[#BBF7D0] p-4 flex items-center gap-3 text-sm font-semibold text-[#065F46]">
-                <CheckCircle2 className="w-5 h-5 text-[#16A34A] shrink-0" />
-                <span>
-                  You&apos;re on the priority list for <strong>{notifyArea}</strong>! We&apos;ll
-                  message you at {notifyContact}.
-                </span>
-              </div>
-            ) : (
-              <form onSubmit={handleNotifySubmit} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={notifyContact}
-                    onChange={(e) => setNotifyContact(e.target.value)}
-                    placeholder="Email or Phone"
-                    className="w-full bg-white border border-[#E7DDD2] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#EA580C]"
-                  />
-                  <input
-                    type="text"
-                    value={notifyArea}
-                    onChange={(e) => setNotifyArea(e.target.value)}
-                    placeholder="Area or Pincode (e.g. 500089)"
-                    className="w-full bg-white border border-[#E7DDD2] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#EA580C]"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm py-3 rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Notify Me
-                </button>
-              </form>
             )}
           </div>
         </div>
+
+        {/* Tailor Cards Grid (3 columns on XL desktop for rich scanability) */}
+        {scoredTailors.length === 0 ? (
+          <div className="mt-8 bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center max-w-xl mx-auto">
+            <Scissors className="w-8 h-8 text-[#0B7285] mx-auto mb-3" />
+            <h3 className="font-serif-accent text-xl font-bold text-[#0B1F3A]">
+              No matching tailors found
+            </h3>
+            <p className="text-sm text-[#475569] mt-1.5">
+              Try a broader service keyword like “blouse”, “alteration”, “suit”, “lehenga”, or
+              “saree”, or clear your active filters.
+            </p>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="mt-5 px-5 py-2.5 rounded-lg bg-[#0B1F3A] hover:bg-[#15325B] text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              Reset Search &amp; Filters
+            </button>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {scoredTailors.map(({ tailor, rankedServices, rankedPortfolio }, idx) => {
+              const isCompared = compareIds.includes(tailor.id);
+
+              return (
+                <motion.article
+                  key={tailor.id}
+                  layout
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.35,
+                    delay: Math.min(idx * 0.04, 0.28),
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className={`group bg-white rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden ${
+                    isCompared
+                      ? 'border-[#0B7285] ring-1 ring-[#0B7285]/30 shadow-lg'
+                      : 'border-[#E2E8F0] hover:shadow-lg hover:border-[#CBD5E1]'
+                  }`}
+                >
+                  <div>
+                    {/* Visual Atelier Cover Photograph Header */}
+                    <div
+                      onClick={() => setProfileState({ tailor, tab: 'services' })}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setProfileState({ tailor, tab: 'services' });
+                        }
+                      }}
+                      className="relative h-44 bg-[#0B1F3A] overflow-hidden cursor-pointer"
+                    >
+                      <SafeImage
+                        src={tailor.coverImage}
+                        alt={tailor.shopName}
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/95 via-[#0B1F3A]/35 to-[#0B1F3A]/20" />
+
+                      {/* Top Clean Metrics Row over Photo */}
+                      <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between text-xs text-white tabular-nums">
+                        <span className="inline-flex items-center gap-1.5 bg-[#0B1F3A]/75 backdrop-blur-xs px-2.5 py-1 rounded-lg font-semibold">
+                          <Star className="w-3.5 h-3.5 fill-[#E2B14B] text-[#E2B14B]" />
+                          {tailor.rating.toFixed(1)}
+                          <span className="text-white/70 font-normal">({tailor.reviewCount})</span>
+                          <span className="text-white/35" aria-hidden="true">
+                            ·
+                          </span>
+                          <span>{tailor.distanceKm.toFixed(1)} km</span>
+                        </span>
+
+                        <span className="bg-[#0B1F3A]/75 backdrop-blur-xs px-2.5 py-1 rounded-lg font-bold text-[#E2B14B]">
+                          From ₹{tailor.startingPrice.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      {/* Bottom Shop Name & Master Tailor over Measured Scrim */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-serif-accent text-lg font-bold text-white leading-snug truncate">
+                            {tailor.shopName}
+                          </h3>
+                          {tailor.verified && (
+                            <BadgeCheck
+                              className="w-4 h-4 text-[#5EEAD4] shrink-0"
+                              aria-label="Verified Tailor"
+                            />
+                          )}
+                        </div>
+                        <p className="text-xs text-white/80 mt-0.5 truncate tabular-nums">
+                          Master {tailor.masterTailor} · {tailor.yearsExperience} yrs ·{' '}
+                          {tailor.locality}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Clean Structured Card Body */}
+                    <div className="p-4 sm:p-5 space-y-3.5">
+                      {/* Operational Metadata Row (Zero-pill, Icon + Text) */}
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
+                        {tailor.pickupAvailable ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#0B7285]">
+                            <Truck className="w-3.5 h-3.5" />
+                            Pickup {tailor.homeVisitFee === 0 ? 'Free' : `₹${tailor.homeVisitFee}`}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#475569]">
+                            <Store className="w-3.5 h-3.5" />
+                            Studio Visit Only
+                          </span>
+                        )}
+                        <span className="text-[#CBD5E1]" aria-hidden="true">
+                          ·
+                        </span>
+                        <span className="text-[#475569] tabular-nums">{tailor.turnaround}</span>
+                        <span className="text-[#CBD5E1]" aria-hidden="true">
+                          ·
+                        </span>
+                        <span
+                          className={
+                            tailor.openNow
+                              ? 'font-semibold text-[#0B7285]'
+                              : 'font-medium text-[#64748B]'
+                          }
+                        >
+                          {tailor.openNow ? 'Open Now' : 'Opens Tomorrow'}
+                        </span>
+                      </div>
+
+                      {/* Specializations Line */}
+                      <p className="text-xs text-[#475569] leading-relaxed line-clamp-1">
+                        <span className="font-semibold text-[#0B1F3A]">Specialties:</span>{' '}
+                        {tailor.specialties.join(' · ')}
+                      </p>
+
+                      {/* Top 2 Matching Services with Direct Quick-Book */}
+                      <div className="pt-2.5 border-t border-[#E2E8F0]">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-semibold text-[#64748B]">
+                            {hasActiveFilters ? 'Matching Services' : 'Popular Services'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setProfileState({ tailor, tab: 'services' })}
+                            className="text-[11px] font-semibold text-[#0B7285] hover:text-[#085463] cursor-pointer"
+                          >
+                            All {tailor.services.length} rates
+                          </button>
+                        </div>
+
+                        <div className="divide-y divide-[#F1F5F9]">
+                          {rankedServices.slice(0, 2).map((srv) => (
+                            <div
+                              key={srv.id}
+                              className="py-1.5 flex items-center justify-between gap-2 text-xs"
+                            >
+                              <span className="font-medium text-[#0B1F3A] truncate">
+                                {srv.name}
+                              </span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="font-bold text-[#0B1F3A] tabular-nums">
+                                  ₹{srv.price.toLocaleString('en-IN')}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setBookingState({ tailor, serviceId: srv.id })}
+                                  className="px-2 py-0.5 rounded border border-[#CBD5E1] hover:border-[#0B7285] hover:bg-[#F0F9FA] text-[11px] font-semibold text-[#0B1F3A] hover:text-[#0B7285] transition-colors cursor-pointer"
+                                >
+                                  Book
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Previous Work Portfolio 3-Thumb Strip */}
+                      <div className="pt-2.5 border-t border-[#E2E8F0]">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[11px] font-semibold text-[#64748B]">
+                            Previous Work
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setProfileState({ tailor, tab: 'portfolio' })}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B7285] hover:text-[#085463] cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Gallery
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                          {rankedPortfolio.slice(0, 3).map((work) => (
+                            <button
+                              key={work.id}
+                              type="button"
+                              onClick={() => setProfileState({ tailor, tab: 'portfolio' })}
+                              className="group/thumb text-left cursor-pointer"
+                            >
+                              <div className="aspect-[4/3] rounded-lg overflow-hidden bg-[#F1F5F9] border border-[#E2E8F0]">
+                                <SafeImage
+                                  src={work.image}
+                                  alt={work.title}
+                                  className="w-full h-full object-cover object-top group-hover/thumb:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                              <p className="text-[11px] font-medium text-[#334155] truncate mt-1 group-hover/thumb:text-[#0B7285] transition-colors">
+                                {work.title}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Clean Action Footer */}
+                  <div className="px-4 sm:px-5 py-3 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCompare(tailor.id)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer whitespace-nowrap ${
+                          isCompared
+                            ? 'border-[#0B7285] bg-[#F0F9FA] text-[#0B7285]'
+                            : 'border-[#CBD5E1] bg-white text-[#334155] hover:border-[#0B1F3A] hover:text-[#0B1F3A]'
+                        }`}
+                      >
+                        {isCompared ? (
+                          <Check className="w-3.5 h-3.5" />
+                        ) : (
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                        )}
+                        {isCompared ? 'Added' : 'Compare'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setProfileState({ tailor, tab: 'services' })}
+                        className="px-2.5 py-2 rounded-lg text-xs font-semibold border border-[#CBD5E1] bg-white text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Profile
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBookingState({
+                          tailor,
+                          serviceId: rankedServices[0]?.id,
+                        })
+                      }
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-[#5EEAD4]" />
+                      {tailor.pickupAvailable ? 'Schedule Pickup' : 'Book Visit'}
+                    </button>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        )}
       </section>
+
+      {/* SECTION 4: COMPACT PLATFORM ASSURANCE & QUICK NAVIGATION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 sm:p-7">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-[#E2E8F0]">
+            <div className="flex items-start gap-3.5 pt-1 md:pt-0">
+              <ShieldCheck className="w-5 h-5 text-[#0B7285] shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-[#0B1F3A]">Quote Approval Before Cutting</h3>
+                <p className="text-xs text-[#475569] mt-1 leading-relaxed">
+                  Review your tailor&apos;s itemized stitching quotation before any fabric is cut.
+                  Zero hidden charges.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3.5 pt-5 md:pt-0 md:pl-6">
+              <Truck className="w-5 h-5 text-[#0B7285] shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-[#0B1F3A]">Flexible Doorstep Pickup</h3>
+                <p className="text-xs text-[#475569] mt-1 leading-relaxed">
+                  Pick a convenient date and 2-hour pickup window for measurements and fabric
+                  collection, or book a studio visit.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3.5 pt-5 md:pt-0 md:pl-6">
+              <Scissors className="w-5 h-5 text-[#C8922A] shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-[#0B1F3A]">7-Day Complimentary Fit Check</h3>
+                <p className="text-xs text-[#475569] mt-1 leading-relaxed">
+                  Every garment stitched through Tailering includes free post-delivery fit
+                  adjustments within 7 days.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs">
+            <span className="text-[#475569]">
+              Prefer locating nearby tailors on a live distance map or listing your own studio?
+            </span>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => onNavigate('nearby-shops')}
+                className="inline-flex items-center gap-1 font-semibold text-[#0B7285] hover:text-[#085463] cursor-pointer"
+              >
+                Explore Real-Time GPS Map
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('partner')}
+                className="inline-flex items-center gap-1 font-semibold text-[#0B1F3A] hover:text-[#0B7285] cursor-pointer"
+              >
+                List Your Tailoring Studio
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SLIM FLOATING COMPARE DOCK */}
+      <AnimatePresence>
+        {comparedTailors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[94vw] max-w-3xl bg-[#0B1F3A] text-white rounded-xl shadow-2xl border border-white/15 px-3.5 py-2.5 flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2 min-w-0 overflow-x-auto no-scrollbar">
+              <span className="text-xs font-semibold text-[#5EEAD4] shrink-0 tabular-nums">
+                Compare ({comparedTailors.length}/3):
+              </span>
+              {comparedTailors.map((t) => (
+                <span
+                  key={t.id}
+                  className="inline-flex items-center gap-1 text-xs bg-white/10 px-2 py-1 rounded-md whitespace-nowrap"
+                >
+                  <span className="max-w-[115px] truncate">{t.shopName}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleCompare(t.id)}
+                    aria-label={`Remove ${t.shopName}`}
+                    className="text-white/70 hover:text-white cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCompareIds([])}
+                className="text-xs text-white/75 hover:text-white px-2 py-1 cursor-pointer"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                disabled={comparedTailors.length < 2}
+                onClick={() => setCompareModalOpen(true)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+                  comparedTailors.length >= 2
+                    ? 'bg-[#C8922A] hover:bg-[#B27D1D] text-white cursor-pointer'
+                    : 'bg-white/15 text-white/60 cursor-not-allowed'
+                }`}
+              >
+                {comparedTailors.length >= 2 ? 'Compare Side-by-Side' : 'Select 1 More'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* INTERACTIVE MODALS */}
+      <CraftReelModal
+        open={filmModalOpen}
+        initialIndex={filmModalStartIndex}
+        onClose={() => setFilmModalOpen(false)}
+        onFilterByIntent={handleFilterFromReel}
+      />
+
+      <TailorProfileModal
+        tailor={profileState?.tailor || null}
+        initialTab={profileState?.tab || 'services'}
+        isCompared={profileState ? compareIds.includes(profileState.tailor.id) : false}
+        onToggleCompare={handleToggleCompare}
+        onClose={() => setProfileState(null)}
+        onBookTailor={(tailor, serviceId, note) => {
+          setProfileState(null);
+          setBookingState({ tailor, serviceId, note });
+        }}
+      />
+
+      <TailorCompareModal
+        open={compareModalOpen}
+        tailors={comparedTailors}
+        onRemove={(id) => {
+          setCompareIds((prev) => {
+            const next = prev.filter((item) => item !== id);
+            if (next.length === 0) setCompareModalOpen(false);
+            return next;
+          });
+        }}
+        onClose={() => setCompareModalOpen(false)}
+        onViewProfile={(tailor) => {
+          setCompareModalOpen(false);
+          setProfileState({ tailor, tab: 'services' });
+        }}
+        onBookTailor={(tailor) => {
+          setCompareModalOpen(false);
+          setBookingState({ tailor });
+        }}
+      />
+
+      <QuickBookModal
+        tailor={bookingState?.tailor || null}
+        initialServiceId={bookingState?.serviceId}
+        initialNote={bookingState?.note}
+        locality={locality}
+        onClose={() => setBookingState(null)}
+        onConfirmBooking={onCreateOrder}
+        onNotifyToast={onNotifyToast}
+      />
     </div>
   );
 };

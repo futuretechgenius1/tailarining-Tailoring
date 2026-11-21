@@ -71,16 +71,16 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
         <div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-[#EA580C] bg-[#FFF7ED] border border-[#FED7AA] px-3 py-1 rounded-full">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0B7285]">
             <Ruler className="w-3.5 h-3.5" />
-            DIGITAL FIT VAULT
-          </span>
-          <h1 className="mt-2.5 text-2xl sm:text-3xl font-extrabold text-[#1C1917]">
+            TAILERING DIGITAL FIT VAULT
+          </p>
+          <h1 className="mt-1.5 text-2xl sm:text-3xl font-bold text-[#0B1F3A] font-serif-accent">
             Saved Measurements
           </h1>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-1">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Reuse verified tailor measurements for faster repeat orders — private and shared only
             with your assigned tailor.
           </p>
@@ -90,39 +90,41 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
           <button
             type="button"
             onClick={() => setShowAddForm((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 bg-white border border-[#E7DDD2] hover:border-[#EA580C] text-[#1C1917] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-white border border-[#CBD5E1] hover:border-[#0B7285] text-[#0B1F3A] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
           >
-            <Plus className="w-4 h-4 text-[#EA580C]" />
+            <Plus className="w-4 h-4 text-[#0B7285]" />
             Add Measurement Profile
           </button>
           <button
             type="button"
             onClick={() => onNavigate('custom-stitching')}
-            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer transition-colors"
           >
-            <Home className="w-4 h-4" />
+            <Home className="w-4 h-4 text-[#5EEAD4]" />
             Book Free Home Measurement
           </button>
         </div>
       </div>
 
-      {/* Privacy Notice Banner (Business Plan Section 10.1) */}
-      <div className="bg-[#FFF9F2] border border-[#F3E5D8] rounded-2xl p-4 flex items-start gap-3">
-        <Lock className="w-5 h-5 text-[#EA580C] shrink-0 mt-0.5" />
-        <div className="text-xs text-[#57534E] leading-relaxed">
-          <strong className="text-[#1C1917]">Privacy-First Measurement Access:</strong> Your body
+      {/* Privacy Notice Banner */}
+      <div className="bg-[#F0F9FA] border border-[#CBE7EC] rounded-2xl p-4 flex items-start gap-3">
+        <Lock className="w-5 h-5 text-[#0B7285] shrink-0 mt-0.5" />
+        <div className="text-xs text-[#334155] leading-relaxed">
+          <strong className="text-[#0B1F3A]">Privacy-First Measurement Access:</strong> Your body
           measurements are stored strictly with your explicit consent and remain invisible to
           unassigned tailors. You can revoke consent or delete any profile anytime.
         </div>
       </div>
 
-      {/* Add Measurement Modal/Inline Form */}
+      {/* Add Measurement Inline Form */}
       {showAddForm && (
         <form
           onSubmit={handleSaveNew}
-          className="bg-white rounded-2xl border border-[#FED7AA] p-5 sm:p-6 shadow-sm space-y-4"
+          className="bg-white rounded-2xl border border-[#0B7285]/40 p-5 sm:p-6 shadow-sm space-y-4"
         >
-          <h2 className="text-base font-extrabold text-[#1C1917]">New Measurement Profile</h2>
+          <h2 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
+            New Measurement Profile
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <input
               type="text"
@@ -130,7 +132,7 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="Profile Label (e.g. Festive Silk Blouse)"
-              className="bg-white border border-[#E7E5E4] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+              className="bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
             />
             <input
               type="text"
@@ -138,14 +140,14 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
               placeholder="Wearer Full Name"
-              className="bg-white border border-[#E7E5E4] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+              className="bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
             />
             <select
               value={garmentType}
               onChange={(e) =>
                 setGarmentType(e.target.value as MeasurementProfile['garmentType'])
               }
-              className="bg-white border border-[#E7E5E4] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+              className="bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
             >
               <option value="Blouse">Blouse</option>
               <option value="Kurti / Salwar">Kurti / Salwar</option>
@@ -156,72 +158,72 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="text-[10.5px] font-bold uppercase text-[#78716C] block mb-1">
+              <label className="text-[10.5px] font-bold uppercase tracking-wider text-[#64748B] block mb-1">
                 Chest / Bust
               </label>
               <input
                 type="text"
                 value={chestBust}
                 onChange={(e) => setChestBust(e.target.value)}
-                className="w-full border border-[#E7E5E4] rounded-xl px-3 py-2 text-xs font-semibold"
+                className="w-full border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
               />
             </div>
             <div>
-              <label className="text-[10.5px] font-bold uppercase text-[#78716C] block mb-1">
+              <label className="text-[10.5px] font-bold uppercase tracking-wider text-[#64748B] block mb-1">
                 Waist
               </label>
               <input
                 type="text"
                 value={waist}
                 onChange={(e) => setWaist(e.target.value)}
-                className="w-full border border-[#E7E5E4] rounded-xl px-3 py-2 text-xs font-semibold"
+                className="w-full border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
               />
             </div>
             <div>
-              <label className="text-[10.5px] font-bold uppercase text-[#78716C] block mb-1">
+              <label className="text-[10.5px] font-bold uppercase tracking-wider text-[#64748B] block mb-1">
                 Garment Length
               </label>
               <input
                 type="text"
                 value={lengthVal}
                 onChange={(e) => setLengthVal(e.target.value)}
-                className="w-full border border-[#E7E5E4] rounded-xl px-3 py-2 text-xs font-semibold"
+                className="w-full border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
               />
             </div>
             <div>
-              <label className="text-[10.5px] font-bold uppercase text-[#78716C] block mb-1">
+              <label className="text-[10.5px] font-bold uppercase tracking-wider text-[#64748B] block mb-1">
                 Shoulder
               </label>
               <input
                 type="text"
                 value={shoulder}
                 onChange={(e) => setShoulder(e.target.value)}
-                className="w-full border border-[#E7E5E4] rounded-xl px-3 py-2 text-xs font-semibold"
+                className="w-full border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-[#44403C]">
+          <label className="flex items-center gap-2 text-xs text-[#334155]">
             <input
               type="checkbox"
               checked={consentChecked}
               onChange={(e) => setConsentChecked(e.target.checked)}
-              className="accent-[#EA580C]"
+              className="accent-[#0B7285]"
             />
-            I consent to securely save this measurement profile for repeat StitchMate bookings.
+            I consent to securely save this measurement profile for repeat Tailering bookings.
           </label>
 
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              className="bg-[#EA580C] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
+              className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer transition-colors"
             >
               Save Profile
             </button>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="text-xs font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+              className="text-xs font-semibold text-[#64748B] hover:text-[#0B1F3A] cursor-pointer"
             >
               Cancel
             </button>
@@ -234,15 +236,17 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
         {profiles.map((prof) => (
           <div
             key={prof.id}
-            className="bg-white rounded-2xl border border-[#EFE6DC] p-5 sm:p-6 space-y-4 shadow-2xs"
+            className="bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 space-y-4 shadow-2xs"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#EA580C]">
+                <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#0B7285]">
                   {prof.garmentType}
                 </span>
-                <h3 className="text-base font-extrabold text-[#1C1917] mt-0.5">{prof.label}</h3>
-                <p className="text-xs text-[#78716C] inline-flex items-center gap-1.5 mt-1">
+                <h3 className="text-base font-bold text-[#0B1F3A] mt-0.5 font-serif-accent">
+                  {prof.label}
+                </h3>
+                <p className="text-xs text-[#64748B] inline-flex items-center gap-1.5 mt-1">
                   <User className="w-3.5 h-3.5" />
                   {prof.ownerName} · Updated {prof.updatedAt}
                 </p>
@@ -252,7 +256,7 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
                 type="button"
                 aria-label="Delete profile"
                 onClick={() => onDeleteProfile(prof.id)}
-                className="p-2 rounded-lg text-[#A8A29E] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-[#94A3B8] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -260,15 +264,15 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {Object.entries(prof.values).map(([k, v]) => (
-                <div key={k} className="bg-[#FAF7F5] rounded-xl p-2.5 border border-[#F2EAE2]">
-                  <p className="text-[10px] font-semibold text-[#78716C] truncate">{k}</p>
-                  <p className="text-xs font-extrabold text-[#1C1917] mt-0.5 tabular-nums">{v}</p>
+                <div key={k} className="bg-[#F8FAFC] rounded-xl p-2.5 border border-[#E2E8F0]">
+                  <p className="text-[10px] font-semibold text-[#64748B] truncate">{k}</p>
+                  <p className="text-xs font-extrabold text-[#0B1F3A] mt-0.5 tabular-nums">{v}</p>
                 </div>
               ))}
             </div>
 
-            <div className="pt-3 border-t border-[#F5EFE8] flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 text-[#57534E]">
+            <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 text-[#475569]">
                 <ShieldCheck className="w-4 h-4 text-[#059669]" />
                 {prof.measuredBy}
               </span>
@@ -276,10 +280,10 @@ export const MeasurementsPage: React.FC<MeasurementsPageProps> = ({
               <button
                 type="button"
                 onClick={() => onToggleConsent(prof.id)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer ${
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
                   prof.consentSaved
                     ? 'bg-[#ECFDF5] text-[#059669]'
-                    : 'bg-[#F5F5F4] text-[#78716C]'
+                    : 'bg-[#F1F5F9] text-[#64748B]'
                 }`}
               >
                 <CheckCircle2 className="w-3 h-3" />

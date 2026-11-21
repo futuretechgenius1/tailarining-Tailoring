@@ -131,6 +131,25 @@ export interface MeasurementProfile {
   values: Record<string, string>;
 }
 
+export interface TailorServiceItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  turnaround: string;
+  description: string;
+}
+
+export interface TailorPortfolioWork {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  price: number;
+  days: number;
+  tags: string[];
+}
+
 export interface TailorPartner {
   id: string;
   shopName: string;
@@ -138,9 +157,28 @@ export interface TailorPartner {
   locality: string;
   distanceKm: number;
   rating: number;
+  reviewCount: number;
   completedOrders: number;
+  yearsExperience: number;
+  bio: string;
+  coverImage: string;
   specialties: string[];
   homeVisitFee: number;
+  pickupAvailable: boolean;
+  nextPickupSlot: string;
+  pickupSlots: string[];
+  workingHours: string;
+  openNow: boolean;
+  startingPrice: number;
   verified: boolean;
   turnaround: string;
+  turnaroundDays: number;
+  services: TailorServiceItem[];
+  portfolio: TailorPortfolioWork[];
+  recentReview: {
+    author: string;
+    text: string;
+    date: string;
+  };
 }
+

@@ -58,7 +58,7 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
   const handleConfirmBooking = (e: React.FormEvent) => {
     e.preventDefault();
-    const orderId = `SM-CST-${Math.floor(1000 + Math.random() * 9000)}`;
+    const orderId = `TLR-CST-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrder: OrderRecord = {
       id: orderId,
       serviceTitle: selectedGarment.label,
@@ -82,16 +82,16 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
         <div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-[#EA580C] bg-[#FFF7ED] border border-[#FED7AA] px-3 py-1 rounded-full">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0B7285]">
             <Scissors className="w-3.5 h-3.5" />
             BESPOKE CUSTOM STITCHING
-          </span>
-          <h1 className="mt-2.5 text-2xl sm:text-3xl font-extrabold text-[#1C1917]">
+          </p>
+          <h1 className="mt-1.5 text-2xl sm:text-3xl font-bold text-[#0B1F3A] font-serif-accent">
             Book Your Custom Stitching Visit
           </h1>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-1">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Transparent starting prices · Final quote approved by you before stitching begins.
           </p>
         </div>
@@ -99,43 +99,45 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
         <button
           type="button"
           onClick={onOpenLocationModal}
-          className="inline-flex items-center gap-2 bg-white border border-[#EFE6DC] rounded-xl px-4 py-2.5 text-xs font-bold text-[#1C1917] hover:border-[#EA580C] cursor-pointer self-start"
+          className="inline-flex items-center gap-2 bg-white border border-[#CBD5E1] rounded-xl px-4 py-2.5 text-xs font-bold text-[#0B1F3A] hover:border-[#0B7285] cursor-pointer self-start transition-colors"
         >
-          <MapPin className="w-4 h-4 text-[#EA580C]" />
+          <MapPin className="w-4 h-4 text-[#0B7285]" />
           <span>{locality}</span>
-          <span className="text-[#EA580C]">Change</span>
+          <span className="text-[#0B7285]">Change</span>
         </button>
       </div>
 
       {confirmedId ? (
-        <div className="bg-white rounded-2xl border border-[#BBF7D0] p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-full bg-[#ECFDF5] text-[#16A34A] mx-auto flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-[#A7F3D0] p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-[#ECFDF5] text-[#059669] mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-extrabold text-[#1C1917]">
+          <h2 className="text-xl font-bold text-[#0B1F3A] font-serif-accent">
             Doorstep Visit Scheduled ({confirmedId})
           </h2>
-          <p className="text-sm text-[#57534E]">
-            <strong>{selectedTailor.masterTailor}</strong> from{' '}
-            <strong>{selectedTailor.shopName}</strong> will meet you on{' '}
-            <strong>{visitDate}</strong> ({timeSlot}) for measurements and final quotation approval.
+          <p className="text-sm text-[#475569]">
+            <strong className="text-[#0B1F3A]">{selectedTailor.masterTailor}</strong> from{' '}
+            <strong className="text-[#0B1F3A]">{selectedTailor.shopName}</strong> will meet you on{' '}
+            <strong className="text-[#0B1F3A]">{visitDate}</strong> ({timeSlot}) for measurements
+            and final quotation approval.
           </p>
-          <div className="bg-[#FFF9F2] rounded-xl p-4 text-xs text-[#57534E] text-left space-y-1">
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#475569] text-left space-y-1">
             <p>
-              <strong>Service:</strong> {selectedGarment.label}
+              <strong className="text-[#0B1F3A]">Service:</strong> {selectedGarment.label}
             </p>
             <p>
-              <strong>Indicative Estimate:</strong> ₹{estimatedTotal.toLocaleString('en-IN')} (Pay at
-              pickup after quote approval)
+              <strong className="text-[#0B1F3A]">Indicative Estimate:</strong> ₹
+              {estimatedTotal.toLocaleString('en-IN')} (Pay at pickup after quote approval)
             </p>
             <p>
-              <strong>Protection:</strong> Fabric Insured · 7-Day Free Doorstep Refit Guarantee
+              <strong className="text-[#0B1F3A]">Protection:</strong> Fabric Insured · 7-Day Free
+              Doorstep Refit Guarantee
             </p>
           </div>
           <button
             type="button"
             onClick={() => setConfirmedId(null)}
-            className="bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white font-bold text-xs px-6 py-3 rounded-xl cursor-pointer"
+            className="bg-[#0B1F3A] hover:bg-[#15325B] text-white font-bold text-xs px-6 py-3 rounded-xl cursor-pointer transition-colors"
           >
             Book Another Garment
           </button>
@@ -145,8 +147,8 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
           {/* Left 8 Cols: Configuration */}
           <div className="lg:col-span-8 space-y-6">
             {/* 1. Choose Garment */}
-            <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 sm:p-6 space-y-4">
-              <h2 className="text-base font-extrabold text-[#1C1917]">
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 space-y-4">
+              <h2 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
                 1. Choose Garment Category
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -159,16 +161,16 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
                       onClick={() => setSelectedGarment(g)}
                       className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                         active
-                          ? 'bg-[#FFF7ED] border-[#EA580C] ring-1 ring-[#EA580C]/20'
-                          : 'bg-white border-[#EFE6DC] hover:border-[#FED7AA]'
+                          ? 'bg-[#F0F9FA] border-[#0B7285] ring-1 ring-[#0B7285]/20'
+                          : 'bg-white border-[#E2E8F0] hover:border-[#0B7285]/45'
                       }`}
                     >
-                      <p className="text-xs font-extrabold text-[#1C1917]">{g.label}</p>
+                      <p className="text-xs font-bold text-[#0B1F3A]">{g.label}</p>
                       <div className="mt-1.5 flex items-baseline justify-between">
-                        <span className="text-sm font-extrabold text-[#EA580C] tabular-nums">
+                        <span className="text-sm font-extrabold text-[#0B7285] tabular-nums">
                           ₹{g.price}
                         </span>
-                        <span className="text-[10px] text-[#78716C]">{g.range}</span>
+                        <span className="text-[10px] text-[#64748B]">{g.range}</span>
                       </div>
                     </button>
                   );
@@ -177,8 +179,8 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
             </div>
 
             {/* 2. Appointment Mode & Verified Local Tailor */}
-            <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 sm:p-6 space-y-5">
-              <h2 className="text-base font-extrabold text-[#1C1917]">
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 space-y-5">
+              <h2 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
                 2. Appointment Mode &amp; Nearby Verified Tailor
               </h2>
 
@@ -186,20 +188,20 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setVisitType('home')}
-                  className={`p-4 rounded-xl border text-left flex items-center gap-3 cursor-pointer ${
+                  className={`p-4 rounded-xl border text-left flex items-center gap-3 cursor-pointer transition-all ${
                     visitType === 'home'
-                      ? 'bg-[#FFF7ED] border-[#EA580C]'
-                      : 'bg-white border-[#EFE6DC]'
+                      ? 'bg-[#F0F9FA] border-[#0B7285]'
+                      : 'bg-white border-[#E2E8F0] hover:border-[#0B7285]/45'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#FFEDD5] text-[#EA580C] flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#F0F9FA] border border-[#CBE7EC] text-[#0B7285] flex items-center justify-center shrink-0">
                     <Home className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#1C1917]">
+                    <p className="text-xs sm:text-sm font-bold text-[#0B1F3A]">
                       Home Measurement Visit
                     </p>
-                    <p className="text-[11px] text-[#78716C]">
+                    <p className="text-[11px] text-[#64748B]">
                       Master tailor visits your doorstep &amp; picks up fabric
                     </p>
                   </div>
@@ -208,20 +210,20 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setVisitType('shop')}
-                  className={`p-4 rounded-xl border text-left flex items-center gap-3 cursor-pointer ${
+                  className={`p-4 rounded-xl border text-left flex items-center gap-3 cursor-pointer transition-all ${
                     visitType === 'shop'
-                      ? 'bg-[#FFF7ED] border-[#EA580C]'
-                      : 'bg-white border-[#EFE6DC]'
+                      ? 'bg-[#F0F9FA] border-[#0B7285]'
+                      : 'bg-white border-[#E2E8F0] hover:border-[#0B7285]/45'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#F5F5F4] text-[#44403C] flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] text-[#0B1F3A] flex items-center justify-center shrink-0">
                     <Store className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#1C1917]">
+                    <p className="text-xs sm:text-sm font-bold text-[#0B1F3A]">
                       Boutique Shop Appointment
                     </p>
-                    <p className="text-[11px] text-[#78716C]">
+                    <p className="text-[11px] text-[#64748B]">
                       Reserved zero-wait slot at nearby partner boutique
                     </p>
                   </div>
@@ -230,7 +232,7 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
               {/* Nearby Tailors List */}
               <div className="space-y-2.5">
-                <p className="text-xs font-bold text-[#57534E]">
+                <p className="text-xs font-bold text-[#475569]">
                   Verified Partners Serving {locality} (within 5 km):
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -243,30 +245,32 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
                         onClick={() => setSelectedTailorId(t.id)}
                         className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                           active
-                            ? 'bg-[#FFF9F2] border-[#EA580C]'
-                            : 'bg-white border-[#EFE6DC] hover:border-[#FED7AA]'
+                            ? 'bg-[#F0F9FA] border-[#0B7285]'
+                            : 'bg-white border-[#E2E8F0] hover:border-[#0B7285]/45'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="text-xs font-extrabold text-[#1C1917]">{t.shopName}</p>
-                            <p className="text-[11px] text-[#78716C]">
+                            <p className="text-xs font-extrabold text-[#0B1F3A]">{t.shopName}</p>
+                            <p className="text-[11px] text-[#64748B] tabular-nums">
                               {t.masterTailor} · {t.distanceKm} km away
                             </p>
                           </div>
-                          <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#1C1917] bg-[#FEF3C7] px-2 py-0.5 rounded-full">
-                            <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" />
+                          <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#A67418] bg-[#FBF5E6] px-2 py-0.5 rounded-md tabular-nums">
+                            <Star className="w-3 h-3 fill-[#C8922A] text-[#C8922A]" />
                             {t.rating}
                           </span>
                         </div>
-                        <p className="mt-2 text-[10.5px] text-[#57534E] line-clamp-1">
+                        <p className="mt-2 text-[10.5px] text-[#475569] line-clamp-1">
                           {t.specialties.join(' · ')}
                         </p>
                         <div className="mt-2 flex items-center justify-between text-[10.5px]">
                           <span className="font-semibold text-[#059669]">
-                            {t.homeVisitFee === 0 ? 'Free Home Visit' : `Visit Fee: ₹${t.homeVisitFee}`}
+                            {t.homeVisitFee === 0
+                              ? 'Free Home Visit'
+                              : `Visit Fee: ₹${t.homeVisitFee}`}
                           </span>
-                          <span className="text-[#78716C]">{t.turnaround}</span>
+                          <span className="text-[#64748B]">{t.turnaround}</span>
                         </div>
                       </button>
                     );
@@ -276,28 +280,28 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
             </div>
 
             {/* 3. Customizations, Reference Photo & Slot */}
-            <div className="bg-white rounded-2xl border border-[#EFE6DC] p-5 sm:p-6 space-y-4">
-              <h2 className="text-base font-extrabold text-[#1C1917]">
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 space-y-4">
+              <h2 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
                 3. Style Notes, Add-ons &amp; Preferred Slot
               </h2>
 
               <div className="flex flex-wrap gap-3">
-                <label className="inline-flex items-center gap-2 bg-[#FAF7F5] border border-[#EFE6DC] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#1C1917] cursor-pointer">
+                <label className="inline-flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#0B1F3A] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={liningIncluded}
                     onChange={(e) => setLiningIncluded(e.target.checked)}
-                    className="accent-[#EA580C]"
+                    className="accent-[#0B7285]"
                   />
                   Pure Cotton Lining (+₹150)
                 </label>
 
-                <label className="inline-flex items-center gap-2 bg-[#FAF7F5] border border-[#EFE6DC] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#1C1917] cursor-pointer">
+                <label className="inline-flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#0B1F3A] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={paddedCups}
                     onChange={(e) => setPaddedCups(e.target.checked)}
-                    className="accent-[#EA580C]"
+                    className="accent-[#0B7285]"
                   />
                   Padded Cups &amp; Piping (+₹180)
                 </label>
@@ -305,28 +309,28 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#78716C] uppercase mb-1.5">
+                  <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">
                     Preferred Visit Date
                   </label>
                   <div className="relative">
-                    <Calendar className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Calendar className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="date"
                       value={visitDate}
                       onChange={(e) => setVisitDate(e.target.value)}
-                      className="w-full bg-white border border-[#E7E5E4] rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#78716C] uppercase mb-1.5">
+                  <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">
                     Time Slot
                   </label>
                   <select
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
-                    className="w-full bg-white border border-[#E7E5E4] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
                   >
                     <option>10:00 AM – 12:00 PM</option>
                     <option>12:00 PM – 02:00 PM</option>
@@ -337,9 +341,9 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-[#E7DDD2] hover:border-[#EA580C] bg-[#FDFBF9] cursor-pointer px-4 text-center">
-                  <Upload className="w-4 h-4 text-[#EA580C] mb-1" />
-                  <span className="text-xs font-bold text-[#44403C]">
+                <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-[#CBD5E1] hover:border-[#0B7285] bg-[#F8FAFC] cursor-pointer px-4 text-center transition-colors">
+                  <Upload className="w-4 h-4 text-[#0B7285] mb-1" />
+                  <span className="text-xs font-bold text-[#334155]">
                     {refFile || 'Upload Reference Design Photo'}
                   </span>
                   <input
@@ -358,7 +362,7 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Neck depth, sleeve style, tassel preference, or fit notes..."
-                  className="w-full bg-white border border-[#E7E5E4] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
                 />
               </div>
             </div>
@@ -366,30 +370,32 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
           {/* Right 4 Cols: Sticky Quote Summary */}
           <div className="lg:col-span-4">
-            <div className="sticky top-28 bg-white rounded-2xl border border-[#EFE6DC] p-5 sm:p-6 shadow-sm space-y-4">
-              <h3 className="text-base font-extrabold text-[#1C1917]">Transparent Estimate</h3>
+            <div className="sticky top-28 bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
+                Transparent Estimate
+              </h3>
 
-              <div className="space-y-2.5 text-xs sm:text-sm pb-4 border-b border-[#F5EFE8]">
+              <div className="space-y-2.5 text-xs sm:text-sm pb-4 border-b border-[#F1F5F9]">
                 <div className="flex justify-between">
-                  <span className="text-[#57534E]">{selectedGarment.label}</span>
-                  <span className="font-bold text-[#1C1917] tabular-nums">
+                  <span className="text-[#475569]">{selectedGarment.label}</span>
+                  <span className="font-bold text-[#0B1F3A] tabular-nums">
                     ₹{selectedGarment.price}
                   </span>
                 </div>
                 {liningIncluded && (
                   <div className="flex justify-between">
-                    <span className="text-[#57534E]">Pure Cotton Lining</span>
-                    <span className="font-bold text-[#1C1917] tabular-nums">₹150</span>
+                    <span className="text-[#475569]">Pure Cotton Lining</span>
+                    <span className="font-bold text-[#0B1F3A] tabular-nums">₹150</span>
                   </div>
                 )}
                 {paddedCups && (
                   <div className="flex justify-between">
-                    <span className="text-[#57534E]">Padded Cups &amp; Piping</span>
-                    <span className="font-bold text-[#1C1917] tabular-nums">₹180</span>
+                    <span className="text-[#475569]">Padded Cups &amp; Piping</span>
+                    <span className="font-bold text-[#0B1F3A] tabular-nums">₹180</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-[#57534E]">
+                  <span className="text-[#475569]">
                     {visitType === 'home' ? 'Doorstep Measurement Visit' : 'Shop Appointment'}
                   </span>
                   <span className="font-bold text-[#059669] tabular-nums">
@@ -400,25 +406,25 @@ export const CustomStitchingPage: React.FC<CustomStitchingPageProps> = ({
 
               <div className="flex items-baseline justify-between">
                 <div>
-                  <p className="text-xs font-bold text-[#78716C]">ESTIMATED TOTAL</p>
-                  <p className="text-[11px] text-[#059669] font-semibold">
+                  <p className="text-xs font-bold text-[#64748B]">ESTIMATED TOTAL</p>
+                  <p className="text-[11px] text-[#0B7285] font-semibold">
                     Zero advance · Pay after final quote
                   </p>
                 </div>
-                <span className="text-2xl font-extrabold text-[#1C1917] tabular-nums">
+                <span className="text-2xl font-extrabold text-[#0B1F3A] tabular-nums">
                   ₹{estimatedTotal.toLocaleString('en-IN')}
                 </span>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm py-3.5 rounded-xl shadow-md shadow-[#EA580C]/20 cursor-pointer"
+                className="w-full bg-[#0B1F3A] hover:bg-[#15325B] text-white font-bold text-sm py-3.5 rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Confirm Measurement Visit
               </button>
 
-              <div className="bg-[#FFF9F2] rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-[#57534E]">
-                <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-[#475569]">
+                <ShieldCheck className="w-4 h-4 text-[#0B7285] shrink-0 mt-0.5" />
                 <span>
                   Stitching never starts until you inspect and approve the tailor&apos;s final quote
                   and promised delivery date.

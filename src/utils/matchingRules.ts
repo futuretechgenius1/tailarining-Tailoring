@@ -123,7 +123,7 @@ function matchesServiceCapability(
 }
 
 /**
- * Evaluates a list of live Google Maps places against StitchMate's matching & ranking rules.
+ * Evaluates a list of live Google Maps places against Tailering's matching & ranking rules.
  * - Filters by operational status, configurable radius (3–10 km), min rating, open-now, and service capability.
  * - Ranks eligible shops deterministically by proximity, rating, review trust volume, and live availability.
  * - Partitions eligible shops into Wave 1 (Top-K broadcast) and Wave 2 (Auto Re-Route pool).
@@ -376,7 +376,7 @@ export function validateOrderTransition(
 
   return {
     allowed: true,
-    reason: `Transition "${order.stage}" → "${targetStage}" satisfies all StitchMate operating rules.`,
+    reason: `Transition "${order.stage}" → "${targetStage}" satisfies all Tailering operating rules.`,
   };
 }
 

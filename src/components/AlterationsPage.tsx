@@ -33,43 +33,56 @@ interface AlterationsPageProps {
 }
 
 const BADGE_STYLE: Record<AlterationService['badgeColor'], string> = {
-  amber: 'bg-[#FEF3C7] text-[#B45309]',
-  orange: 'bg-[#FFEDD5] text-[#C2410C]',
-  blue: 'bg-[#DBEAFE] text-[#1D4ED8]',
-  emerald: 'bg-[#D1FAE5] text-[#047857]',
-  rose: 'bg-[#FFE4E6] text-[#BE123C]',
-  purple: 'bg-[#F3E8FF] text-[#7E22CE]',
+  amber: 'bg-[#FBF5E6] text-[#A67418]',
+  orange: 'bg-[#F0F9FA] text-[#0B7285]',
+  blue: 'bg-[#EFF6FF] text-[#1E40AF]',
+  emerald: 'bg-[#ECFDF5] text-[#047857]',
+  rose: 'bg-[#F0F9FA] text-[#0B7285]',
+  purple: 'bg-[#F1F5F9] text-[#0B1F3A]',
 };
 
 const AlterationIconBadge: React.FC<{ service: AlterationService }> = ({ service }) => {
   if (service.section === 'saree') {
     return (
-      <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#FED7AA] bg-[#FFF7ED] mx-auto shadow-2xs">
-        <SafeImage src={ASSETS.sareePleating} alt={service.title} className="w-full h-full object-cover" />
+      <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#C8922A]/40 bg-[#FBF5E6] mx-auto shadow-2xs">
+        <SafeImage
+          src={ASSETS.sareePleating}
+          alt={service.title}
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   }
 
   const circleColor: Record<AlterationService['iconType'], string> = {
-    button: 'bg-[#FEF3C7] border-[#F59E0B] text-[#78350F]',
-    tear: 'bg-[#F5F5F4] border-[#57534E] text-[#1C1917]',
-    waist: 'bg-[#FEE2E2] border-[#EF4444] text-[#B91C1C]',
-    length: 'bg-[#E0E7FF] border-[#6366F1] text-[#3730A3]',
-    'zip-small': 'bg-[#FFEDD5] border-[#F97316] text-[#C2410C]',
-    sleeve: 'bg-[#EDE9FE] border-[#8B5CF6] text-[#5B21B6]',
-    'slim-fit': 'bg-[#DCFCE7] border-[#22C55E] text-[#15803D]',
-    'zip-large': 'bg-[#FCE7F3] border-[#EC4899] text-[#9D174D]',
-    jeans: 'bg-[#DBEAFE] border-[#2563EB] text-[#1E3A8A]',
-    'double-stitch': 'bg-[#FEF9C3] border-[#EAB308] text-[#854D0E]',
-    'saree-fall': 'bg-[#FFE4E6] border-[#F43F5E] text-[#9F1239]',
-    'saree-pleat': 'bg-[#FFEDD5] border-[#EA580C] text-[#9A3412]',
+    button: 'bg-[#FBF5E6] border-[#C8922A]/50 text-[#A67418]',
+    tear: 'bg-[#F1F5F9] border-[#94A3B8] text-[#0B1F3A]',
+    waist: 'bg-[#F0F9FA] border-[#0B7285]/45 text-[#0B7285]',
+    length: 'bg-[#EFF6FF] border-[#3B82F6]/45 text-[#1D4ED8]',
+    'zip-small': 'bg-[#FBF5E6] border-[#C8922A]/50 text-[#A67418]',
+    sleeve: 'bg-[#F1F5F9] border-[#0B1F3A]/30 text-[#0B1F3A]',
+    'slim-fit': 'bg-[#ECFDF5] border-[#10B981]/45 text-[#047857]',
+    'zip-large': 'bg-[#F0F9FA] border-[#0B7285]/45 text-[#0B7285]',
+    jeans: 'bg-[#EFF6FF] border-[#1E3A8A]/35 text-[#0B1F3A]',
+    'double-stitch': 'bg-[#FBF5E6] border-[#C8922A]/50 text-[#A67418]',
+    'saree-fall': 'bg-[#F0F9FA] border-[#0B7285]/45 text-[#0B7285]',
+    'saree-pleat': 'bg-[#FBF5E6] border-[#C8922A]/50 text-[#A67418]',
   };
 
   return (
     <div
-      className={`w-14 h-14 rounded-full border-2 mx-auto flex items-center justify-center shadow-2xs ${circleColor[service.iconType]}`}
+      className={`w-14 h-14 rounded-full border mx-auto flex items-center justify-center shadow-2xs ${circleColor[service.iconType]}`}
     >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="25"
+        height="25"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {service.iconType === 'button' && (
           <>
             <circle cx="12" cy="12" r="8" />
@@ -105,7 +118,9 @@ const AlterationIconBadge: React.FC<{ service: AlterationService }> = ({ service
             <path d="M7 3l5 4 5-4" />
           </>
         )}
-        {(service.iconType === 'sleeve' || service.iconType === 'slim-fit' || service.iconType === 'double-stitch') && (
+        {(service.iconType === 'sleeve' ||
+          service.iconType === 'slim-fit' ||
+          service.iconType === 'double-stitch') && (
           <>
             <path d="M4 7l4-3h8l4 3-2.5 5-2-1V20h-7V11l-2 1L4 7z" />
             <path d="M12 4v3" />
@@ -160,47 +175,46 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
     return (
       <div
         key={srv.id}
-        className="relative bg-white rounded-2xl border border-[#EFE6DC] hover:border-[#FED7AA] hover:shadow-md transition-all p-4 pt-7 flex flex-col justify-between overflow-hidden"
+        className="relative bg-white rounded-2xl border border-[#E2E8F0] hover:border-[#0B7285]/45 hover:shadow-md transition-all p-4 pt-7 flex flex-col justify-between overflow-hidden"
       >
-        {/* Top-left Corner Badge (exact match to Screenshot 2) */}
         <span
-          className={`absolute top-0 left-0 text-[9.5px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-br-xl ${BADGE_STYLE[srv.badgeColor]}`}
+          className={`absolute top-0 left-0 text-[9.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-br-xl ${BADGE_STYLE[srv.badgeColor]}`}
         >
           {srv.badge}
         </span>
 
         <div className="text-center">
           <AlterationIconBadge service={srv} />
-          <h3 className="mt-3 text-sm font-extrabold text-[#EA580C] leading-snug">{srv.title}</h3>
-          <p className="mt-1.5 text-[11.5px] text-[#57534E] leading-relaxed line-clamp-2 min-h-[34px]">
+          <h3 className="mt-3 text-sm font-bold text-[#0B1F3A] leading-snug">{srv.title}</h3>
+          <p className="mt-1.5 text-[11.5px] text-[#64748B] leading-relaxed line-clamp-2 min-h-[34px]">
             {srv.description}
           </p>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-[#F5EFE8] flex items-center justify-between gap-2">
+        <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
           <div className="flex items-baseline gap-0.5 tabular-nums">
-            <span className="text-sm font-extrabold text-[#1C1917]">₹{srv.price}</span>
-            <span className="text-[11px] text-[#78716C]">/{srv.unit}</span>
+            <span className="text-sm font-extrabold text-[#0B1F3A]">₹{srv.price}</span>
+            <span className="text-[11px] text-[#64748B]">/{srv.unit}</span>
           </div>
 
           {qty > 0 ? (
-            <div className="inline-flex items-center gap-1.5 bg-[#FFF7ED] border border-[#EA580C] rounded-full px-1.5 py-0.5">
+            <div className="inline-flex items-center gap-1.5 bg-[#F0F9FA] border border-[#0B7285] rounded-lg px-1.5 py-0.5">
               <button
                 type="button"
                 aria-label={`Remove one ${srv.title}`}
                 onClick={() => onUpdateQty(srv.id, -1)}
-                className="w-6 h-6 rounded-full bg-white text-[#EA580C] flex items-center justify-center hover:bg-[#EA580C] hover:text-white transition-colors cursor-pointer"
+                className="w-6 h-6 rounded-md bg-white text-[#0B7285] flex items-center justify-center hover:bg-[#0B7285] hover:text-white transition-colors cursor-pointer"
               >
                 <Minus className="w-3 h-3" />
               </button>
-              <span className="text-xs font-extrabold text-[#EA580C] min-w-[16px] text-center tabular-nums">
+              <span className="text-xs font-extrabold text-[#0B1F3A] min-w-[16px] text-center tabular-nums">
                 {qty}
               </span>
               <button
                 type="button"
                 aria-label={`Add one more ${srv.title}`}
                 onClick={() => onUpdateQty(srv.id, 1)}
-                className="w-6 h-6 rounded-full bg-[#EA580C] text-white flex items-center justify-center hover:bg-[#C2410C] transition-colors cursor-pointer"
+                className="w-6 h-6 rounded-md bg-[#0B7285] text-white flex items-center justify-center hover:bg-[#085463] transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
               </button>
@@ -209,7 +223,7 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
             <button
               type="button"
               onClick={() => onAddAlteration(srv)}
-              className="inline-flex items-center gap-1 text-xs font-bold text-[#EA580C] bg-[#FFF7ED] hover:bg-[#EA580C] hover:text-white border border-[#FED7AA] px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs font-bold text-[#0B7285] bg-[#F0F9FA] hover:bg-[#0B7285] hover:text-white border border-[#CBE7EC] px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
             >
               Add +
             </button>
@@ -220,25 +234,30 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
   };
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-8">
       {/* Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1C1917]">Doorstep Alteration</h1>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-0.5">
-            Expert fitting, mending &amp; doorstep pickup in Hyderabad
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0B7285]">
+            EXPRESS DOORSTEP SERVICE
+          </p>
+          <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-[#0B1F3A] font-serif-accent">
+            Doorstep Alterations &amp; Saree Finishing
+          </h1>
+          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+            Expert fitting, precision mending, and complimentary doorstep pickup in Hyderabad
           </p>
         </div>
 
         {/* Book | History Toggle */}
-        <div className="inline-flex items-center bg-[#F5EFE8] p-1 rounded-xl self-start sm:self-auto">
+        <div className="inline-flex items-center bg-[#F1F5F9] border border-[#E2E8F0] p-1 rounded-xl self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setViewMode('book')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               viewMode === 'book'
-                ? 'bg-white text-[#1C1917] shadow-xs'
-                : 'text-[#78716C] hover:text-[#1C1917]'
+                ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                : 'text-[#475569] hover:text-[#0B1F3A]'
             }`}
           >
             Book
@@ -248,12 +267,18 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
             onClick={() => setViewMode('history')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
               viewMode === 'history'
-                ? 'bg-white text-[#1C1917] shadow-xs'
-                : 'text-[#78716C] hover:text-[#1C1917]'
+                ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                : 'text-[#475569] hover:text-[#0B1F3A]'
             }`}
           >
             History
-            <span className="text-[10px] bg-[#EA580C]/15 text-[#EA580C] px-1.5 rounded-full tabular-nums">
+            <span
+              className={`text-[10px] px-1.5 rounded-md tabular-nums ${
+                viewMode === 'history'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-[#0B7285]/15 text-[#0B7285]'
+              }`}
+            >
               {orders.length}
             </span>
           </button>
@@ -261,16 +286,15 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
       </div>
 
       {viewMode === 'history' ? (
-        /* Order History View (Business Plan Order Lifecycle & Quote Approval) */
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-[#1C1917]">
+            <h2 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
               Your Stitching &amp; Alteration Bookings
             </h2>
             <button
               type="button"
               onClick={() => setViewMode('book')}
-              className="text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#0B7285] hover:underline cursor-pointer"
             >
               + Book New Alteration
             </button>
@@ -280,45 +304,45 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
             {orders.map((ord) => (
               <div
                 key={ord.id}
-                className="bg-white rounded-2xl border border-[#EFE6DC] p-5 flex flex-col justify-between gap-4 shadow-2xs"
+                className="bg-white rounded-2xl border border-[#E2E8F0] p-5 flex flex-col justify-between gap-4 shadow-2xs"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-extrabold text-[#EA580C] tabular-nums">
+                    <span className="text-xs font-extrabold text-[#0B7285] tabular-nums">
                       {ord.id}
                     </span>
                     <span
-                      className={`text-[10.5px] font-bold px-2.5 py-0.5 rounded-full ${
+                      className={`text-[10.5px] font-bold px-2.5 py-0.5 rounded-md ${
                         ord.stage === 'Delivered'
                           ? 'bg-[#ECFDF5] text-[#059669]'
                           : ord.stage === 'Quotation Submitted'
-                            ? 'bg-[#FEF3C7] text-[#B45309]'
-                            : 'bg-[#FFF7ED] text-[#EA580C]'
+                            ? 'bg-[#FBF5E6] text-[#A67418]'
+                            : 'bg-[#F0F9FA] text-[#0B7285]'
                       }`}
                     >
                       {ord.stage}
                     </span>
                   </div>
 
-                  <h3 className="mt-2 text-sm sm:text-base font-extrabold text-[#1C1917]">
+                  <h3 className="mt-2 text-sm sm:text-base font-bold text-[#0B1F3A]">
                     {ord.serviceTitle}
                   </h3>
-                  <p className="text-xs text-[#57534E] mt-1">{ord.itemsSummary}</p>
+                  <p className="text-xs text-[#475569] mt-1">{ord.itemsSummary}</p>
 
-                  <div className="mt-3 pt-3 border-t border-[#F5EFE8] grid grid-cols-2 gap-2 text-xs text-[#57534E]">
+                  <div className="mt-3 pt-3 border-t border-[#F1F5F9] grid grid-cols-2 gap-2 text-xs text-[#475569]">
                     <div>
-                      <span className="text-[#78716C] block text-[10.5px]">Assigned Tailor</span>
-                      <span className="font-semibold text-[#1C1917]">{ord.tailorName}</span>
+                      <span className="text-[#64748B] block text-[10.5px]">Assigned Tailor</span>
+                      <span className="font-semibold text-[#0B1F3A]">{ord.tailorName}</span>
                     </div>
                     <div>
-                      <span className="text-[#78716C] block text-[10.5px]">Promised Delivery</span>
-                      <span className="font-semibold text-[#1C1917]">{ord.deliveryDate}</span>
+                      <span className="text-[#64748B] block text-[10.5px]">Promised Delivery</span>
+                      <span className="font-semibold text-[#0B1F3A]">{ord.deliveryDate}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-[#F5EFE8]">
-                  <span className="text-base font-extrabold text-[#1C1917] tabular-nums">
+                <div className="flex items-center justify-between pt-3 border-t border-[#F1F5F9]">
+                  <span className="text-base font-extrabold text-[#0B1F3A] tabular-nums">
                     ₹{ord.amount.toLocaleString('en-IN')}
                   </span>
 
@@ -326,7 +350,7 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                     <button
                       type="button"
                       onClick={() => onApproveQuote(ord.id)}
-                      className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+                      className="inline-flex items-center gap-1.5 bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer transition-colors"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Approve Final Quote
@@ -343,93 +367,76 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
           </div>
         </div>
       ) : (
-        /* Book Alteration Services View (Exact match to Screenshot 2) */
         <>
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search services (e.g. zip, waist, tear)..."
-              className="w-full bg-white border border-[#E7DDD2] rounded-xl pl-11 pr-4 py-3 text-xs sm:text-sm text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#EA580C] shadow-2xs"
-            />
-          </div>
+          {/* Search + Filter Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-xl">
+              <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search services (e.g. zip, waist, tear, saree)..."
+                className="w-full bg-white border border-[#CBD5E1] rounded-xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B7285] shadow-2xs"
+              />
+            </div>
 
-          {/* Filter Chips */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setActiveFilter('all')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeFilter === 'all'
-                  ? 'bg-[#18181B] text-white shadow-xs'
-                  : 'bg-white border border-[#E7E5E4] text-[#44403C] hover:border-[#EA580C]'
-              }`}
-            >
-              <span>All</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full tabular-nums ${
-                  activeFilter === 'all' ? 'bg-white/20 text-white' : 'bg-[#F5F5F4] text-[#57534E]'
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveFilter('all')}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeFilter === 'all'
+                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                    : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
                 }`}
               >
-                12
-              </span>
-            </button>
+                <span>All</span>
+                <span className="text-[10px] opacity-80 tabular-nums">12</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveFilter('garment')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeFilter === 'garment'
-                  ? 'bg-[#18181B] text-white shadow-xs'
-                  : 'bg-white border border-[#E7E5E4] text-[#44403C] hover:border-[#EA580C]'
-              }`}
-            >
-              <Scissors className="w-3.5 h-3.5" />
-              <span>Garments</span>
-              <span
-                className={`text-[10px] px-1.5 rounded-full tabular-nums ${
+              <button
+                type="button"
+                onClick={() => setActiveFilter('garment')}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeFilter === 'garment'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#F5F5F4] text-[#57534E]'
+                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                    : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
                 }`}
               >
-                10
-              </span>
-            </button>
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Garments</span>
+                <span className="text-[10px] opacity-80 tabular-nums">10</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveFilter('saree')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeFilter === 'saree'
-                  ? 'bg-[#18181B] text-white shadow-xs'
-                  : 'bg-white border border-[#E7E5E4] text-[#44403C] hover:border-[#EA580C]'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#EA580C]" />
-              <span>Saree &amp; Add-ons</span>
-              <span className="text-[9.5px] font-extrabold uppercase bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-md">
-                SPECIAL
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('saree')}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeFilter === 'saree'
+                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                    : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C8922A]" />
+                <span>Saree &amp; Add-ons</span>
+              </button>
+            </div>
           </div>
 
           {/* Section 1: Garment Alteration & Repair Services */}
           {garmentServices.length > 0 && (
             <section>
-              <div className="flex items-end justify-between gap-2 pb-3 border-b border-[#EFE6DC] mb-5">
+              <div className="flex items-end justify-between gap-2 pb-3 border-b border-[#E2E8F0] mb-5">
                 <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-[#1C1917]">
+                  <h2 className="text-base sm:text-lg font-bold text-[#0B1F3A] font-serif-accent">
                     Garment Alteration &amp; Repair Services
                   </h2>
-                  <p className="text-xs text-[#78716C]">
-                    Trousers, shirts, kurtis, zip replacements, tear mending, and custom size fitting.
+                  <p className="text-xs text-[#64748B]">
+                    Trousers, shirts, kurtis, zip replacements, tear mending, and precision sizing.
                   </p>
                 </div>
-                <span className="text-[11px] font-semibold text-[#78716C] bg-[#F5EFE8] px-2.5 py-1 rounded-full shrink-0 tabular-nums">
+                <span className="text-xs font-semibold text-[#64748B] shrink-0 tabular-nums">
                   {garmentServices.length} services
                 </span>
               </div>
@@ -443,17 +450,17 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
           {/* Section 2: Stitching & Saree Add-Ons */}
           {sareeServices.length > 0 && (
             <section>
-              <div className="flex items-end justify-between gap-2 pb-3 border-b border-[#EFE6DC] mb-5">
+              <div className="flex items-end justify-between gap-2 pb-3 border-b border-[#E2E8F0] mb-5">
                 <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-[#1C1917]">
+                  <h2 className="text-base sm:text-lg font-bold text-[#0B1F3A] font-serif-accent">
                     Stitching &amp; Saree Add-Ons
                   </h2>
-                  <p className="text-xs text-[#78716C]">
+                  <p className="text-xs text-[#64748B]">
                     Matching saree fall &amp; pico, ready-to-wear 1-minute pre-pleating, and blouse
                     finishing.
                   </p>
                 </div>
-                <span className="text-[11px] font-semibold text-[#78716C] bg-[#F5EFE8] px-2.5 py-1 rounded-full shrink-0 tabular-nums">
+                <span className="text-xs font-semibold text-[#64748B] shrink-0 tabular-nums">
                   {sareeServices.length} services
                 </span>
               </div>
@@ -465,32 +472,34 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
           )}
 
           {filteredServices.length === 0 && (
-            <div className="bg-white rounded-2xl border border-[#EFE6DC] p-10 text-center">
-              <p className="text-sm font-bold text-[#1C1917]">No matching alteration services found.</p>
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center">
+              <p className="text-sm font-bold text-[#0B1F3A]">
+                No matching alteration services found.
+              </p>
               <button
                 type="button"
                 onClick={() => {
                   setSearch('');
                   setActiveFilter('all');
                 }}
-                className="mt-3 text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
+                className="mt-3 text-xs font-bold text-[#0B7285] hover:underline cursor-pointer"
               >
                 Reset Search &amp; Filters
               </button>
             </div>
           )}
 
-          {/* Section 3: Explore Stitching Designs (Exact match to Screenshot 2 bottom showcase) */}
+          {/* Section 3: Explore Stitching Designs */}
           <section className="pt-4">
             <div className="flex items-center justify-between gap-4 mb-5">
-              <h2 className="text-lg sm:text-xl font-extrabold text-[#1C1917] font-serif-accent">
+              <h2 className="text-lg sm:text-xl font-bold text-[#0B1F3A] font-serif-accent">
                 Explore Stitching Designs
               </h2>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => onNavigate('designs')}
-                  className="inline-flex items-center gap-0.5 text-xs font-bold text-[#EA580C] hover:underline mr-2 cursor-pointer"
+                  className="inline-flex items-center gap-0.5 text-xs font-bold text-[#0B7285] hover:underline mr-2 cursor-pointer"
                 >
                   More
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -499,7 +508,7 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                   type="button"
                   aria-label="Scroll designs left"
                   onClick={() => scrollDesigns('left')}
-                  className="w-8 h-8 rounded-full border border-[#FED7AA] text-[#EA580C] hover:bg-[#FFF7ED] flex items-center justify-center cursor-pointer"
+                  className="w-8 h-8 rounded-full border border-[#CBD5E1] text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] flex items-center justify-center cursor-pointer transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -507,7 +516,7 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                   type="button"
                   aria-label="Scroll designs right"
                   onClick={() => scrollDesigns('right')}
-                  className="w-8 h-8 rounded-full border border-[#FED7AA] text-[#EA580C] hover:bg-[#FFF7ED] flex items-center justify-center cursor-pointer"
+                  className="w-8 h-8 rounded-full border border-[#CBD5E1] text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] flex items-center justify-center cursor-pointer transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -523,11 +532,11 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                 return (
                   <div
                     key={design.id}
-                    className="snap-start shrink-0 w-[235px] sm:w-[248px] bg-white rounded-2xl border border-[#EFE6DC] hover:border-[#FED7AA] hover:shadow-md overflow-hidden flex flex-col transition-all"
+                    className="snap-start shrink-0 w-[235px] sm:w-[248px] bg-white rounded-2xl border border-[#E2E8F0] hover:border-[#0B7285]/45 hover:shadow-md overflow-hidden flex flex-col transition-all"
                   >
                     <div
                       onClick={() => onSelectDesign(design)}
-                      className="relative aspect-[3/4] bg-[#F8F6F4] overflow-hidden cursor-pointer"
+                      className="relative aspect-[3/4] bg-[#F1F5F9] overflow-hidden cursor-pointer"
                     >
                       <SafeImage
                         src={design.image}
@@ -535,8 +544,8 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                         className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
                       />
                       {design.trusted && (
-                        <span className="absolute top-2.5 left-0 bg-[#38BDF8] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-r-full shadow-xs">
-                          Trusted
+                        <span className="absolute top-2.5 left-2.5 bg-[#0B1F3A]/85 backdrop-blur-xs text-[#E2B14B] text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+                          Atelier Verified
                         </span>
                       )}
                       <button
@@ -550,35 +559,35 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                       >
                         <Heart
                           className={`w-4 h-4 ${
-                            isFav ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#57534E]'
+                            isFav ? 'fill-[#C8922A] text-[#C8922A]' : 'text-[#475569]'
                           }`}
                         />
                       </button>
-                      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#1C1917] text-[10.5px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                        <Clock className="w-3 h-3 text-[#78716C]" />
+                      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#0B1F3A] text-[10.5px] font-bold px-2 py-0.5 rounded-md tabular-nums">
+                        <Clock className="w-3 h-3 text-[#0B7285]" />
                         {design.turnaroundDays}d
                       </span>
                     </div>
 
                     <div className="p-3.5 flex flex-col flex-1 justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#EA580C]">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#0B7285]">
                           {design.category}
                         </p>
                         <h3
                           onClick={() => onSelectDesign(design)}
-                          className="mt-1 text-xs sm:text-[13px] font-bold text-[#1C1917] line-clamp-2 hover:text-[#EA580C] cursor-pointer"
+                          className="mt-1 text-xs sm:text-[13px] font-bold text-[#0B1F3A] line-clamp-2 hover:text-[#0B7285] cursor-pointer"
                         >
                           {design.title}
                         </h3>
-                        <p className="mt-2 text-base font-extrabold text-[#1C1917] tabular-nums">
+                        <p className="mt-2 text-base font-extrabold text-[#0B1F3A] tabular-nums">
                           ₹ {design.price.toLocaleString('en-IN')}
                         </p>
                       </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-[#F5EFE8] flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#EA580C] tabular-nums">
-                          <Eye className="w-3.5 h-3.5" />
+                      <div className="mt-3 pt-2.5 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B] tabular-nums">
+                          <Eye className="w-3.5 h-3.5 text-[#0B7285]" />
                           {design.views} views
                         </span>
 
@@ -587,14 +596,14 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
                             type="button"
                             aria-label="Add design to bag"
                             onClick={() => onQuickAddDesign(design)}
-                            className="w-8 h-8 rounded-lg border border-[#FED7AA] text-[#EA580C] hover:bg-[#FFF7ED] flex items-center justify-center cursor-pointer"
+                            className="w-8 h-8 rounded-lg border border-[#CBD5E1] text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] flex items-center justify-center cursor-pointer transition-colors"
                           >
                             <ShoppingCart className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => onSelectDesign(design)}
-                            className="bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-xs cursor-pointer"
+                            className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                           >
                             Stitch
                           </button>
@@ -610,7 +619,7 @@ export const AlterationsPage: React.FC<AlterationsPageProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigate('designs')}
-                className="inline-flex items-center justify-center bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm px-7 py-3 rounded-full shadow-md shadow-[#EA580C]/20 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center bg-[#0B1F3A] hover:bg-[#15325B] text-white font-bold text-sm px-7 py-3 rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Explore All Designs
               </button>

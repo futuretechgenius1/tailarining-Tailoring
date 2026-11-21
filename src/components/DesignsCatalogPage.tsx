@@ -64,20 +64,24 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
   });
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1C1917]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0B7285]">
+            TAILERING LOOKBOOK ARCHIVE
+          </p>
+          <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-[#0B1F3A] font-serif-accent">
             Curated Stitching Designs
           </h1>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-0.5">
-            Select a style and our verified Hyderabad master tailors will stitch it to your exact fit.
+          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+            Select a silhouette and our verified Hyderabad master ateliers will tailor it to your
+            exact fit.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="inline-flex items-center bg-[#F5EFE8] p-1 rounded-full">
+          <div className="inline-flex items-center bg-[#F1F5F9] border border-[#E2E8F0] p-1 rounded-xl">
             {(['all', 'women', 'men'] as const).map((g) => (
               <button
                 key={g}
@@ -86,10 +90,10 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                   setGenderFilter(g);
                   setSelectedCategory('all');
                 }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold capitalize transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                   genderFilter === g
-                    ? 'bg-[#18181B] text-white'
-                    : 'text-[#57534E] hover:text-[#1C1917]'
+                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                    : 'text-[#475569] hover:text-[#0B1F3A]'
                 }`}
               >
                 {g}
@@ -97,13 +101,13 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
             ))}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 bg-white border border-[#E7DDD2] rounded-xl px-3 py-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#78716C]" />
+          <div className="inline-flex items-center gap-1.5 bg-white border border-[#CBD5E1] rounded-xl px-3 py-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#64748B]" />
             <select
               aria-label="Sort designs"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'popular' | 'price-low' | 'price-high')}
-              className="text-xs font-semibold text-[#1C1917] bg-transparent focus:outline-none cursor-pointer"
+              className="text-xs font-semibold text-[#0B1F3A] bg-transparent focus:outline-none cursor-pointer"
             >
               <option value="popular">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
@@ -113,16 +117,16 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
         </div>
       </div>
 
-      {/* Search + Horizontal Category Pills */}
+      {/* Search + Horizontal Category Filters */}
       <div className="space-y-3">
         <div className="relative max-w-xl">
-          <Search className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search maggam blouse, lehenga, sherwani, gown..."
-            className="w-full bg-white border border-[#E7DDD2] rounded-xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-[#1C1917] focus:outline-none focus:border-[#EA580C]"
+            className="w-full bg-white border border-[#CBD5E1] rounded-xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B7285]"
           />
         </div>
 
@@ -130,10 +134,10 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
               selectedCategory === 'all'
-                ? 'bg-[#EA580C] text-white'
-                : 'bg-white border border-[#E7DDD2] text-[#44403C] hover:border-[#EA580C]'
+                ? 'bg-[#0B7285] text-white'
+                : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
             }`}
           >
             All Categories
@@ -145,10 +149,10 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
                   selectedCategory === cat.id
-                    ? 'bg-[#EA580C] text-white'
-                    : 'bg-white border border-[#E7DDD2] text-[#44403C] hover:border-[#EA580C]'
+                    ? 'bg-[#0B7285] text-white'
+                    : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
                 }`}
               >
                 {cat.name}
@@ -159,10 +163,10 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
 
       {/* Designs Grid */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#EFE6DC] p-12 text-center">
-          <p className="text-base font-bold text-[#1C1917]">No designs matched your filter.</p>
-          <p className="text-xs text-[#78716C] mt-1">
-            Try clearing your search or explore all curated StitchMate styles.
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 text-center">
+          <p className="text-base font-bold text-[#0B1F3A]">No designs matched your filter.</p>
+          <p className="text-xs text-[#64748B] mt-1">
+            Try clearing your search or explore all curated Tailering styles.
           </p>
           <button
             type="button"
@@ -171,7 +175,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
               setGenderFilter('all');
               setSearchQuery('');
             }}
-            className="mt-4 bg-[#EA580C] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
+            className="mt-4 bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer transition-colors"
           >
             Show All Designs
           </button>
@@ -183,11 +187,11 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
             return (
               <div
                 key={design.id}
-                className="group bg-white rounded-2xl border border-[#EFE6DC] hover:border-[#FED7AA] hover:shadow-md overflow-hidden flex flex-col transition-all"
+                className="group bg-white rounded-2xl border border-[#E2E8F0] hover:border-[#0B7285]/45 hover:shadow-md overflow-hidden flex flex-col transition-all"
               >
                 <div
                   onClick={() => onSelectDesign(design)}
-                  className="relative aspect-[3/4] bg-[#F8F6F4] overflow-hidden cursor-pointer"
+                  className="relative aspect-[3/4] bg-[#F1F5F9] overflow-hidden cursor-pointer"
                 >
                   <SafeImage
                     src={design.image}
@@ -195,8 +199,8 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                   />
                   {design.trusted && (
-                    <span className="absolute top-2.5 left-0 bg-[#38BDF8] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-r-full shadow-xs">
-                      Trusted
+                    <span className="absolute top-2.5 left-2.5 bg-[#0B1F3A]/85 backdrop-blur-xs text-[#E2B14B] text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+                      Atelier Verified
                     </span>
                   )}
                   <button
@@ -210,12 +214,12 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                   >
                     <Heart
                       className={`w-4 h-4 ${
-                        isFav ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#57534E]'
+                        isFav ? 'fill-[#C8922A] text-[#C8922A]' : 'text-[#475569]'
                       }`}
                     />
                   </button>
-                  <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#1C1917] text-[10.5px] font-bold px-2 py-0.5 rounded-full">
-                    <Clock className="w-3 h-3 text-[#78716C]" />
+                  <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#0B1F3A] text-[10.5px] font-bold px-2 py-0.5 rounded-md tabular-nums">
+                    <Clock className="w-3 h-3 text-[#0B7285]" />
                     {design.turnaroundDays}d
                   </span>
                 </div>
@@ -223,38 +227,38 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                 <div className="p-3.5 flex flex-col flex-1 justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#EA580C] truncate">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#0B7285] truncate">
                         {design.category}
                       </p>
-                      <span className="inline-flex items-center gap-0.5 text-[10.5px] font-bold text-[#1C1917] shrink-0">
-                        <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" />
+                      <span className="inline-flex items-center gap-0.5 text-[10.5px] font-bold text-[#0B1F3A] shrink-0 tabular-nums">
+                        <Star className="w-3 h-3 fill-[#C8922A] text-[#C8922A]" />
                         {design.rating}
                       </span>
                     </div>
                     <h3
                       onClick={() => onSelectDesign(design)}
-                      className="mt-1 text-xs sm:text-sm font-bold text-[#1C1917] line-clamp-2 hover:text-[#EA580C] cursor-pointer"
+                      className="mt-1 text-xs sm:text-sm font-bold text-[#0B1F3A] line-clamp-2 hover:text-[#0B7285] cursor-pointer"
                     >
                       {design.title}
                     </h3>
-                    <p className="text-[11px] text-[#78716C] truncate mt-0.5">
+                    <p className="text-[11px] text-[#64748B] truncate mt-0.5">
                       by {design.boutique}
                     </p>
                     <div className="mt-2 flex items-baseline gap-2 tabular-nums">
-                      <span className="text-base font-extrabold text-[#1C1917]">
+                      <span className="text-base font-extrabold text-[#0B1F3A]">
                         ₹{design.price.toLocaleString('en-IN')}
                       </span>
                       {design.originalPrice && (
-                        <span className="text-xs text-[#A8A29E] line-through">
+                        <span className="text-xs text-[#94A3B8] line-through">
                           ₹{design.originalPrice.toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-[#F5EFE8] flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#EA580C] tabular-nums">
-                      <Eye className="w-3.5 h-3.5" />
+                  <div className="mt-3 pt-2.5 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B] tabular-nums">
+                      <Eye className="w-3.5 h-3.5 text-[#0B7285]" />
                       {design.views}
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -262,14 +266,14 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                         type="button"
                         aria-label="Add to bag"
                         onClick={() => onQuickAddDesign(design)}
-                        className="w-8 h-8 rounded-lg border border-[#FED7AA] text-[#EA580C] hover:bg-[#FFF7ED] flex items-center justify-center cursor-pointer"
+                        className="w-8 h-8 rounded-lg border border-[#CBD5E1] text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] flex items-center justify-center cursor-pointer transition-colors"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => onSelectDesign(design)}
-                        className="bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg cursor-pointer"
+                        className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                       >
                         Stitch
                       </button>

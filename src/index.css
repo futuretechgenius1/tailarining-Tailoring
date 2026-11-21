@@ -2,46 +2,29 @@
 
 @layer base {
   :root {
-    --brand-orange: #EA580C;
-    --brand-orange-light: #F97316;
-    --brand-cream: #FFF9F2;
-    --brand-ivory: #FDFBF9;
-    --brand-ink: #1C1917;
+    --tailering-navy: #0B1F3A;
+    --tailering-navy-soft: #15325B;
+    --tailering-teal: #0B7285;
+    --tailering-teal-light: #0E8A9E;
+    --tailering-gold: #C8922A;
+    --tailering-gold-light: #E2B14B;
+    --tailering-canvas: #F8FAFC;
+    --tailering-surface: #FFFFFF;
+    --tailering-border: #E2E8F0;
+    --tailering-ink: #0B1F3A;
+    --tailering-muted: #526277;
   }
 
   html {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     scroll-behavior: smooth;
+    color: var(--tailering-ink);
+    background-color: var(--tailering-canvas);
   }
 }
 
 .font-serif-accent {
   font-family: 'Playfair Display', Georgia, serif;
-}
-
-@keyframes ticker-scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-ticker {
-  display: flex;
-  width: max-content;
-  animation: ticker-scroll 34s linear infinite;
-}
-
-.animate-ticker:hover {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-ticker {
-    animation: none;
-  }
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -53,7 +36,67 @@
   scrollbar-width: none;
 }
 
-.dot-pattern-peach {
-  background-image: radial-gradient(rgba(234, 88, 12, 0.24) 1.5px, transparent 1.5px);
-  background-size: 14px 14px;
+.atelier-grid-pattern {
+  background-image: radial-gradient(rgba(200, 146, 42, 0.22) 1.25px, transparent 1.25px);
+  background-size: 16px 16px;
 }
+
+@keyframes kenBurnsZoom {
+  0% {
+    transform: scale(1) translate3d(0%, 0%, 0);
+  }
+  50% {
+    transform: scale(1.08) translate3d(-1.5%, -1%, 0);
+  }
+  100% {
+    transform: scale(1) translate3d(0%, 0%, 0);
+  }
+}
+
+@keyframes kenBurnsPan {
+  0% {
+    transform: scale(1.06) translate3d(1.5%, 0%, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(-1.5%, -1.2%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(1.5%, 0%, 0);
+  }
+}
+
+@keyframes stitchFlow {
+  0% {
+    stroke-dashoffset: 64;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-ken-burns {
+  animation: kenBurnsZoom 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-ken-burns-pan {
+  animation: kenBurnsPan 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-stitch-flow {
+  stroke-dasharray: 8 8;
+  animation: stitchFlow 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-ken-burns,
+  .animate-ken-burns-pan,
+  .animate-stitch-flow {
+    animation: none;
+  }
+}
+

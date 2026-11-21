@@ -40,17 +40,19 @@ export const LocationModal: React.FC<{
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-[2px]">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-[#EFE6DC]">
-        <div className="px-5 py-4 border-b border-[#F3E8DC] flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1F3A]/55 backdrop-blur-[2px]">
+      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-[#E2E8F0]">
+        <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
           <div>
-            <h3 className="text-base font-extrabold text-[#1C1917]">Select Service Locality</h3>
-            <p className="text-[11px] text-[#78716C]">Hyderabad Doorstep Tailoring Zones</p>
+            <h3 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
+              Select Service Locality
+            </h3>
+            <p className="text-[11px] text-[#64748B]">Hyderabad Doorstep Tailoring Zones</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#78716C] hover:bg-[#FFF7ED] cursor-pointer"
+            className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0B1F3A] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -58,13 +60,13 @@ export const LocationModal: React.FC<{
 
         <div className="p-4 space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search Manikonda, Gachibowli, Jubilee Hills..."
-              className="w-full border border-[#E7DDD2] rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#EA580C]"
+              className="w-full border border-[#CBD5E1] rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B7285]"
             />
           </div>
 
@@ -81,12 +83,12 @@ export const LocationModal: React.FC<{
                   }}
                   className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                     active
-                      ? 'bg-[#FFF7ED] text-[#EA580C] border border-[#FED7AA]'
-                      : 'text-[#292524] hover:bg-[#FAF7F5]'
+                      ? 'bg-[#F0F9FA] text-[#0B7285] border border-[#CBE7EC]'
+                      : 'text-[#334155] hover:bg-[#F8FAFC]'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-[#EA580C]" />
+                    <MapPin className="w-3.5 h-3.5 text-[#0B7285]" />
                     {loc}
                   </span>
                   {active && <Check className="w-4 h-4" />}
@@ -150,7 +152,7 @@ export const CartDrawer: React.FC<{
   };
 
   const handlePlaceOrder = () => {
-    const id = `SM-2026-${Math.floor(1050 + Math.random() * 8900)}`;
+    const id = `TLR-2026-${Math.floor(1050 + Math.random() * 8900)}`;
     const newOrder: OrderRecord = {
       id,
       serviceTitle:
@@ -172,12 +174,14 @@ export const CartDrawer: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/45 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#0B1F3A]/55 backdrop-blur-[2px]">
       <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#F3E8DC] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-[#EA580C]" />
-            <h3 className="text-base font-extrabold text-[#1C1917]">Your StitchMate Bag</h3>
+            <ShoppingBag className="w-5 h-5 text-[#0B7285]" />
+            <h3 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
+              Your Tailering Bag
+            </h3>
           </div>
           <button
             type="button"
@@ -185,7 +189,7 @@ export const CartDrawer: React.FC<{
               setBookingDone(null);
               onClose();
             }}
-            className="p-1.5 rounded-lg text-[#78716C] hover:bg-[#FFF7ED] cursor-pointer"
+            className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -193,16 +197,19 @@ export const CartDrawer: React.FC<{
 
         {bookingDone ? (
           <div className="flex-1 p-8 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-[#ECFDF5] text-[#16A34A] flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
               <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h4 className="text-xl font-extrabold text-[#1C1917]">Booking Confirmed!</h4>
-            <p className="text-xs font-bold text-[#EA580C] bg-[#FFF7ED] px-3 py-1 rounded-full">
+            <h4 className="text-xl font-bold text-[#0B1F3A] font-serif-accent">
+              Booking Confirmed
+            </h4>
+            <p className="text-xs font-bold text-[#0B7285] bg-[#F0F9FA] border border-[#CBE7EC] px-3 py-1 rounded-lg tabular-nums">
               Order ID: {bookingDone}
             </p>
-            <p className="text-sm text-[#57534E]">
-              Our certified master tailor in <strong>{locality}</strong> will arrive for free
-              doorstep measurement &amp; pickup. Pay securely at pickup!
+            <p className="text-sm text-[#475569]">
+              Our certified master tailor in <strong className="text-[#0B1F3A]">{locality}</strong>{' '}
+              will arrive for complimentary doorstep measurement &amp; pickup. Pay securely at
+              pickup.
             </p>
             <button
               type="button"
@@ -210,19 +217,19 @@ export const CartDrawer: React.FC<{
                 setBookingDone(null);
                 onClose();
               }}
-              className="mt-2 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-xs font-bold px-6 py-3 rounded-xl cursor-pointer"
+              className="mt-2 bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-6 py-3 rounded-xl cursor-pointer transition-colors"
             >
               Continue Browsing
             </button>
           </div>
         ) : cart.length === 0 ? (
           <div className="flex-1 p-8 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-[#FFF7ED] text-[#EA580C] flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#F0F9FA] text-[#0B7285] flex items-center justify-center">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <p className="text-sm font-bold text-[#1C1917]">Your StitchMate bag is empty</p>
-            <p className="text-xs text-[#78716C] max-w-xs">
-              Add doorstep alterations from ₹49 or custom stitching designs to book a free home
+            <p className="text-sm font-bold text-[#0B1F3A]">Your Tailering bag is empty</p>
+            <p className="text-xs text-[#64748B] max-w-xs">
+              Add doorstep alterations from ₹49 or custom couture designs to schedule a free home
               visit.
             </p>
           </div>
@@ -232,17 +239,21 @@ export const CartDrawer: React.FC<{
               {cart.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-[#FDFBF9] rounded-xl border border-[#EFE6DC] p-3.5 flex items-center gap-3"
+                  className="bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-3.5 flex items-center gap-3"
                 >
                   {item.image && (
-                    <div className="w-14 h-16 rounded-lg overflow-hidden bg-[#FFF7ED] shrink-0">
-                      <SafeImage src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    <div className="w-14 h-16 rounded-lg overflow-hidden bg-[#F1F5F9] shrink-0">
+                      <SafeImage
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-extrabold text-[#1C1917] line-clamp-1">{item.title}</p>
-                    <p className="text-[11px] text-[#78716C] truncate">{item.subtitle}</p>
-                    <p className="text-xs font-extrabold text-[#EA580C] mt-1 tabular-nums">
+                    <p className="text-xs font-bold text-[#0B1F3A] line-clamp-1">{item.title}</p>
+                    <p className="text-[11px] text-[#64748B] truncate">{item.subtitle}</p>
+                    <p className="text-xs font-extrabold text-[#0B7285] mt-1 tabular-nums">
                       ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                     </p>
                   </div>
@@ -251,25 +262,25 @@ export const CartDrawer: React.FC<{
                     <button
                       type="button"
                       onClick={() => onRemoveItem(item.id)}
-                      className="text-[#A8A29E] hover:text-red-500 cursor-pointer"
+                      className="text-[#94A3B8] hover:text-red-600 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                    <div className="inline-flex items-center gap-1.5 bg-white border border-[#E7DDD2] rounded-full px-1.5 py-0.5">
+                    <div className="inline-flex items-center gap-1.5 bg-white border border-[#CBD5E1] rounded-lg px-1.5 py-0.5">
                       <button
                         type="button"
                         onClick={() => onUpdateQty(item.id, -1)}
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[#57534E] hover:text-[#EA580C] cursor-pointer"
+                        className="w-5 h-5 rounded flex items-center justify-center text-[#475569] hover:text-[#0B7285] cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-xs font-bold tabular-nums min-w-[14px] text-center">
+                      <span className="text-xs font-bold tabular-nums min-w-[14px] text-center text-[#0B1F3A]">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => onUpdateQty(item.id, 1)}
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[#57534E] hover:text-[#EA580C] cursor-pointer"
+                        className="w-5 h-5 rounded flex items-center justify-center text-[#475569] hover:text-[#0B7285] cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -282,19 +293,19 @@ export const CartDrawer: React.FC<{
               <div className="pt-2">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Tag className="w-3.5 h-3.5 text-[#A8A29E] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Tag className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value)}
                       placeholder="Promo code (WELCOME150)"
-                      className="w-full border border-[#E7DDD2] rounded-xl pl-9 pr-3 py-2 text-xs uppercase focus:outline-none focus:border-[#EA580C]"
+                      className="w-full border border-[#CBD5E1] rounded-xl pl-9 pr-3 py-2 text-xs uppercase text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleApplyPromo}
-                    className="bg-[#1C1917] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+                    className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer transition-colors"
                   >
                     Apply
                   </button>
@@ -302,23 +313,25 @@ export const CartDrawer: React.FC<{
               </div>
             </div>
 
-            <div className="p-5 border-t border-[#F3E8DC] bg-[#FFF9F2] space-y-3">
+            <div className="p-5 border-t border-[#E2E8F0] bg-[#F8FAFC] space-y-3">
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-[#57534E]">
+                <div className="flex justify-between text-[#475569]">
                   <span>Items Subtotal</span>
-                  <span className="font-bold tabular-nums">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-[#0B1F3A] tabular-nums">
+                    ₹{subtotal.toLocaleString('en-IN')}
+                  </span>
                 </div>
                 <div className="flex justify-between text-[#059669]">
                   <span>Doorstep Measurement &amp; Pickup</span>
                   <span className="font-bold">FREE</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex justify-between text-[#059669]">
+                  <div className="flex justify-between text-[#0B7285]">
                     <span>Promo ({appliedPromo})</span>
                     <span className="font-bold tabular-nums">-₹{discount}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm font-extrabold text-[#1C1917] pt-2 border-t border-[#EFE2D4]">
+                <div className="flex justify-between text-sm font-extrabold text-[#0B1F3A] pt-2 border-t border-[#E2E8F0]">
                   <span>Pay at Pickup Total</span>
                   <span className="tabular-nums">₹{total.toLocaleString('en-IN')}</span>
                 </div>
@@ -327,7 +340,7 @@ export const CartDrawer: React.FC<{
               <button
                 type="button"
                 onClick={handlePlaceOrder}
-                className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm py-3.5 rounded-xl shadow-md cursor-pointer"
+                className="w-full bg-[#0B1F3A] hover:bg-[#15325B] text-white font-bold text-sm py-3.5 rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Book Now · Pay at Pickup
               </button>
@@ -353,17 +366,19 @@ export const WishlistDrawer: React.FC<{
   const saved = DESIGNS_CATALOG.filter((d) => wishlistIds.includes(d.id));
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/45 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#0B1F3A]/55 backdrop-blur-[2px]">
       <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#F3E8DC] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-[#E11D48] fill-[#E11D48]" />
-            <h3 className="text-base font-extrabold text-[#1C1917]">Saved Designs ({saved.length})</h3>
+            <Heart className="w-5 h-5 text-[#C8922A] fill-[#C8922A]" />
+            <h3 className="text-base font-bold text-[#0B1F3A] font-serif-accent">
+              Saved Designs ({saved.length})
+            </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#78716C] hover:bg-[#FFF7ED] cursor-pointer"
+            className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -372,9 +387,9 @@ export const WishlistDrawer: React.FC<{
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {saved.length === 0 ? (
             <div className="text-center py-16 space-y-2">
-              <Heart className="w-10 h-10 text-[#E7E5E4] mx-auto" />
-              <p className="text-sm font-bold text-[#1C1917]">No saved designs yet</p>
-              <p className="text-xs text-[#78716C]">
+              <Heart className="w-10 h-10 text-[#CBD5E1] mx-auto" />
+              <p className="text-sm font-bold text-[#0B1F3A]">No saved designs yet</p>
+              <p className="text-xs text-[#64748B]">
                 Tap the heart icon on any blouse, lehenga, or sherwani to bookmark it here.
               </p>
             </div>
@@ -382,15 +397,21 @@ export const WishlistDrawer: React.FC<{
             saved.map((d) => (
               <div
                 key={d.id}
-                className="flex items-center gap-3 p-3 rounded-xl border border-[#EFE6DC] bg-[#FDFBF9]"
+                className="flex items-center gap-3 p-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]"
               >
                 <div className="w-16 h-20 rounded-lg overflow-hidden shrink-0">
-                  <SafeImage src={d.image} alt={d.title} className="w-full h-full object-cover object-top" />
+                  <SafeImage
+                    src={d.image}
+                    alt={d.title}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-extrabold text-[#EA580C] uppercase">{d.category}</p>
-                  <p className="text-xs font-bold text-[#1C1917] line-clamp-2">{d.title}</p>
-                  <p className="text-xs font-extrabold text-[#1C1917] mt-1 tabular-nums">
+                  <p className="text-[10px] font-bold text-[#0B7285] uppercase tracking-wider">
+                    {d.category}
+                  </p>
+                  <p className="text-xs font-bold text-[#0B1F3A] line-clamp-2">{d.title}</p>
+                  <p className="text-xs font-extrabold text-[#0B1F3A] mt-1 tabular-nums">
                     ₹{d.price.toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -401,14 +422,14 @@ export const WishlistDrawer: React.FC<{
                       onClose();
                       onSelectDesign(d);
                     }}
-                    className="bg-[#EA580C] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                    className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                   >
                     Stitch
                   </button>
                   <button
                     type="button"
                     onClick={() => onToggleWishlist(d.id)}
-                    className="text-[11px] text-[#78716C] hover:text-red-600 cursor-pointer"
+                    className="text-[11px] text-[#64748B] hover:text-red-600 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -435,10 +456,10 @@ export const DesignDetailModal: React.FC<{
   if (!design) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl border border-[#EFE6DC] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1F3A]/60 backdrop-blur-[2px]">
+      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl border border-[#E2E8F0] max-h-[90vh] overflow-y-auto">
         <div className="grid grid-cols-1 sm:grid-cols-12">
-          <div className="sm:col-span-5 relative bg-[#F8F6F4] min-h-[260px]">
+          <div className="sm:col-span-5 relative bg-[#F1F5F9] min-h-[260px]">
             <SafeImage
               src={design.image}
               alt={design.title}
@@ -451,7 +472,7 @@ export const DesignDetailModal: React.FC<{
             >
               <Heart
                 className={`w-4 h-4 ${
-                  isWishlisted ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#57534E]'
+                  isWishlisted ? 'fill-[#C8922A] text-[#C8922A]' : 'text-[#475569]'
                 }`}
               />
             </button>
@@ -460,68 +481,68 @@ export const DesignDetailModal: React.FC<{
           <div className="sm:col-span-7 p-5 sm:p-6 flex flex-col justify-between gap-4">
             <div>
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#EA580C]">
+                <span className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#0B7285]">
                   {design.category}
                 </span>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1 rounded-lg text-[#78716C] hover:bg-[#FFF7ED] cursor-pointer"
+                  className="p-1 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <h3 className="text-lg sm:text-xl font-extrabold text-[#1C1917] mt-1 leading-snug">
+              <h3 className="text-lg sm:text-xl font-bold text-[#0B1F3A] mt-1 leading-snug font-serif-accent">
                 {design.title}
               </h3>
-              <p className="text-xs text-[#78716C] mt-0.5">
-                Crafted by <strong className="text-[#1C1917]">{design.boutique}</strong>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Crafted by <strong className="text-[#0B1F3A]">{design.boutique}</strong>
               </p>
 
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-2xl font-extrabold text-[#1C1917] tabular-nums">
+                <span className="text-2xl font-extrabold text-[#0B1F3A] tabular-nums">
                   ₹{design.price.toLocaleString('en-IN')}
                 </span>
                 {design.originalPrice && (
-                  <span className="text-sm text-[#A8A29E] line-through tabular-nums">
+                  <span className="text-sm text-[#94A3B8] line-through tabular-nums">
                     ₹{design.originalPrice.toLocaleString('en-IN')}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#1C1917] bg-[#FEF3C7] px-2 py-0.5 rounded-full">
-                  <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" />
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#A67418] bg-[#FBF5E6] px-2 py-0.5 rounded-md tabular-nums">
+                  <Star className="w-3 h-3 fill-[#C8922A] text-[#C8922A]" />
                   {design.rating}
                 </span>
               </div>
 
-              <p className="mt-3 text-xs sm:text-sm text-[#44403C] leading-relaxed">
+              <p className="mt-3 text-xs sm:text-sm text-[#334155] leading-relaxed">
                 {design.description}
               </p>
 
-              <div className="mt-3 bg-[#FFF9F2] border border-[#F3E5D8] rounded-xl p-3 text-xs text-[#57534E] space-y-1.5">
+              <div className="mt-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-xs text-[#475569] space-y-1.5">
                 <p>
-                  <strong className="text-[#1C1917]">Fabric Guidance:</strong> {design.fabricNote}
+                  <strong className="text-[#0B1F3A]">Fabric Guidance:</strong> {design.fabricNote}
                 </p>
-                <p className="inline-flex items-center gap-1.5 text-[#059669] font-semibold">
+                <p className="inline-flex items-center gap-1.5 text-[#0B7285] font-semibold">
                   <Clock className="w-3.5 h-3.5" />
                   Estimated Delivery: {design.turnaroundDays} Days · Free Home Measurement
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2.5 pt-2 border-t border-[#F5EFE8]">
+            <div className="space-y-2.5 pt-2 border-t border-[#E2E8F0]">
               <button
                 type="button"
                 onClick={() => {
                   onAddDesignToCart(design);
                   onClose();
                 }}
-                className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-bold text-sm py-3 rounded-xl shadow-md cursor-pointer"
+                className="w-full bg-[#0B1F3A] hover:bg-[#15325B] text-white font-bold text-sm py-3 rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Add to Bag · Book Free Home Visit
               </button>
-              <p className="text-[11px] text-center text-[#78716C] inline-flex items-center justify-center gap-1 w-full">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+              <p className="text-[11px] text-center text-[#64748B] inline-flex items-center justify-center gap-1 w-full">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0B7285]" />
                 Fabric Insured · 7-Day Free Doorstep Refit Guarantee
               </p>
             </div>
@@ -543,7 +564,7 @@ export const ReferralModal: React.FC<{
   const [copied, setCopied] = useState(false);
   if (!open) return null;
 
-  const refCode = 'STITCH50HYD';
+  const refCode = 'TAILERING50';
   const copyCode = () => {
     if (navigator.clipboard) navigator.clipboard.writeText(refCode).catch(() => {});
     setCopied(true);
@@ -552,9 +573,9 @@ export const ReferralModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-[#EFE6DC]">
-        <div className="bg-gradient-to-r from-[#064E3B] to-[#047857] p-6 text-white relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1F3A]/60 backdrop-blur-[2px]">
+      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-[#E2E8F0]">
+        <div className="bg-gradient-to-br from-[#0B1F3A] via-[#0F2C52] to-[#0B7285] p-6 text-white relative">
           <button
             type="button"
             onClick={onClose}
@@ -562,32 +583,34 @@ export const ReferralModal: React.FC<{
           >
             <X className="w-5 h-5" />
           </button>
-          <Gift className="w-8 h-8 text-[#FDE047] mb-2" />
-          <h3 className="text-xl font-extrabold">Gift ₹50, Earn ₹50 Cash!</h3>
-          <p className="text-xs text-[#D1FAE5] mt-1">
-            Share your personal StitchMate invite code with friends &amp; neighbors in Hyderabad.
+          <Gift className="w-8 h-8 text-[#E2B14B] mb-2" />
+          <h3 className="text-xl font-bold font-serif-accent">Gift ₹50, Earn ₹50 Cash</h3>
+          <p className="text-xs text-slate-200 mt-1">
+            Share your personal Tailering invite code with friends &amp; neighbors in Hyderabad.
           </p>
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="bg-[#FFF9F2] border border-dashed border-[#FB923C] rounded-xl p-4 flex items-center justify-between">
+          <div className="bg-[#F8FAFC] border border-dashed border-[#0B7285]/50 rounded-xl p-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase text-[#78716C]">YOUR REFERRAL CODE</p>
-              <p className="text-lg font-extrabold text-[#EA580C] tracking-wider">{refCode}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                YOUR REFERRAL CODE
+              </p>
+              <p className="text-lg font-extrabold text-[#0B1F3A] tracking-wider">{refCode}</p>
             </div>
             <button
               type="button"
               onClick={copyCode}
-              className="inline-flex items-center gap-1.5 bg-[#EA580C] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
-          <p className="text-xs text-[#57534E] leading-relaxed">
+          <p className="text-xs text-[#475569] leading-relaxed">
             When your friend books their first custom stitching or alteration order using{' '}
-            <strong>{refCode}</strong>, they get ₹50 off instantly and ₹50 real cash is credited to
-            your StitchMate account upon delivery.
+            <strong className="text-[#0B1F3A]">{refCode}</strong>, they receive ₹50 off instantly
+            and ₹50 cash is credited to your Tailering account upon delivery.
           </p>
         </div>
       </div>
@@ -606,7 +629,7 @@ export const SupportDrawer: React.FC<{
   const [messages, setMessages] = useState([
     {
       from: 'agent',
-      text: `Namaste! Welcome to StitchMate Hyderabad Support (${locality}). How can we help with your stitching, alterations, or measurement visit today?`,
+      text: `Namaste! Welcome to Tailering Concierge (${locality}). How can we assist with your bespoke stitching, alterations, or home measurement visit today?`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -621,40 +644,42 @@ export const SupportDrawer: React.FC<{
       { from: 'user', text: msg },
       {
         from: 'agent',
-        text: 'Thank you for reaching out! A StitchMate Master Tailor advisor has been assigned to your query and can also call you back within 5 minutes.',
+        text: 'Thank you for reaching out! A Tailering Master Tailor advisor has been assigned to your query and can call you back within 5 minutes.',
       },
     ]);
     setInput('');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[1px]">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#0B1F3A]/45 backdrop-blur-[1px]">
       <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col">
-        <div className="bg-[#16A34A] text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-[#0B1F3A] text-white px-5 py-4 flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <MessageCircle className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg bg-[#0B7285]/40 text-[#5EEAD4] flex items-center justify-center">
+              <MessageCircle className="w-4 h-4" />
+            </div>
             <div>
-              <h3 className="text-sm font-extrabold">StitchMate Support</h3>
-              <p className="text-[11px] text-white/85">Hyderabad Customer &amp; Tailor Desk</p>
+              <h3 className="text-sm font-bold font-serif-accent">Tailering Concierge</h3>
+              <p className="text-[11px] text-slate-300">Hyderabad Customer &amp; Tailor Desk</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/15 cursor-pointer"
+            className="p-1 rounded-lg hover:bg-white/10 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FAF7F5]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8FAFC]">
           {messages.map((m, idx) => (
             <div
               key={idx}
               className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                 m.from === 'user'
-                  ? 'ml-auto bg-[#EA580C] text-white rounded-br-sm'
-                  : 'bg-white border border-[#EFE6DC] text-[#1C1917] rounded-bl-sm'
+                  ? 'ml-auto bg-[#0B1F3A] text-white rounded-br-sm'
+                  : 'bg-white border border-[#E2E8F0] text-[#0B1F3A] rounded-bl-sm'
               }`}
             >
               {m.text}
@@ -671,7 +696,7 @@ export const SupportDrawer: React.FC<{
                 key={quick}
                 type="button"
                 onClick={() => sendMessage(quick)}
-                className="text-[11px] font-semibold bg-white border border-[#FED7AA] text-[#EA580C] px-2.5 py-1 rounded-full hover:bg-[#FFF7ED] cursor-pointer"
+                className="text-[11px] font-semibold bg-white border border-[#CBE7EC] text-[#0B7285] px-2.5 py-1 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-colors"
               >
                 {quick}
               </button>
@@ -684,19 +709,19 @@ export const SupportDrawer: React.FC<{
             e.preventDefault();
             sendMessage();
           }}
-          className="p-3 bg-white border-t border-[#EFE6DC] flex items-center gap-2"
+          className="p-3 bg-white border-t border-[#E2E8F0] flex items-center gap-2"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your question..."
-            className="flex-1 bg-[#FAF7F5] border border-[#E7DDD2] rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#EA580C]"
+            className="flex-1 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
           />
           <button
             type="submit"
             aria-label="Send message"
-            className="w-9 h-9 rounded-xl bg-[#16A34A] text-white flex items-center justify-center cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white flex items-center justify-center cursor-pointer transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
