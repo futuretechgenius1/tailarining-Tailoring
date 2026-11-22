@@ -5,16 +5,17 @@ import {
   AdvancedMarker,
   InfoWindow,
   Map as GoogleMap,
-  Pin,
   useAdvancedMarkerRef,
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps';
 import {
   AlertCircle,
+  ArrowRight,
   Bike,
   Calendar,
   Car,
+  Check,
   CheckCircle2,
   Clock,
   Eye,
@@ -51,9 +52,9 @@ import {
   validateOrderTransition,
 } from '../utils/matchingRules';
 import { SafeImage } from './SafeImage';
+import { MapBookingFlowPanel, MapBookingStep } from './MapBookingFlowPanel';
 import {
   MapRouteSummary,
-  MapShopBookingModal,
   MapShopDetailModal,
   getShopFallbackImage,
 } from './MapShopModals';
@@ -327,20 +328,20 @@ const ShopAdvancedMarker: React.FC<{
   const [markerRef, marker] = useAdvancedMarkerRef();
 
   const isTopWave = shop.eligible && shop.dispatchWave === 1;
-  const pinBg = !shop.eligible
-    ? '#94A3B8'
+  const markerClasses = !shop.eligible
+    ? 'bg-[#64748B] border-[#CBD5E1] text-white'
     : isSelected
-      ? '#0B1F3A'
+      ? 'bg-[#0B1F3A] border-[#E2B14B] text-white scale-110 shadow-xl ring-4 ring-[#0B7285]/35'
       : isTopWave
-        ? '#0B7285'
-        : '#C8922A';
-  const pinBorder = !shop.eligible
-    ? '#64748B'
+        ? 'bg-[#0B7285] border-white text-white shadow-lg hover:scale-105'
+        : 'bg-[#C8922A] border-white text-white shadow-md hover:scale-105';
+  const pointerColor = !shop.eligible
+    ? 'border-t-[#64748B]'
     : isSelected
-      ? '#E2B14B'
+      ? 'border-t-[#0B1F3A]'
       : isTopWave
-        ? '#085463'
-        : '#926515';
+        ? 'border-t-[#0B7285]'
+        : 'border-t-[#C8922A]';
 
   return (
     <>
@@ -348,23 +349,34 @@ const ShopAdvancedMarker: React.FC<{
         ref={markerRef}
         position={shop.place.location}
         title={shop.place.name}
-        zIndex={isSelected ? 50 : isTopWave ? 30 : shop.eligible ? 20 : 10}
+        zIndex={isSelected ? 60 : isTopWave ? 30 : shop.eligible ? 20 : 10}
         onClick={() => onSelect(shop)}
       >
-        <Pin
-          background={pinBg}
-          borderColor={pinBorder}
-          glyphColor="#FFFFFF"
-          scale={isSelected ? 1.28 : isTopWave ? 1.12 : 0.94}
-        >
-          <span className="text-[11px] font-extrabold">
-            {shop.rank !== null ? `#${shop.rank}` : '×'}
-          </span>
-        </Pin>
+        <div className="relative flex flex-col items-center cursor-pointer select-none group">
+          {isSelected && (
+            <span className="absolute -inset-2 rounded-full bg-[#0B7285]/25 animate-ping pointer-events-none" />
+          )}
+          <div
+            className={`relative inline-flex items-center gap-1 px-2.5 py-1 rounded-full border-2 transition-all duration-150 tabular-nums ${markerClasses}`}
+          >
+            <span className="text-[11px] font-extrabold leading-none">
+              {shop.rank !== null ? `#${shop.rank}` : '×'}
+            </span>
+            {shop.eligible && shop.place.rating !== null && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold leading-none opacity-95">
+                <span className="opacity-50">·</span>
+                {shop.place.rating.toFixed(1)}★
+              </span>
+            )}
+          </div>
+          <span
+            className={`w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] -mt-0.5 ${pointerColor}`}
+          />
+        </div>
       </AdvancedMarker>
 
       {isSelected && marker && (
-        <InfoWindow anchor={marker} maxWidth={300} onCloseClick={onCloseInfo}>
+        <InfoWindow anchor={marker} maxWidth={310} onCloseClick={onCloseInfo}>
           <div className="p-1 text-[#0B1F3A] space-y-2.5 font-sans">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -431,9 +443,10 @@ const ShopAdvancedMarker: React.FC<{
               <button
                 type="button"
                 onClick={() => onBookShop(shop)}
-                className="flex-1 bg-[#0B7285] hover:bg-[#085463] text-white text-[11px] font-bold py-1.5 px-2.5 rounded-lg cursor-pointer"
+                className="flex-1 bg-[#0B7285] hover:bg-[#085463] text-white text-[11px] font-bold py-1.5 px-2.5 rounded-lg cursor-pointer inline-flex items-center justify-center gap-1"
               >
-                Book Appointment
+                Choose Service
+                <ArrowRight className="w-3 h-3" />
               </button>
             </div>
           </div>
@@ -490,14 +503,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
   const [placesError, setPlacesError] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
-  // Selected shop, Live Route & Modals
+  // Selected shop, Inline Map Booking Flow Step & Live Route
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+  const [bookingStep, setBookingStep] = useState<MapBookingStep>(1);
   const [travelMode, setTravelMode] = useState<TravelModeOption>('DRIVING');
   const [routeSummary, setRouteSummary] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
   const [detailModalShop, setDetailModalShop] = useState<EvaluatedTailorShop | null>(null);
-  const [bookingModalShop, setBookingModalShop] = useState<EvaluatedTailorShop | null>(null);
 
   const mapSectionRef = useRef<HTMLElement | null>(null);
 
@@ -744,6 +757,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
         setSuggestions([]);
         setSuggestionsOpen(false);
         setSelectedShopId(null);
+        setBookingStep(1);
         onUpdateLocality(label);
         onNotifyToast(`Searching real-time tailor shops near ${label}`);
       }
@@ -773,6 +787,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
         setUserLocation(coords);
         setLocationSource('gps');
         setSelectedShopId(null);
+        setBookingStep(1);
         onUpdateLocality(`Live GPS (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
         onNotifyToast('Locked onto your real-time GPS location! Finding nearest tailor shops...');
       },
@@ -884,8 +899,27 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
     setDispatchStatus('accepted');
   };
 
+  const handleSelectShopOnMap = (shop: EvaluatedTailorShop) => {
+    setSelectedShopId(shop.place.id);
+    if (bookingStep === 4) {
+      setBookingStep(1);
+    }
+  };
+
+  const handleStartBookingForShop = (shop: EvaluatedTailorShop, scrollToMap = false) => {
+    setSelectedShopId(shop.place.id);
+    setBookingStep(2);
+    setActiveRightTab('shops');
+    if (scrollToMap) {
+      mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleFocusShopOnMap = (shop: EvaluatedTailorShop) => {
     setSelectedShopId(shop.place.id);
+    if (bookingStep === 4) {
+      setBookingStep(1);
+    }
     mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -1084,6 +1118,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   setUserLocation(z.center);
                   setLocationSource('zone');
                   setSelectedShopId(null);
+                  setBookingStep(1);
                   onUpdateLocality(z.label);
                 }}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
@@ -1173,7 +1208,106 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
           </button>
         </div>
 
-        {/* Main Split Workspace: Interactive Google Map (Left) + Workbench (Right) */}
+        {/* INTERACTIVE 3-STEP MAP BOOKING PROGRESS BAR */}
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-4 py-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
+            {(
+              [
+                {
+                  num: 1 as MapBookingStep,
+                  title: '1. Select Shop',
+                  sub: selectedShop ? selectedShop.place.name : 'Tap any map marker',
+                  enabled: true,
+                },
+                {
+                  num: 2 as MapBookingStep,
+                  title: '2. Choose Service',
+                  sub: selectedShop ? 'Stitching & pickup mode' : 'Select a shop first',
+                  enabled: Boolean(selectedShop),
+                },
+                {
+                  num: 3 as MapBookingStep,
+                  title: '3. Schedule',
+                  sub:
+                    bookingStep === 4
+                      ? 'Appointment confirmed'
+                      : 'Date, slot & confirm',
+                  enabled: Boolean(selectedShop),
+                },
+              ] as const
+            ).map((s) => {
+              const isCompleted =
+                bookingStep === 4 ||
+                (s.num === 1 && Boolean(selectedShop) && bookingStep >= 2) ||
+                bookingStep > s.num;
+              const isActive = bookingStep === s.num;
+              return (
+                <button
+                  key={s.num}
+                  type="button"
+                  disabled={!s.enabled}
+                  onClick={() => {
+                    if (s.enabled) setBookingStep(s.num);
+                  }}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all ${
+                    isActive
+                      ? 'border-[#0B7285] bg-[#F0F9FA] shadow-2xs cursor-pointer'
+                      : isCompleted
+                        ? 'border-[#CBE7EC] bg-white hover:border-[#0B7285] cursor-pointer'
+                        : s.enabled
+                          ? 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1] cursor-pointer'
+                          : 'border-[#F1F5F9] bg-[#F8FAFC] opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <span
+                    className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 tabular-nums ${
+                      isCompleted
+                        ? 'bg-[#0B7285] text-white'
+                        : isActive
+                          ? 'bg-[#0B1F3A] text-white'
+                          : 'bg-[#E2E8F0] text-[#475569]'
+                    }`}
+                  >
+                    {isCompleted ? <Check className="w-3.5 h-3.5" /> : s.num}
+                  </span>
+                  <span className="min-w-0">
+                    <span
+                      className={`block text-xs font-bold truncate ${
+                        isActive ? 'text-[#0B1F3A]' : 'text-[#334155]'
+                      }`}
+                    >
+                      {s.title}
+                    </span>
+                    <span className="block text-[11px] text-[#64748B] truncate">{s.sub}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedShop && bookingStep === 1 && (
+            <button
+              type="button"
+              onClick={() => handleStartBookingForShop(selectedShop)}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-semibold transition-colors cursor-pointer shrink-0 shadow-xs whitespace-nowrap"
+            >
+              Continue with {selectedShop.place.name.split(' ').slice(0, 2).join(' ')}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {bookingStep >= 2 && (
+            <button
+              type="button"
+              onClick={() => setBookingStep(1)}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#CBD5E1] hover:border-[#0B7285] text-xs font-semibold text-[#0B1F3A] hover:text-[#0B7285] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+            >
+              Browse All Shops
+            </button>
+          )}
+        </div>
+
+        {/* Main Split Workspace: Interactive Google Map (Left) + Inline Booking / Workbench (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN: Real-Time Map + Selected Shop Action Spotlight */}
           <div className="lg:col-span-7 space-y-4">
@@ -1219,10 +1353,13 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     shop={shop}
                     isSelected={selectedShopId === shop.place.id}
                     routeSummary={routeSummary}
-                    onSelect={(s) => setSelectedShopId(s.place.id)}
-                    onCloseInfo={() => setSelectedShopId(null)}
+                    onSelect={handleSelectShopOnMap}
+                    onCloseInfo={() => {
+                      setSelectedShopId(null);
+                      setBookingStep(1);
+                    }}
                     onInspectShop={(s) => setDetailModalShop(s)}
-                    onBookShop={(s) => setBookingModalShop(s)}
+                    onBookShop={(s) => handleStartBookingForShop(s)}
                   />
                 ))}
               </GoogleMap>
@@ -1369,11 +1506,17 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => setBookingModalShop(selectedShop)}
+                        onClick={() => handleStartBookingForShop(selectedShop)}
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                       >
                         <Calendar className="w-3.5 h-3.5" />
-                        Book Appointment &amp; Pickup
+                        {bookingStep === 1
+                          ? 'Choose Service & Book'
+                          : bookingStep === 2
+                            ? 'Selecting Service (Step 2)'
+                            : bookingStep === 3
+                              ? 'Scheduling Slot (Step 3)'
+                              : 'Book Again'}
                       </button>
                     </div>
                   </div>
@@ -1433,55 +1576,74 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             </p>
           </div>
 
-          {/* RIGHT COLUMN: Ranked Live Shops / Matching Rules / Dispatch & Guard Simulator */}
+          {/* RIGHT COLUMN: Inline 3-Step Map Booking Flow OR Ranked Live Shops / Rules / Dispatch */}
           <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-            {/* Tab Header */}
-            <div className="grid grid-cols-3 border-b border-[#E2E8F0] bg-[#F8FAFC] p-1.5 gap-1">
-              <button
-                type="button"
-                onClick={() => setActiveRightTab('shops')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  activeRightTab === 'shops'
-                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                    : 'text-[#475569] hover:text-[#0B1F3A]'
-                }`}
-              >
-                Nearest ({eligibleShops.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightTab('rules')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-                  activeRightTab === 'rules'
-                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                    : 'text-[#475569] hover:text-[#0B1F3A]'
-                }`}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                Rules Engine
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightTab('dispatch')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-                  activeRightTab === 'dispatch'
-                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                    : 'text-[#475569] hover:text-[#0B1F3A]'
-                }`}
-              >
-                <Send className="w-3.5 h-3.5" />
-                Top-{rules.topKBroadcastCount} Dispatch
-              </button>
-            </div>
+            {bookingStep >= 2 && selectedShop ? (
+              <MapBookingFlowPanel
+                step={bookingStep}
+                selectedShop={selectedShop}
+                routeSummary={routeSummary}
+                locality={locality}
+                rules={rules}
+                defaultAddress={sampleCustomerAddress}
+                onChangeStep={setBookingStep}
+                onInspectShop={(s) => setDetailModalShop(s)}
+                onConfirmOrder={handleBookingComplete}
+                onNotifyToast={onNotifyToast}
+                onResetFlow={() => {
+                  setBookingStep(1);
+                  setSelectedShopId(null);
+                }}
+              />
+            ) : (
+              <>
+                {/* Tab Header */}
+                <div className="grid grid-cols-3 border-b border-[#E2E8F0] bg-[#F8FAFC] p-1.5 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveRightTab('shops')}
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      activeRightTab === 'shops'
+                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                    }`}
+                  >
+                    Nearest ({eligibleShops.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRightTab('rules')}
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                      activeRightTab === 'rules'
+                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                    }`}
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    Rules Engine
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRightTab('dispatch')}
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                      activeRightTab === 'dispatch'
+                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                    }`}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Top-{rules.topKBroadcastCount} Dispatch
+                  </button>
+                </div>
 
-            {/* TAB 1: LIVE RANKED SHOPS */}
-            {activeRightTab === 'shops' && (
-              <div className="p-4 space-y-3 max-h-[640px] overflow-y-auto">
-                {placesError && (
-                  <div className="rounded-xl bg-[#FEF2F2] border border-[#FECACA] p-3 text-xs text-[#991B1B]">
-                    {placesError}
-                  </div>
-                )}
+                {/* TAB 1: LIVE RANKED SHOPS */}
+                {activeRightTab === 'shops' && (
+                  <div className="p-4 space-y-3 max-h-[640px] overflow-y-auto">
+                    {placesError && (
+                      <div className="rounded-xl bg-[#FEF2F2] border border-[#FECACA] p-3 text-xs text-[#991B1B]">
+                        {placesError}
+                      </div>
+                    )}
 
                 {evaluatedShops.length === 0 && !searchingPlaces && !placesError && (
                   <div className="text-center py-10 text-xs text-[#64748B]">
@@ -1571,11 +1733,12 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setBookingModalShop(shop);
+                                handleStartBookingForShop(shop);
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-[#0B1F3A] hover:bg-[#0B7285] text-white text-[11px] font-semibold transition-colors cursor-pointer shrink-0"
+                              className="px-2.5 py-1 rounded-lg bg-[#0B1F3A] hover:bg-[#0B7285] text-white text-[11px] font-semibold transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1"
                             >
-                              Book
+                              Select
+                              <ArrowRight className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
@@ -1921,7 +2084,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() => setBookingModalShop(shop)}
+                            onClick={() => handleStartBookingForShop(shop)}
                             className="bg-[#0B7285] hover:bg-[#085463] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
                           >
                             Accept &amp; Schedule
@@ -1986,6 +2149,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   </div>
                 )}
               </div>
+            )}
+              </>
             )}
           </div>
         </div>
@@ -2204,7 +2369,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                     <button
                       type="button"
-                      onClick={() => setBookingModalShop(shop)}
+                      onClick={() => handleStartBookingForShop(shop, true)}
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <Calendar className="w-3.5 h-3.5 text-[#5EEAD4]" />
@@ -2218,26 +2383,15 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
         )}
       </section>
 
-      {/* COMPLETE MAP SHOP DETAIL & BOOKING MODALS */}
+      {/* LIVE MAP SHOP DETAIL MODAL */}
       <MapShopDetailModal
         shop={detailModalShop}
         routeSummary={routeSummary}
         onClose={() => setDetailModalShop(null)}
         onBookShop={(shop) => {
           setDetailModalShop(null);
-          setBookingModalShop(shop);
+          handleStartBookingForShop(shop, true);
         }}
-      />
-
-      <MapShopBookingModal
-        shop={bookingModalShop}
-        routeSummary={routeSummary}
-        locality={locality}
-        rules={rules}
-        defaultAddress={sampleCustomerAddress}
-        onClose={() => setBookingModalShop(null)}
-        onConfirmOrder={handleBookingComplete}
-        onNotifyToast={onNotifyToast}
       />
     </div>
   );
