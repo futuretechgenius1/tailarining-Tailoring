@@ -7,18 +7,23 @@ export type PageRoute =
   | 'measurements'
   | 'nearby-shops'
   | 'auth'
-  | 'partner';
+  | 'partner'
+  | 'dashboard';
 
 export type AuthMode = 'login' | 'signup';
 
-export type UserRole = 'customer' | 'tailor' | 'admin';
+export type UserRole = 'owner' | 'tailor' | 'customer';
 
 export interface UserSession {
+  id: number;
   name: string;
-  phone?: string;
-  email?: string;
+  phone?: string | null;
+  email: string;
   role: UserRole;
+  status?: 'active' | 'suspended' | 'pending';
   locality: string;
+  address?: string | null;
+  tailorProfileId?: number | null;
 }
 
 export interface CategoryItem {

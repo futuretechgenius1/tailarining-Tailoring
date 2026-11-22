@@ -23,6 +23,10 @@ import { CustomStitchingPage } from './components/CustomStitchingPage';
 import { MeasurementsPage } from './components/MeasurementsPage';
 import { PartnerPortalPage } from './components/PartnerPortalPage';
 import { NearbyShopsPage } from './components/NearbyShopsPage';
+import { OwnerDashboard } from './components/dashboards/OwnerDashboard';
+import { TailorDashboard } from './components/dashboards/TailorDashboard';
+import { CustomerDashboard } from './components/dashboards/CustomerDashboard';
+import { setAuthToken } from './services/api';
 import { validateOrderTransition } from './utils/matchingRules';
 import {
   CartDrawer,
@@ -227,7 +231,81 @@ export default function App() {
 
   const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Auth page renders full-bleed split screen (matching Screenshots 4 & 5)
+  const handleLogout = useCallback(() => {
+    setAuthToken(null);
+    setUser(null);
+    setActivePage('home');
+    showToast('Signed out of Tailering.');
+  }, [showToast]);
+
+  // Role-Based Dashboards (App Owner, Tailor Partner, Customer) — Strict RBAC Gate
+  if (activePage === 'dashboard') {
+    if (!user) {
+      return (
+        <>
+          <AuthPage
+            initialMode="login"
+            locality={locality}
+            onLoginSuccess={(session, redirectTo) => {
+              setUser(session);
+              setLocality(session.locality || locality);
+              showToast(`Welcome to Tailering, ${session.name}!`);
+              handleNavigate(redirectTo || 'dashboard');
+            }}
+            onBackHome={() => handleNavigate('home')}
+            onNotifyToast={showToast}
+          />
+          {toastMsg && (
+            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0B1F3A] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
+              <CheckCircle2 className="w-4 h-4 text-[#5EEAD4] shrink-0" />
+              <span className="truncate">{toastMsg}</span>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <>
+        {user.role === 'owner' && (
+          <OwnerDashboard
+            user={user}
+            onBackToStorefront={() => handleNavigate('home')}
+            onLogout={handleLogout}
+            onNotifyToast={showToast}
+          />
+        )}
+        {user.role === 'tailor' && (
+          <TailorDashboard
+            user={user}
+            onBackToStorefront={() => handleNavigate('home')}
+            onLogout={handleLogout}
+            onNotifyToast={showToast}
+          />
+        )}
+        {user.role === 'customer' && (
+          <CustomerDashboard
+            user={user}
+            onUpdateUser={(next) => {
+              setUser(next);
+              setLocality(next.locality);
+            }}
+            onBackToStorefront={() => handleNavigate('home')}
+            onLogout={handleLogout}
+            onNotifyToast={showToast}
+          />
+        )}
+        {toastMsg && (
+          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0B1F3A] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 max-w-[92vw]">
+            <CheckCircle2 className="w-4 h-4 text-[#5EEAD4] shrink-0" />
+            <span className="truncate">{toastMsg}</span>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Auth page renders full-bleed split screen
   if (activePage === 'auth') {
     return (
       <>
@@ -236,8 +314,9 @@ export default function App() {
           locality={locality}
           onLoginSuccess={(session, redirectTo) => {
             setUser(session);
+            if (session.locality) setLocality(session.locality);
             showToast(`Welcome to Tailering, ${session.name}!`);
-            handleNavigate(redirectTo || 'home');
+            handleNavigate(redirectTo || 'dashboard');
           }}
           onBackHome={() => handleNavigate('home')}
           onNotifyToast={showToast}
@@ -291,10 +370,7 @@ export default function App() {
           }
         }}
         user={user}
-        onLogout={() => {
-          setUser(null);
-          showToast('Signed out of Tailering.');
-        }}
+        onLogout={handleLogout}
       />
 
       <main className="flex-1">

@@ -231,8 +231,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#E2E8F0] shadow-xl py-2 z-50">
                   <div className="px-4 py-2 border-b border-[#F1F5F9]">
                     <p className="text-xs font-bold text-[#0B1F3A] truncate">{user.name}</p>
-                    <p className="text-[11px] text-[#64748B] capitalize">{user.role} Account</p>
+                    <p className="text-[11px] text-[#0B7285] font-semibold capitalize">
+                      {user.role === 'owner'
+                        ? 'App Owner Console'
+                        : user.role === 'tailor'
+                          ? 'Tailor Partner'
+                          : 'Customer Account'}
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      onNavigate('dashboard');
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#0B7285] bg-[#F0F9FA]/70 hover:bg-[#F0F9FA] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    Open{' '}
+                    {user.role === 'owner'
+                      ? 'App Owner Dashboard'
+                      : user.role === 'tailor'
+                        ? 'Tailor Dashboard'
+                        : 'Customer Dashboard'}
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -247,22 +269,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     type="button"
                     onClick={() => {
                       setUserMenuOpen(false);
-                      onNavigate('alterations');
+                      onNavigate('nearby-shops');
                     }}
                     className="w-full text-left px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F0F9FA] hover:text-[#0B7285] cursor-pointer"
                   >
-                    My Bookings &amp; Orders
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      onNavigate('partner');
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F0F9FA] hover:text-[#0B7285] flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Briefcase className="w-3.5 h-3.5" />
-                    Partner &amp; Admin Portal
+                    Find Nearest Tailor
                   </button>
                   <button
                     type="button"
@@ -356,7 +367,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     { label: 'Institutional Uniforms', route: 'uniforms' },
                     { label: 'Saved Measurements', route: 'measurements' },
                     { label: 'Nearby Tailor Shops (Live Map)', route: 'nearby-shops' },
-                    { label: 'Partner & Admin Portal', route: 'partner' },
+                    {
+                      label: user ? 'My Role Dashboard' : 'Dashboard Sign In',
+                      route: user ? 'dashboard' : 'auth',
+                    },
                   ] as { label: string; route: PageRoute }[]
                 ).map((item) => (
                   <button
