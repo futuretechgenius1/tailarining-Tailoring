@@ -6,13 +6,22 @@ import {
   hashPassword,
   loadAuthUserById,
   requireAuth,
+  revokeAuthToken,
   safeEqualString,
   signAuthToken,
   verifyPassword,
 } from '../auth';
 import { ensureDatabaseReady, isDbConfigured, queryRows, withTransaction } from '../db';
+import { createRateLimiter, strongPasswordSchema } from '../security';
 
 const router = Router();
+
+const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  keyPrefix: 'auth',
+  message: 'Too many authentication attempts. Please wait a few minutes before retrying.',
+});
 
 const registerSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters').max(120),
@@ -23,7 +32,7 @@ const registerSchema = z.object({
     .regex(/^[0-9+\-\s]{10,20}$/, 'Enter a valid mobile number')
     .optional()
     .or(z.literal('')),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
+  password: strongPasswordSchema,
   role: z.enum(['customer', 'tailor']).default('customer'),
   locality: z.string().trim().min(2).max(160).default('Alkapur Township, Manikonda'),
   address: z.string().trim().max(400).optional(),
@@ -44,7 +53,7 @@ const bootstrapOwnerSchema = z.object({
     .regex(/^[0-9+\-\s]{10,20}$/, 'Enter a valid mobile number')
     .optional()
     .or(z.literal('')),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
+  password: strongPasswordSchema,
   setupCode: z.string().optional(),
 });
 
@@ -67,7 +76,7 @@ const updateProfileSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters').max(128),
+  newPassword: strongPasswordSchema,
 });
 
 // Check DB status & whether first-run App Owner has been claimed
@@ -101,7 +110,7 @@ router.get('/bootstrap-status', async (_req, res: Response, next: NextFunction) 
 });
 
 // One-time atomic App Owner bootstrap route (locks once an owner exists)
-router.post('/bootstrap-owner', async (req, res: Response, next: NextFunction) => {
+router.post('/bootstrap-owner', authRateLimiter, async (req, res: Response, next: NextFunction) => {
   try {
     await ensureDatabaseReady();
     const parsed = bootstrapOwnerSchema.safeParse(req.body);
@@ -177,7 +186,7 @@ router.post('/bootstrap-owner', async (req, res: Response, next: NextFunction) =
 });
 
 // Register Customer or Tailor Partner (transactional)
-router.post('/register', async (req, res: Response, next: NextFunction) => {
+router.post('/register', authRateLimiter, async (req, res: Response, next: NextFunction) => {
   try {
     await ensureDatabaseReady();
     const parsed = registerSchema.safeParse(req.body);
@@ -293,7 +302,7 @@ router.post('/register', async (req, res: Response, next: NextFunction) => {
 });
 
 // Sign In (email or phone + password)
-router.post('/login', async (req, res: Response, next: NextFunction) => {
+router.post('/login', authRateLimiter, async (req, res: Response, next: NextFunction) => {
   try {
     await ensureDatabaseReady();
     const parsed = loginSchema.safeParse(req.body);
@@ -346,6 +355,15 @@ router.post('/login', async (req, res: Response, next: NextFunction) => {
 // Get current authenticated user
 router.get('/me', requireAuth, async (req: AuthedRequest, res: Response) => {
   res.json({ user: req.user });
+});
+
+// Server-side sign out (revokes active Bearer token immediately)
+router.post('/logout', requireAuth, (req: AuthedRequest, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    revokeAuthToken(authHeader.slice(7).trim());
+  }
+  res.json({ message: 'Signed out securely.' });
 });
 
 // Update current user profile
@@ -401,7 +419,11 @@ router.patch('/profile', requireAuth, async (req: AuthedRequest, res: Response, 
 });
 
 // Change password
-router.post('/change-password', requireAuth, async (req: AuthedRequest, res: Response, next: NextFunction) => {
+router.post(
+  '/change-password',
+  authRateLimiter,
+  requireAuth,
+  async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const parsed = changePasswordSchema.safeParse(req.body);
     if (!parsed.success) {

@@ -2,24 +2,39 @@ import { Router, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 import { AuthedRequest, requireAuth } from '../auth';
 import { executeSql, queryRows } from '../db';
+import { buildPaginationMeta, parsePagination } from '../security';
 
 const router = Router();
 router.use(requireAuth);
 
 router.get('/', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT id, title, message, category, is_read, related_order_id, created_at
-       FROM notifications
-       WHERE user_id = ?
-       ORDER BY created_at DESC
-       LIMIT 60`,
-      [req.user!.id],
-    );
+    const { page, limit, offset } = parsePagination(req.query, 12, 50);
 
-    const unreadCount = rows.filter((r) => !r.is_read).length;
+    const [statsRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total,
+                SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread_count
+         FROM notifications
+         WHERE user_id = ?`,
+        [req.user!.id],
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT id, title, message, category, is_read, related_order_id, created_at
+         FROM notifications
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        [req.user!.id],
+      ),
+    ]);
+
+    const total = Number(statsRows[0]?.total || 0);
+    const unreadCount = Number(statsRows[0]?.unread_count || 0);
+
     res.json({
       unreadCount,
+      pagination: buildPaginationMeta(page, limit, total),
       notifications: rows.map((r) => ({
         id: Number(r.id),
         title: String(r.title),

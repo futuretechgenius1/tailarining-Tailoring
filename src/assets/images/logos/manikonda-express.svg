@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#0B7285"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M40 38L80 28M40 28L80 38" stroke="#E2B14B" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="40" cy="28" r="4" fill="#FFFFFF"/>
+  <circle cx="40" cy="38" r="4" fill="#FFFFFF"/>
+  <text x="60" y="77" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="1.5">ME</text>
+  <text x="60" y="96" text-anchor="middle" fill="#E0F2F5" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="2">EXPRESS FIT</text>
+</svg>

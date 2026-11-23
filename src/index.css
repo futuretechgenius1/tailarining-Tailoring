@@ -2,17 +2,20 @@
 
 @layer base {
   :root {
-    --tailering-navy: #0B1F3A;
-    --tailering-navy-soft: #15325B;
-    --tailering-teal: #0B7285;
-    --tailering-teal-light: #0E8A9E;
-    --tailering-gold: #C8922A;
-    --tailering-gold-light: #E2B14B;
-    --tailering-canvas: #F8FAFC;
+    --tailering-navy: #1A103D;
+    --tailering-navy-soft: #2E1065;
+    --tailering-violet: #6B21D9;
+    --tailering-violet-light: #7C3AED;
+    --tailering-lavender-soft: #F4EEFF;
+    --tailering-teal: #6B21D9;
+    --tailering-teal-light: #7C3AED;
+    --tailering-gold: #F97316;
+    --tailering-gold-light: #FB923C;
+    --tailering-canvas: #FAF8FF;
     --tailering-surface: #FFFFFF;
-    --tailering-border: #E2E8F0;
-    --tailering-ink: #0B1F3A;
-    --tailering-muted: #526277;
+    --tailering-border: #EAE0FA;
+    --tailering-ink: #1A103D;
+    --tailering-muted: #5B4E7A;
   }
 
   html {
@@ -24,7 +27,12 @@
 }
 
 .font-serif-accent {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-editorial {
+  font-family: 'Playfair Display', Georgia, Cambria, serif;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -37,8 +45,8 @@
 }
 
 .atelier-grid-pattern {
-  background-image: radial-gradient(rgba(200, 146, 42, 0.22) 1.25px, transparent 1.25px);
-  background-size: 16px 16px;
+  background-image: radial-gradient(rgba(107, 33, 217, 0.14) 1.25px, transparent 1.25px);
+  background-size: 18px 18px;
 }
 
 @keyframes kenBurnsZoom {

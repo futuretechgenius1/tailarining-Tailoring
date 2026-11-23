@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#102A43"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#E2B14B" stroke-width="2"/>
+  <path d="M42 38L50 28L60 36L70 28L78 38H42Z" fill="#C8922A"/>
+  <text x="60" y="76" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="30" font-weight="700" letter-spacing="2">DR</text>
+  <text x="60" y="95" text-anchor="middle" fill="#5EEAD4" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="2">DECCAN ROYAL</text>
+</svg>

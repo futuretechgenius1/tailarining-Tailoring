@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Mail,
-  MapPin,
-  MessageCircle,
-  AlertTriangle,
-  Smartphone,
+  ArrowRight,
   Facebook,
   Instagram,
+  Linkedin,
+  MessageCircle,
+  Youtube,
 } from 'lucide-react';
 import { PageRoute } from '../types';
 import { TaileringLogo } from './TaileringLogo';
@@ -24,271 +23,318 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenReferral,
   onNotifyToast,
 }) => {
+  const [email, setEmail] = useState('');
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      onNotifyToast('Please enter a valid email address to subscribe.');
+      return;
+    }
+    setEmail('');
+    onNotifyToast(`Subscribed ${trimmed} to Tailering lookbooks & offers.`);
+  };
+
   return (
     <>
-      <footer className="bg-[#0B1F3A] text-white mt-16 border-t border-[#15325B]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-12 sm:py-14">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-10 border-b border-white/10">
-            {/* Brand Column */}
-            <div className="md:col-span-4 space-y-4">
+      <footer className="bg-[#19092C] text-white mt-14 border-t border-[#2E1352]">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1.5fr_0.85fr_0.95fr_0.95fr_0.95fr_1.5fr] gap-8 items-start">
+            {/* Column 1: Brand + Social Circles */}
+            <div className="col-span-2 sm:col-span-3 lg:col-span-1 space-y-3.5">
               <TaileringLogo compact inverted />
-              <p className="text-xs leading-relaxed text-[#CBD5E1] max-w-xs">
-                Bespoke doorstep tailoring for modern wardrobes. Precision measurements, master
-                craftsmanship, and transparent delivery across Hyderabad.
+              <p className="text-xs text-[#D8C8EC] leading-relaxed">
+                Your Complete Tailoring Marketplace
               </p>
-              <div className="space-y-2 pt-1 text-xs">
+              <div className="flex items-center gap-2.5 pt-1">
                 <button
                   type="button"
-                  onClick={onOpenSupport}
-                  className="flex items-center gap-2 text-[#E2E8F0] hover:text-[#E2B14B] font-medium cursor-pointer transition-colors"
+                  aria-label="Tailering YouTube"
+                  onClick={() => onNotifyToast('Following Tailering Studio on YouTube.')}
+                  className="w-8 h-8 rounded-full bg-[#DC2626] hover:opacity-90 text-white flex items-center justify-center transition-opacity cursor-pointer"
                 >
-                  <Mail className="w-3.5 h-3.5 text-[#E2B14B]" />
-                  support@tailering.in
-                </button>
-                <div className="flex items-center gap-3 text-[#CBD5E1]">
-                  <button
-                    type="button"
-                    onClick={onOpenSupport}
-                    className="inline-flex items-center gap-1.5 text-[#5EEAD4] font-semibold hover:underline cursor-pointer"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    Concierge Support
-                  </button>
-                  <span className="text-white/25">·</span>
-                  <span className="inline-flex items-center gap-1 text-[#94A3B8]">
-                    <MapPin className="w-3.5 h-3.5" />
-                    Hyderabad
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2.5 pt-2">
-                <button
-                  type="button"
-                  aria-label="Tailering Facebook"
-                  onClick={() => onNotifyToast('Following Tailering on Facebook.')}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-[#0B7285] text-white flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <Facebook className="w-3.5 h-3.5" />
+                  <Youtube className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   aria-label="Tailering Instagram"
                   onClick={() => onNotifyToast('Following @tailering.in on Instagram.')}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-[#C8922A] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#F59E0B] via-[#EC4899] to-[#7C3AED] hover:opacity-90 text-white flex items-center justify-center transition-opacity cursor-pointer"
                 >
-                  <Instagram className="w-3.5 h-3.5" />
+                  <Instagram className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
-                  aria-label="Tailering X"
-                  onClick={() => onNotifyToast('Following @tailering_in on X.')}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-xs transition-colors cursor-pointer"
+                  aria-label="Tailering Facebook"
+                  onClick={() => onNotifyToast('Following Tailering on Facebook.')}
+                  className="w-8 h-8 rounded-full bg-[#2563EB] hover:opacity-90 text-white flex items-center justify-center transition-opacity cursor-pointer"
                 >
-                  𝕏
+                  <Facebook className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Tailering LinkedIn"
+                  onClick={() => onNotifyToast('Following Tailering on LinkedIn.')}
+                  className="w-8 h-8 rounded-full bg-[#0284C7] hover:opacity-90 text-white flex items-center justify-center transition-opacity cursor-pointer"
+                >
+                  <Linkedin className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Links Columns */}
-            <div className="md:col-span-8 space-y-6">
-              <div>
-                <h4 className="text-[11px] font-semibold tracking-[0.16em] text-[#E2B14B] uppercase mb-2.5">
-                  Tailoring Services
-                </h4>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#CBD5E1]">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('custom-stitching')}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Custom Stitching
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('alterations')}
-                    className="font-semibold text-[#5EEAD4] hover:underline cursor-pointer"
-                  >
-                    Doorstep Alterations
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('uniforms')}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Uniforms &amp; B2B
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('designs', { categoryId: 'blouse' })}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Women&apos;s Couture
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('designs', { categoryId: 'sherwanis' })}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Men&apos;s Bespoke
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('designs', { categoryId: 'maggam' })}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Maggam &amp; Bridal
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('measurements')}
-                    className="hover:text-white cursor-pointer transition-colors"
-                  >
-                    Saved Measurements
-                  </button>
-                  <span className="text-white/20">·</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('nearby-shops')}
-                    className="font-semibold text-[#E2B14B] hover:underline cursor-pointer"
-                  >
-                    Nearby Tailor Map
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-[11px] font-semibold tracking-[0.16em] text-[#E2B14B] uppercase mb-2.5">
-                  Platform &amp; Partners
-                </h4>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#CBD5E1]">
+            {/* Column 2: Quick Links */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-white tracking-wide">Quick Links</h4>
+              <ul className="space-y-2 text-xs text-[#CBB8E4]">
+                <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('home')}
-                    className="hover:text-white cursor-pointer transition-colors"
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    About Tailering
+                    Home
                   </button>
-                  <span className="text-white/20">·</span>
+                </li>
+                <li>
                   <button
                     type="button"
-                    onClick={() => onNavigate('partner')}
-                    className="hover:text-white cursor-pointer transition-colors"
+                    onClick={() => onNavigate('designs', { categoryId: 'all' })}
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Master Tailors
+                    Designs
                   </button>
-                  <span className="text-white/20">·</span>
+                </li>
+                <li>
                   <button
                     type="button"
-                    onClick={() => onNavigate('partner')}
-                    className="font-semibold text-[#5EEAD4] hover:underline cursor-pointer"
+                    onClick={() => onNavigate('custom-stitching')}
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Partner with Us
+                    Custom Stitching
                   </button>
-                  <span className="text-white/20">·</span>
+                </li>
+                <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('alterations')}
-                    className="hover:text-white cursor-pointer transition-colors"
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Transparent Pricing
+                    Alterations
                   </button>
-                  <span className="text-white/20">·</span>
+                </li>
+                <li>
                   <button
                     type="button"
-                    onClick={onOpenReferral}
-                    className="font-semibold text-[#E2B14B] hover:underline cursor-pointer"
+                    onClick={() => onNavigate('uniforms')}
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Refer &amp; Earn ₹50
+                    Uniforms
                   </button>
-                  <span className="text-white/20">·</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: For Users */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-white tracking-wide">For Users</h4>
+              <ul className="space-y-2 text-xs text-[#CBB8E4]">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigate('home');
+                      setTimeout(() => {
+                        document
+                          .getElementById('how-tailering-works')
+                          ?.scrollIntoView({ behavior: 'smooth' });
+                      }, 80);
+                    }}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    How It Works
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('nearby-shops')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Find Tailors
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('fabric-calculator')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Fabric Calculator
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('dashboard')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Track Order
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={onOpenSupport}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Help &amp; Support
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: For Tailors */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-white tracking-wide">For Tailors</h4>
+              <ul className="space-y-2 text-xs text-[#CBB8E4]">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('partner')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Become a Partner
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('partner')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Partner Benefits
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('alterations')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Pricing
+                  </button>
+                </li>
+                <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('auth')}
-                    className="hover:text-white cursor-pointer transition-colors"
+                    className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Business Login
+                    Partner Login
                   </button>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={onOpenSupport}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E2E8F0] bg-white/8 border border-white/15 hover:border-[#E2B14B] hover:text-white px-3.5 py-2 rounded-lg transition-colors cursor-pointer"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5 text-[#E2B14B]" />
-                  Report Issue
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    onNotifyToast(
-                      'Tailering Mobile Web App ready — add to Home Screen from your browser menu.',
-                    )
-                  }
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B1F3A] bg-[#E2B14B] hover:bg-[#D49B2A] px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  Install Mobile App
-                </button>
-              </div>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={onOpenReferral}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Refer &amp; Earn ₹50
+                  </button>
+                </li>
+              </ul>
             </div>
-          </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11.5px] text-[#94A3B8]">
-            <p>© 2026 Tailering. All rights reserved.</p>
-            <div className="flex items-center gap-5">
-              <button
-                type="button"
-                onClick={() =>
-                  onNotifyToast(
-                    'Privacy Policy: Measurements & customer addresses are masked until tailor assignment.',
-                  )
-                }
-                className="hover:text-white cursor-pointer transition-colors"
+            {/* Column 5: Company */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-white tracking-wide">Company</h4>
+              <ul className="space-y-2 text-xs text-[#CBB8E4]">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('home')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    About Us
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onNotifyToast('Hiring master pattern drafters & city ops in Hyderabad!')
+                    }
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Careers
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onNotifyToast(
+                        'Terms: Stitching starts only after customer approves final quote & delivery date.',
+                      )
+                    }
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Terms &amp; Conditions
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onNotifyToast(
+                        'Privacy Policy: Measurements & addresses stay private until tailor assignment.',
+                      )
+                    }
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={onOpenSupport}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Contact Us
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 6: Subscribe for Updates + Copyright */}
+            <div className="col-span-2 sm:col-span-3 lg:col-span-1 space-y-4">
+              <h4 className="text-xs font-bold text-white tracking-wide">Subscribe for Updates</h4>
+              <form
+                onSubmit={handleSubscribe}
+                className="flex items-center bg-white rounded-full p-1 pl-4 shadow-md max-w-xs"
               >
-                Privacy
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  onNotifyToast(
-                    'Terms: Stitching starts only after customer approves final quote & delivery date.',
-                  )
-                }
-                className="hover:text-white cursor-pointer transition-colors"
-              >
-                Terms
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  onNotifyToast(
-                    'Fit Guarantee: Free 7-day doorstep alteration & refit on every custom garment.',
-                  )
-                }
-                className="hover:text-white cursor-pointer transition-colors"
-              >
-                Fit Guarantee
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  onNotifyToast(
-                    'Doorstep pickup & delivery across Alkapur Township, Manikonda & Hyderabad zones.',
-                  )
-                }
-                className="hover:text-white cursor-pointer transition-colors"
-              >
-                Service Zones
-              </button>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  aria-label="Email address for updates"
+                  className="flex-1 min-w-0 bg-transparent text-xs text-[#1B1038] placeholder:text-[#8E7FA8] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  aria-label="Subscribe"
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-[#8B2FC9] to-[#6D1D9A] hover:from-[#7B23B5] hover:to-[#56148A] text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+              <div className="w-10 h-px bg-white/20" />
+              <p className="text-[11.5px] text-[#A993C7]">
+                © 2026 Tailering. All Rights Reserved.
+              </p>
             </div>
           </div>
         </div>
@@ -299,7 +345,7 @@ export const Footer: React.FC<FooterProps> = ({
         type="button"
         onClick={onOpenSupport}
         aria-label="Open Tailering Support"
-        className="fixed bottom-5 right-5 z-30 w-12 h-12 rounded-full bg-[#0B7285] hover:bg-[#085463] text-white shadow-lg shadow-[#0B1F3A]/25 flex items-center justify-center transition-transform duration-150 hover:scale-105 cursor-pointer"
+        className="fixed bottom-5 right-5 z-30 w-12 h-12 rounded-full bg-gradient-to-r from-[#7B23B5] to-[#5B178E] hover:from-[#6D1D9A] hover:to-[#4A1173] text-white shadow-lg shadow-[#5B178E]/35 flex items-center justify-center transition-transform duration-150 hover:scale-105 cursor-pointer"
       >
         <MessageCircle className="w-5 h-5" />
       </button>

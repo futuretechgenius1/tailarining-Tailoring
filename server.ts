@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ensureDatabaseReady, isDbConfigured } from './server/db';
+import { createRateLimiter, securityHeaders } from './server/security';
 import authRoutes from './server/routes/authRoutes';
 import publicRoutes from './server/routes/publicRoutes';
 import notificationRoutes from './server/routes/notificationRoutes';
@@ -17,10 +18,30 @@ const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function startServer(): Promise<void> {
   const app = express();
+  app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
-  // Strict JSON body limit
-  app.use(express.json({ limit: '1mb' }));
+  // Baseline HTTP security headers (iframe-compatible)
+  app.use(securityHeaders);
+
+  // Scoped 2mb JSON body limit only for validated image upload endpoints
+  app.use('/api/tailor/portfolio', express.json({ limit: '2mb' }));
+  app.use('/api/tailor/logo', express.json({ limit: '2mb' }));
+  app.use('/api/owner/tailors', express.json({ limit: '2mb' }));
+
+  // Strict JSON body limit for all other endpoints
+  app.use(express.json({ limit: '512kb' }));
+
+  // General API rate limiting (240 req / min per IP)
+  app.use(
+    '/api',
+    createRateLimiter({
+      windowMs: 60 * 1000,
+      max: 240,
+      keyPrefix: 'api',
+      message: 'Too many API requests. Please slow down and try again shortly.',
+    }),
+  );
 
   // Health & DB readiness endpoint
   app.get('/api/health', async (_req: Request, res: Response) => {
@@ -90,6 +111,7 @@ async function startServer(): Promise<void> {
     app.use(vite.middlewares);
   } else {
     const distDir = path.resolve(__dirname, 'dist');
+    app.use('/src/assets/images', express.static(path.resolve(__dirname, 'src', 'assets', 'images')));
     app.use(express.static(distDir));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.join(distDir, 'index.html'));

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#3B0764"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#E9D5FF" stroke-width="2"/>
+  <path d="M46 26L60 44L74 26" stroke="#F472B6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="60" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="2">VF</text>
+  <text x="60" y="96" text-anchor="middle" fill="#E9D5FF" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="2">VASTRAA</text>
+</svg>

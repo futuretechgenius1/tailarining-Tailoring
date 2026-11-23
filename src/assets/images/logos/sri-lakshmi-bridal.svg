@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#5B1932"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#E2B14B" stroke-width="2"/>
+  <path d="M60 24C65 31 69 36 69 41C69 45 65 48 60 48C55 48 51 45 51 41C51 36 55 31 60 24Z" stroke="#E2B14B" stroke-width="2"/>
+  <text x="60" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="2">SL</text>
+  <text x="60" y="96" text-anchor="middle" fill="#FDE68A" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="2">SRI LAKSHMI</text>
+</svg>

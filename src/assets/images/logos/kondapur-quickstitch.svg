@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#7C3AED"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"/>
+  <path d="M38 35C48 25 72 45 82 35" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="60" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="2">KQ</text>
+  <text x="60" y="96" text-anchor="middle" fill="#F5F3FF" font-family="Arial, sans-serif" font-size="8" font-weight="700" letter-spacing="1.8">QUICKSTITCH</text>
+</svg>

@@ -3,6 +3,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { z } from 'zod';
 import { AuthedRequest, requireAuth, requireRole } from '../auth';
 import { executeSql, getPlatformSettingsMap, queryRows, withTransaction } from '../db';
+import { buildPaginationMeta, parsePagination } from '../security';
 
 const router = Router();
 router.use(requireAuth, requireRole('customer'));
@@ -81,22 +82,36 @@ router.get('/overview', async (req: AuthedRequest, res: Response, next: NextFunc
   }
 });
 
-// 2. LIST CUSTOMER ORDERS
+// 2. LIST CUSTOMER ORDERS (Paginated)
 router.get('/orders', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const status = typeof req.query.status === 'string' ? req.query.status.trim() : '';
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT o.*, tp.shop_name AS tailor_shop_name, tp.master_tailor, tp.locality AS tailor_locality,
-              u.phone AS tailor_phone
-       FROM orders o
-       LEFT JOIN tailor_profiles tp ON tp.id = o.tailor_id
-       LEFT JOIN users u ON u.id = tp.user_id
-       WHERE o.customer_id = ?
-         AND (? = '' OR o.status = ?)
-       ORDER BY o.created_at DESC`,
-      [req.user!.id, status, status],
-    );
-    res.json({ orders: rows });
+    const { page, limit, offset } = parsePagination(req.query, 8, 50);
+    const conditions: string[] = [`o.customer_id = ?`];
+    const params: (string | number)[] = [req.user!.id];
+    if (status) {
+      conditions.push(`o.status = ?`);
+      params.push(status);
+    }
+
+    const whereClause = conditions.join(' AND ');
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(`SELECT COUNT(*) AS total FROM orders o WHERE ${whereClause}`, params),
+      queryRows<RowDataPacket[]>(
+        `SELECT o.*, tp.shop_name AS tailor_shop_name, tp.master_tailor, tp.locality AS tailor_locality,
+                u.phone AS tailor_phone
+         FROM orders o
+         LEFT JOIN tailor_profiles tp ON tp.id = o.tailor_id
+         LEFT JOIN users u ON u.id = tp.user_id
+         WHERE ${whereClause}
+         ORDER BY o.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ orders: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -584,34 +599,52 @@ router.post('/orders/:id/pay', async (req: AuthedRequest, res: Response, next: N
   }
 });
 
-// 8. PAYMENT HISTORY
+// 8. PAYMENT HISTORY (Paginated)
 router.get('/payments', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT p.*, o.order_code, o.service_title, o.status AS order_status, tp.shop_name AS tailor_shop_name
-       FROM payments p
-       JOIN orders o ON o.id = p.order_id
-       LEFT JOIN tailor_profiles tp ON tp.id = p.tailor_id
-       WHERE p.customer_id = ?
-       ORDER BY p.created_at DESC`,
-      [req.user!.id],
-    );
-    res.json({ payments: rows });
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM payments WHERE customer_id = ?`,
+        [req.user!.id],
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT p.*, o.order_code, o.service_title, o.status AS order_status, tp.shop_name AS tailor_shop_name
+         FROM payments p
+         JOIN orders o ON o.id = p.order_id
+         LEFT JOIN tailor_profiles tp ON tp.id = p.tailor_id
+         WHERE p.customer_id = ?
+         ORDER BY p.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        [req.user!.id],
+      ),
+    ]);
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ payments: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
 });
 
-// 9. MEASUREMENT PROFILES (CRUD)
+// 9. MEASUREMENT PROFILES (CRUD + Paginated)
 router.get('/measurements', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT id, label, garment_type, owner_name, measured_by, consent_saved, values_json, updated_at
-       FROM measurement_profiles
-       WHERE customer_id = ?
-       ORDER BY updated_at DESC`,
-      [req.user!.id],
-    );
+    const { page, limit, offset } = parsePagination(req.query, 8, 50);
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM measurement_profiles WHERE customer_id = ?`,
+        [req.user!.id],
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT id, label, garment_type, owner_name, measured_by, consent_saved, values_json, updated_at
+         FROM measurement_profiles
+         WHERE customer_id = ?
+         ORDER BY updated_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        [req.user!.id],
+      ),
+    ]);
+    const total = Number(countRows[0]?.total || 0);
     res.json({
       measurements: rows.map((r) => ({
         id: Number(r.id),
@@ -626,6 +659,7 @@ router.get('/measurements', async (req: AuthedRequest, res: Response, next: Next
             : (r.values_json as Record<string, string>),
         updatedAt: r.updated_at,
       })),
+      pagination: buildPaginationMeta(page, limit, total),
     });
   } catch (err) {
     next(err);
@@ -688,5 +722,162 @@ router.delete('/measurements/:id', async (req: AuthedRequest, res: Response, nex
     next(err);
   }
 });
+
+// 10. SUBMIT CUSTOMER REVIEW FOR A TAILOR SHOP (Authenticated Customer, Transactional)
+const createReviewSchema = z.object({
+  rating: z.coerce.number().int().min(1, 'Please select a star rating between 1 and 5').max(5),
+  serviceName: z.string().trim().max(160).optional(),
+  comment: z
+    .string()
+    .trim()
+    .min(8, 'Please write at least 8 characters describing your experience.')
+    .max(1000, 'Review comment cannot exceed 1000 characters.'),
+});
+
+router.post(
+  '/tailors/:id/reviews',
+  async (req: AuthedRequest, res: Response, next: NextFunction) => {
+    try {
+      const tailorId = Number(req.params.id);
+      if (!Number.isInteger(tailorId) || tailorId <= 0) {
+        res.status(400).json({ error: 'Invalid tailor shop ID.' });
+        return;
+      }
+
+      const parsed = createReviewSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid review input.' });
+        return;
+      }
+
+      const { rating, serviceName, comment } = parsed.data;
+      const customerId = req.user!.id;
+      const reviewerName = req.user!.fullName;
+      const reviewerLocality = req.user!.locality || 'Hyderabad';
+
+      const result = await withTransaction(async (conn) => {
+        const [tpRows] = await conn.execute<RowDataPacket[]>(
+          `SELECT tp.id, tp.rating, tp.total_reviews, tp.shop_name
+           FROM tailor_profiles tp
+           JOIN users u ON u.id = tp.user_id
+           WHERE tp.id = ? AND u.status = 'active'
+           LIMIT 1
+           FOR UPDATE`,
+          [tailorId],
+        );
+
+        if (tpRows.length === 0) {
+          const err = new Error('Tailor shop not found.') as Error & { statusCode?: number };
+          err.statusCode = 404;
+          throw err;
+        }
+
+        const [orderMatch] = await conn.execute<RowDataPacket[]>(
+          `SELECT id FROM orders WHERE customer_id = ? AND tailor_id = ? LIMIT 1`,
+          [customerId, tailorId],
+        );
+        const isVerifiedBooking = orderMatch.length > 0 ? 1 : 0;
+
+        const cleanService = serviceName && serviceName.trim() ? serviceName.trim() : null;
+        const [insertRes] = await conn.execute<ResultSetHeader>(
+          `INSERT INTO tailor_reviews (
+             tailor_id, customer_id, reviewer_name, reviewer_locality,
+             service_name, rating, comment, is_verified_booking
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            tailorId,
+            customerId,
+            reviewerName,
+            reviewerLocality,
+            cleanService,
+            rating,
+            comment,
+            isVerifiedBooking,
+          ],
+        );
+
+        const [aggRows] = await conn.execute<RowDataPacket[]>(
+          `SELECT rating, COUNT(*) AS cnt
+           FROM tailor_reviews
+           WHERE tailor_id = ?
+           GROUP BY rating`,
+          [tailorId],
+        );
+
+        const breakdown: Record<'5' | '4' | '3' | '2' | '1', number> = {
+          '5': 0,
+          '4': 0,
+          '3': 0,
+          '2': 0,
+          '1': 0,
+        };
+        let reviewSum = 0;
+        let reviewCount = 0;
+        for (const row of aggRows) {
+          const s = Math.min(5, Math.max(1, Number(row.rating || 5)));
+          const c = Number(row.cnt || 0);
+          breakdown[String(s) as '1' | '2' | '3' | '4' | '5'] = c;
+          reviewSum += s * c;
+          reviewCount += c;
+        }
+
+        const prevTotal = Number(tpRows[0].total_reviews || 0);
+        const prevRating = Number(tpRows[0].rating || 4.8);
+        const nextTotalReviews = Math.max(prevTotal + 1, reviewCount);
+        const blendedRating =
+          prevTotal > 0
+            ? Number(((prevRating * prevTotal + rating) / (prevTotal + 1)).toFixed(2))
+            : Number((reviewSum / Math.max(1, reviewCount)).toFixed(2));
+
+        const recentReviewJson = JSON.stringify({
+          author: reviewerName,
+          text: comment,
+          date: 'Just now',
+        });
+
+        await conn.execute(
+          `UPDATE tailor_profiles
+           SET rating = ?, total_reviews = ?, recent_review_json = ?
+           WHERE id = ?`,
+          [blendedRating, nextTotalReviews, recentReviewJson, tailorId],
+        );
+
+        const [createdRows] = await conn.execute<RowDataPacket[]>(
+          `SELECT id, tailor_id, reviewer_name, reviewer_locality, service_name,
+                  rating, comment, is_verified_booking, created_at
+           FROM tailor_reviews
+           WHERE id = ?
+           LIMIT 1`,
+          [insertRes.insertId],
+        );
+
+        const created = createdRows[0];
+        return {
+          review: {
+            id: Number(created.id),
+            tailorId: Number(created.tailor_id),
+            reviewerName: String(created.reviewer_name),
+            reviewerLocality: String(created.reviewer_locality),
+            serviceName: created.service_name ? String(created.service_name) : null,
+            rating: Number(created.rating),
+            comment: String(created.comment),
+            isVerifiedBooking: Boolean(created.is_verified_booking),
+            createdAt: String(created.created_at),
+          },
+          rating: blendedRating,
+          totalReviews: nextTotalReviews,
+          ratingBreakdown: breakdown,
+        };
+      });
+
+      res.status(201).json({
+        ...result,
+        message: 'Thank you! Your customer review has been published.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

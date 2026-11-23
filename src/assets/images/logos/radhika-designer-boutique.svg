@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#0B1F3A"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#C8922A" stroke-width="2"/>
+  <circle cx="60" cy="40" r="10" stroke="#E2B14B" stroke-width="2.2"/>
+  <path d="M46 40C50 32 70 32 74 40" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round"/>
+  <text x="60" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="30" font-weight="700" letter-spacing="2">RB</text>
+  <text x="60" y="96" text-anchor="middle" fill="#E2B14B" font-family="Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="2.4">RADHIKA</text>
+</svg>

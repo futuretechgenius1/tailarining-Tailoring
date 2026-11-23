@@ -29,7 +29,19 @@ const JWT_SIGNING_SECRET =
     ? process.env.JWT_SECRET.trim()
     : crypto.randomBytes(32).toString('hex');
 
-const JWT_EXPIRES_IN = '24h';
+const JWT_EXPIRES_IN = '12h';
+const JWT_ISSUER = 'tailering-api';
+const JWT_AUDIENCE = 'tailering-app';
+
+// In-memory JWT revocation denylist (jti -> expiry timestamp ms)
+const revokedTokenJtis = new Map<string, number>();
+
+function pruneRevokedTokens(): void {
+  const now = Date.now();
+  for (const [jti, expMs] of revokedTokenJtis.entries()) {
+    if (expMs <= now) revokedTokenJtis.delete(jti);
+  }
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -43,13 +55,23 @@ export function signAuthToken(payload: { userId: number; role: DbUserRole }): st
   return jwt.sign(payload, JWT_SIGNING_SECRET, {
     algorithm: 'HS256',
     expiresIn: JWT_EXPIRES_IN,
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+    jwtid: crypto.randomUUID(),
   });
 }
 
-export function verifyAuthToken(token: string): { userId: number; role: DbUserRole } {
+export function verifyAuthToken(token: string): {
+  userId: number;
+  role: DbUserRole;
+  jti?: string;
+  exp?: number;
+} {
   const decoded = jwt.verify(token, JWT_SIGNING_SECRET, {
     algorithms: ['HS256'],
-  }) as { userId?: unknown; role?: unknown };
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+  }) as { userId?: unknown; role?: unknown; jti?: unknown; exp?: unknown };
 
   if (
     typeof decoded?.userId !== 'number' ||
@@ -58,7 +80,36 @@ export function verifyAuthToken(token: string): { userId: number; role: DbUserRo
     throw new Error('Invalid token payload');
   }
 
-  return { userId: decoded.userId, role: decoded.role };
+  return {
+    userId: decoded.userId,
+    role: decoded.role,
+    jti: typeof decoded.jti === 'string' ? decoded.jti : undefined,
+    exp: typeof decoded.exp === 'number' ? decoded.exp : undefined,
+  };
+}
+
+export function revokeAuthToken(token: string): void {
+  pruneRevokedTokens();
+  try {
+    const decoded = verifyAuthToken(token);
+    if (decoded.jti) {
+      const expMs = decoded.exp ? decoded.exp * 1000 : Date.now() + 12 * 3600 * 1000;
+      revokedTokenJtis.set(decoded.jti, expMs);
+    }
+  } catch {
+    // Token already invalid or expired
+  }
+}
+
+export function isTokenRevoked(jti?: string): boolean {
+  if (!jti) return false;
+  const expMs = revokedTokenJtis.get(jti);
+  if (!expMs) return false;
+  if (expMs <= Date.now()) {
+    revokedTokenJtis.delete(jti);
+    return false;
+  }
+  return true;
 }
 
 export function safeEqualString(a: string, b: string): boolean {
@@ -111,11 +162,16 @@ export async function requireAuth(
       return;
     }
 
-    let decoded: { userId: number; role: DbUserRole };
+    let decoded: { userId: number; role: DbUserRole; jti?: string };
     try {
       decoded = verifyAuthToken(token);
     } catch {
       res.status(401).json({ error: 'Session expired or invalid. Please sign in again.' });
+      return;
+    }
+
+    if (isTokenRevoked(decoded.jti)) {
+      res.status(401).json({ error: 'Session has been signed out. Please sign in again.' });
       return;
     }
 

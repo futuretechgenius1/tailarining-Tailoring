@@ -3,6 +3,14 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { z } from 'zod';
 import { AuthedRequest, hashPassword, requireAuth, requireRole } from '../auth';
 import { executeSql, queryRows, withTransaction } from '../db';
+import {
+  ALLOWED_PORTFOLIO_MIMES,
+  buildPaginationMeta,
+  createRateLimiter,
+  parsePagination,
+  strongPasswordSchema,
+  validatePortfolioImageBuffer,
+} from '../security';
 
 const router = Router();
 router.use(requireAuth, requireRole('owner'));
@@ -115,28 +123,46 @@ router.get('/overview', async (_req: AuthedRequest, res: Response, next: NextFun
   }
 });
 
-// 2. USERS & CUSTOMERS MANAGEMENT
+// 2. USERS & CUSTOMERS MANAGEMENT (Paginated)
 router.get('/users', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const role = typeof req.query.role === 'string' ? req.query.role.trim() : '';
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
 
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.status, u.locality, u.address, u.created_at,
-              COUNT(DISTINCT o.id) AS order_count,
-              COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.total_amount ELSE 0 END), 0) AS total_spent,
-              tp.shop_name
-       FROM users u
-       LEFT JOIN orders o ON o.customer_id = u.id
-       LEFT JOIN tailor_profiles tp ON tp.user_id = u.id
-       WHERE (? = '' OR u.role = ?)
-         AND (? = '' OR u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ? OR u.locality LIKE ?)
-       GROUP BY u.id, tp.shop_name
-       ORDER BY u.created_at DESC`,
-      [role, role, q, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`],
-    );
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (role) {
+      conditions.push(`u.role = ?`);
+      params.push(role);
+    }
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(`(u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ? OR u.locality LIKE ?)`);
+      params.push(like, like, like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    res.json({ users: rows });
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(`SELECT COUNT(*) AS total FROM users u ${whereClause}`, params),
+      queryRows<RowDataPacket[]>(
+        `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.status, u.locality, u.address, u.created_at,
+                COUNT(DISTINCT o.id) AS order_count,
+                COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.total_amount ELSE 0 END), 0) AS total_spent,
+                tp.shop_name
+         FROM users u
+         LEFT JOIN orders o ON o.customer_id = u.id
+         LEFT JOIN tailor_profiles tp ON tp.user_id = u.id
+         ${whereClause}
+         GROUP BY u.id, tp.shop_name
+         ORDER BY u.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ users: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -146,7 +172,7 @@ const createUserSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(190),
   phone: z.string().trim().max(30).optional().or(z.literal('')),
-  password: z.string().min(8).max(128),
+  password: strongPasswordSchema,
   role: z.enum(['owner', 'tailor', 'customer']),
   locality: z.string().trim().min(2).max(160).default('Alkapur Township, Manikonda'),
   shopName: z.string().trim().max(160).optional(),
@@ -272,29 +298,83 @@ router.patch('/users/:id', async (req: AuthedRequest, res: Response, next: NextF
   }
 });
 
-// 3. TAILORS MANAGEMENT
-router.get('/tailors', async (_req: AuthedRequest, res: Response, next: NextFunction) => {
+// 3. TAILORS MANAGEMENT (Paginated + Search)
+router.get('/tailors', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await queryRows<RowDataPacket[]>(`
-      SELECT tp.*, u.full_name, u.email, u.phone, u.status AS user_status,
-             COUNT(DISTINCT o.id) AS total_orders,
-             SUM(CASE WHEN o.status = 'Delivered' THEN 1 ELSE 0 END) AS delivered_count,
-             COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.total_amount ELSE 0 END), 0) AS total_gmv,
-             COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.tailor_payout ELSE 0 END), 0) AS total_payout
-      FROM tailor_profiles tp
-      JOIN users u ON u.id = tp.user_id
-      LEFT JOIN orders o ON o.tailor_id = tp.id
-      GROUP BY tp.id
-      ORDER BY tp.created_at DESC
-    `);
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
 
-    res.json({ tailors: rows });
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(`(tp.shop_name LIKE ? OR tp.master_tailor LIKE ? OR tp.locality LIKE ? OR u.email LIKE ?)`);
+      params.push(like, like, like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total
+         FROM tailor_profiles tp
+         JOIN users u ON u.id = tp.user_id
+         ${whereClause}`,
+        params,
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT tp.id, tp.user_id, tp.shop_name, tp.master_tailor, tp.bio, tp.locality, tp.address,
+                tp.specialties_json, tp.working_hours, tp.experience_years, tp.home_visit_fee,
+                tp.pickup_available, tp.is_available, tp.is_verified, tp.commission_rate,
+                tp.rating, tp.total_reviews, tp.completed_orders, tp.cover_image_url, tp.logo_url,
+                tp.distance_km, tp.turnaround_text, tp.turnaround_days, tp.created_at, tp.updated_at,
+                u.full_name, u.email, u.phone, u.status AS user_status,
+                COUNT(DISTINCT o.id) AS total_orders,
+                SUM(CASE WHEN o.status = 'Delivered' THEN 1 ELSE 0 END) AS delivered_count,
+                COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.total_amount ELSE 0 END), 0) AS total_gmv,
+                COALESCE(SUM(CASE WHEN o.status <> 'Cancelled' THEN o.tailor_payout ELSE 0 END), 0) AS total_payout
+         FROM tailor_profiles tp
+         JOIN users u ON u.id = tp.user_id
+         LEFT JOIN orders o ON o.tailor_id = tp.id
+         ${whereClause}
+         GROUP BY tp.id
+         ORDER BY tp.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ tailors: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
 });
 
+const safeImageUrlSchema = z
+  .string()
+  .trim()
+  .max(255)
+  .refine(
+    (val) =>
+      val === '' ||
+      val.startsWith('/') ||
+      val.startsWith('https://') ||
+      val.startsWith('http://'),
+    'Image URL must be a relative path or http(s) URL.',
+  );
+
 const patchTailorSchema = z.object({
+  shopName: z.string().trim().min(2).max(160).optional(),
+  masterTailor: z.string().trim().min(2).max(120).optional(),
+  locality: z.string().trim().min(2).max(160).optional(),
+  bio: z.string().trim().max(1000).optional(),
+  workingHours: z.string().trim().min(3).max(120).optional(),
+  experienceYears: z.coerce.number().int().min(0).max(60).optional(),
+  coverImageUrl: safeImageUrlSchema.optional(),
+  logoUrl: safeImageUrlSchema.optional(),
+  turnaroundText: z.string().trim().min(2).max(60).optional(),
+  turnaroundDays: z.coerce.number().int().min(1).max(60).optional(),
+  pickupAvailable: z.boolean().optional(),
   isVerified: z.boolean().optional(),
   isAvailable: z.boolean().optional(),
   commissionRate: z.coerce.number().min(0).max(50).optional(),
@@ -329,12 +409,35 @@ router.patch('/tailors/:id', async (req: AuthedRequest, res: Response, next: Nex
 
       await conn.execute(
         `UPDATE tailor_profiles
-         SET is_verified = COALESCE(?, is_verified),
+         SET shop_name = COALESCE(?, shop_name),
+             master_tailor = COALESCE(?, master_tailor),
+             locality = COALESCE(?, locality),
+             bio = COALESCE(?, bio),
+             working_hours = COALESCE(?, working_hours),
+             experience_years = COALESCE(?, experience_years),
+             cover_image_url = COALESCE(?, cover_image_url),
+             logo_url = CASE WHEN ? THEN ? ELSE logo_url END,
+             turnaround_text = COALESCE(?, turnaround_text),
+             turnaround_days = COALESCE(?, turnaround_days),
+             pickup_available = COALESCE(?, pickup_available),
+             is_verified = COALESCE(?, is_verified),
              is_available = COALESCE(?, is_available),
              commission_rate = COALESCE(?, commission_rate),
              home_visit_fee = COALESCE(?, home_visit_fee)
          WHERE id = ?`,
         [
+          d.shopName ?? null,
+          d.masterTailor ?? null,
+          d.locality ?? null,
+          d.bio ?? null,
+          d.workingHours ?? null,
+          d.experienceYears ?? null,
+          d.coverImageUrl !== undefined ? (d.coverImageUrl || null) : null,
+          d.logoUrl !== undefined ? 1 : 0,
+          d.logoUrl || null,
+          d.turnaroundText ?? null,
+          d.turnaroundDays ?? null,
+          d.pickupAvailable !== undefined ? (d.pickupAvailable ? 1 : 0) : null,
           d.isVerified !== undefined ? (d.isVerified ? 1 : 0) : null,
           d.isAvailable !== undefined ? (d.isAvailable ? 1 : 0) : null,
           d.commissionRate ?? null,
@@ -364,16 +467,157 @@ router.patch('/tailors/:id', async (req: AuthedRequest, res: Response, next: Nex
   }
 });
 
-// 4. SERVICES CATALOG MANAGEMENT (CRUD)
-router.get('/services', async (_req: AuthedRequest, res: Response, next: NextFunction) => {
+const ownerLogoUploadLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  keyPrefix: 'owner-logo-upload',
+  message: 'Too many logo upload requests. Please try again shortly.',
+});
+
+const ownerLogoSchema = z.object({
+  mimeType: z.enum(ALLOWED_PORTFOLIO_MIMES),
+  imageBase64: z.string().min(32).max(2_200_000),
+});
+
+router.post(
+  '/tailors/:id/logo',
+  ownerLogoUploadLimiter,
+  async (req: AuthedRequest, res: Response, next: NextFunction) => {
+    try {
+      const tailorId = Number(req.params.id);
+      if (!Number.isInteger(tailorId) || tailorId <= 0) {
+        res.status(400).json({ error: 'Invalid tailor ID.' });
+        return;
+      }
+
+      const parsed = ownerLogoSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid logo upload.' });
+        return;
+      }
+
+      const cleanedBase64 = parsed.data.imageBase64.replace(
+        /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
+        '',
+      );
+      const imageBuffer = Buffer.from(cleanedBase64, 'base64');
+      const check = validatePortfolioImageBuffer(imageBuffer, parsed.data.mimeType);
+      if (!check.valid) {
+        res.status(400).json({ error: check.reason || 'Unsupported logo image.' });
+        return;
+      }
+
+      const logoUrl = `/api/public/tailors/${tailorId}/logo?v=${Date.now()}`;
+      const result = await executeSql(
+        `UPDATE tailor_profiles
+         SET logo_url = ?, logo_mime = ?, logo_data = ?
+         WHERE id = ?`,
+        [logoUrl, parsed.data.mimeType, imageBuffer, tailorId],
+      );
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: 'Tailor profile not found.' });
+        return;
+      }
+
+      res.json({ logoUrl, message: 'Tailor shop logo uploaded and published.' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.delete('/tailors/:id/logo', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await queryRows<RowDataPacket[]>(`
-      SELECT s.*, tp.shop_name AS tailor_shop_name
-      FROM services s
-      LEFT JOIN tailor_profiles tp ON tp.id = s.tailor_id
-      ORDER BY s.tailor_id IS NOT NULL, s.created_at DESC
-    `);
-    res.json({ services: rows });
+    const tailorId = Number(req.params.id);
+    if (!Number.isInteger(tailorId) || tailorId <= 0) {
+      res.status(400).json({ error: 'Invalid tailor ID.' });
+      return;
+    }
+    const result = await executeSql(
+      `UPDATE tailor_profiles
+       SET logo_url = NULL, logo_mime = NULL, logo_data = NULL
+       WHERE id = ?`,
+      [tailorId],
+    );
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Tailor profile not found.' });
+      return;
+    }
+    res.json({ message: 'Tailor shop logo removed.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/tailors/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const tailorId = Number(req.params.id);
+    if (!Number.isInteger(tailorId) || tailorId <= 0) {
+      res.status(400).json({ error: 'Invalid tailor ID.' });
+      return;
+    }
+
+    await withTransaction(async (conn) => {
+      const [rows] = await conn.execute<RowDataPacket[]>(
+        `SELECT user_id FROM tailor_profiles WHERE id = ? LIMIT 1`,
+        [tailorId],
+      );
+      if (rows.length === 0) {
+        const err = new Error('Tailor profile not found.') as Error & { statusCode?: number };
+        err.statusCode = 404;
+        throw err;
+      }
+      await conn.execute(`DELETE FROM tailor_profiles WHERE id = ?`, [tailorId]);
+      await conn.execute(`UPDATE users SET status = 'suspended' WHERE id = ?`, [rows[0].user_id]);
+    });
+
+    res.json({ message: 'Tailor partner removed from storefront.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 4. SERVICES CATALOG MANAGEMENT (CRUD + Paginated)
+router.get('/services', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
+
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (category) {
+      conditions.push(`s.category = ?`);
+      params.push(category);
+    }
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(`(s.title LIKE ? OR s.description LIKE ? OR tp.shop_name LIKE ?)`);
+      params.push(like, like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total
+         FROM services s
+         LEFT JOIN tailor_profiles tp ON tp.id = s.tailor_id
+         ${whereClause}`,
+        params,
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT s.*, tp.shop_name AS tailor_shop_name
+         FROM services s
+         LEFT JOIN tailor_profiles tp ON tp.id = s.tailor_id
+         ${whereClause}
+         ORDER BY s.tailor_id IS NOT NULL, s.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ services: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -468,25 +712,52 @@ router.delete('/services/:id', async (req: AuthedRequest, res: Response, next: N
   }
 });
 
-// 5. ORDERS MANAGEMENT (View all, assign tailor, update status/quote/delivery in transaction)
+// 5. ORDERS MANAGEMENT (Paginated)
 router.get('/orders', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const status = typeof req.query.status === 'string' ? req.query.status.trim() : '';
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
 
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT o.*, c.full_name AS customer_name, c.email AS customer_email, c.phone AS customer_phone,
-              tp.shop_name AS tailor_shop_name, tp.master_tailor
-       FROM orders o
-       JOIN users c ON c.id = o.customer_id
-       LEFT JOIN tailor_profiles tp ON tp.id = o.tailor_id
-       WHERE (? = '' OR o.status = ?)
-         AND (? = '' OR o.order_code LIKE ? OR o.service_title LIKE ? OR c.full_name LIKE ? OR tp.shop_name LIKE ?)
-       ORDER BY o.created_at DESC`,
-      [status, status, q, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`],
-    );
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (status) {
+      conditions.push(`o.status = ?`);
+      params.push(status);
+    }
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(
+        `(o.order_code LIKE ? OR o.service_title LIKE ? OR c.full_name LIKE ? OR tp.shop_name LIKE ?)`,
+      );
+      params.push(like, like, like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    res.json({ orders: rows });
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total
+         FROM orders o
+         JOIN users c ON c.id = o.customer_id
+         LEFT JOIN tailor_profiles tp ON tp.id = o.tailor_id
+         ${whereClause}`,
+        params,
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT o.*, c.full_name AS customer_name, c.email AS customer_email, c.phone AS customer_phone,
+                tp.shop_name AS tailor_shop_name, tp.master_tailor
+         FROM orders o
+         JOIN users c ON c.id = o.customer_id
+         LEFT JOIN tailor_profiles tp ON tp.id = o.tailor_id
+         ${whereClause}
+         ORDER BY o.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ orders: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -611,21 +882,31 @@ router.patch('/orders/:id', async (req: AuthedRequest, res: Response, next: Next
   }
 });
 
-// 6. PAYMENTS & SETTLEMENTS LEDGER
+// 6. PAYMENTS & SETTLEMENTS LEDGER (Paginated)
 router.get('/payments', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const status = typeof req.query.status === 'string' ? req.query.status.trim() : '';
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT p.*, o.order_code, o.service_title, c.full_name AS customer_name, tp.shop_name AS tailor_shop_name
-       FROM payments p
-       JOIN orders o ON o.id = p.order_id
-       JOIN users c ON c.id = p.customer_id
-       LEFT JOIN tailor_profiles tp ON tp.id = p.tailor_id
-       WHERE (? = '' OR p.payment_status = ?)
-       ORDER BY p.created_at DESC`,
-      [status, status],
-    );
-    res.json({ payments: rows });
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
+    const whereClause = status ? `WHERE p.payment_status = ?` : '';
+    const params = status ? [status] : [];
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(`SELECT COUNT(*) AS total FROM payments p ${whereClause}`, params),
+      queryRows<RowDataPacket[]>(
+        `SELECT p.*, o.order_code, o.service_title, c.full_name AS customer_name, tp.shop_name AS tailor_shop_name
+         FROM payments p
+         JOIN orders o ON o.id = p.order_id
+         JOIN users c ON c.id = p.customer_id
+         LEFT JOIN tailor_profiles tp ON tp.id = p.tailor_id
+         ${whereClause}
+         ORDER BY p.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ payments: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -676,15 +957,15 @@ router.patch('/payments/:id', async (req: AuthedRequest, res: Response, next: Ne
          SET payment_status = ?,
              payout_status = ?,
              transaction_ref = COALESCE(?, transaction_ref),
-             paid_at = CASE WHEN ? = 'completed' AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END,
-             settled_at = CASE WHEN ? = 'settled' AND settled_at IS NULL THEN CURRENT_TIMESTAMP ELSE settled_at END
+             paid_at = CASE WHEN ? = 1 AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END,
+             settled_at = CASE WHEN ? = 1 AND settled_at IS NULL THEN CURRENT_TIMESTAMP ELSE settled_at END
          WHERE id = ?`,
         [
           nextPayStatus,
           nextPayoutStatus,
           d.transactionRef ?? null,
-          nextPayStatus,
-          nextPayoutStatus,
+          nextPayStatus === 'completed' ? 1 : 0,
+          nextPayoutStatus === 'settled' ? 1 : 0,
           paymentId,
         ],
       );
@@ -806,6 +1087,318 @@ router.put('/settings', async (req: AuthedRequest, res: Response, next: NextFunc
     });
 
     res.json({ message: 'Platform configuration saved.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 9. CURATED DESIGNS CATALOG CRUD (Updates DesignsCatalogPage & Alterations carousel live)
+router.get('/designs', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 12, 50);
+
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(`(title LIKE ? OR category LIKE ? OR boutique LIKE ?)`);
+      params.push(like, like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(`SELECT COUNT(*) AS total FROM designs_catalog ${whereClause}`, params),
+      queryRows<RowDataPacket[]>(
+        `SELECT * FROM designs_catalog ${whereClause} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ designs: rows, pagination: buildPaginationMeta(page, limit, total) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const designSchema = z.object({
+  title: z.string().trim().min(2).max(180),
+  category: z.string().trim().min(2).max(80),
+  categoryId: z.string().trim().min(2).max(60).default('blouse'),
+  gender: z.enum(['women', 'men']).default('women'),
+  boutique: z.string().trim().min(2).max(160).default('Tailering Master Atelier'),
+  price: z.coerce.number().min(20).max(500000),
+  originalPrice: z.coerce.number().min(20).max(500000).nullable().optional(),
+  imageUrl: safeImageUrlSchema.refine((v) => v.length > 0, 'Image URL is required'),
+  turnaroundDays: z.coerce.number().int().min(1).max(60).default(5),
+  trusted: z.boolean().default(true),
+  description: z.string().trim().max(1000).optional(),
+  fabricNote: z.string().trim().max(500).optional(),
+  isTrending: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+router.post('/designs', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const parsed = designSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid design data' });
+      return;
+    }
+    const d = parsed.data;
+    const slug = `des-${Date.now().toString(36)}`;
+    const result = await executeSql(
+      `INSERT INTO designs_catalog (
+         slug, title, category, category_id, gender, boutique, price, original_price,
+         image_url, turnaround_days, trusted, description, fabric_note, is_trending, is_active
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        slug,
+        d.title,
+        d.category,
+        d.categoryId,
+        d.gender,
+        d.boutique,
+        d.price,
+        d.originalPrice ?? null,
+        d.imageUrl,
+        d.turnaroundDays,
+        d.trusted ? 1 : 0,
+        d.description || '',
+        d.fabricNote || '',
+        d.isTrending ? 1 : 0,
+        d.isActive ? 1 : 0,
+      ],
+    );
+    res.status(201).json({ id: result.insertId, message: 'Design added to storefront catalog.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/designs/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'Invalid design ID.' });
+      return;
+    }
+    const parsed = designSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid design update' });
+      return;
+    }
+    const d = parsed.data;
+    const resUpd = await executeSql(
+      `UPDATE designs_catalog
+       SET title = COALESCE(?, title),
+           category = COALESCE(?, category),
+           category_id = COALESCE(?, category_id),
+           gender = COALESCE(?, gender),
+           boutique = COALESCE(?, boutique),
+           price = COALESCE(?, price),
+           original_price = CASE WHEN ? THEN ? ELSE original_price END,
+           image_url = COALESCE(?, image_url),
+           turnaround_days = COALESCE(?, turnaround_days),
+           trusted = COALESCE(?, trusted),
+           description = COALESCE(?, description),
+           fabric_note = COALESCE(?, fabric_note),
+           is_trending = COALESCE(?, is_trending),
+           is_active = COALESCE(?, is_active)
+       WHERE id = ?`,
+      [
+        d.title ?? null,
+        d.category ?? null,
+        d.categoryId ?? null,
+        d.gender ?? null,
+        d.boutique ?? null,
+        d.price ?? null,
+        d.originalPrice !== undefined ? 1 : 0,
+        d.originalPrice ?? null,
+        d.imageUrl ?? null,
+        d.turnaroundDays ?? null,
+        d.trusted !== undefined ? (d.trusted ? 1 : 0) : null,
+        d.description ?? null,
+        d.fabricNote ?? null,
+        d.isTrending !== undefined ? (d.isTrending ? 1 : 0) : null,
+        d.isActive !== undefined ? (d.isActive ? 1 : 0) : null,
+        id,
+      ],
+    );
+    if (resUpd.affectedRows === 0) {
+      res.status(404).json({ error: 'Design not found.' });
+      return;
+    }
+    res.json({ message: 'Design updated on storefront.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/designs/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'Invalid design ID.' });
+      return;
+    }
+    await executeSql(`DELETE FROM designs_catalog WHERE id = ?`, [id]);
+    res.json({ message: 'Design removed from storefront.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 10. DOORSTEP ALTERATION SERVICES CRUD (Updates AlterationsPage live)
+router.get('/alterations', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 15, 50);
+
+    const conditions: string[] = [];
+    const params: string[] = [];
+    if (q) {
+      const like = `%${q}%`;
+      conditions.push(`(title LIKE ? OR description LIKE ?)`);
+      params.push(like, like);
+    }
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM alteration_services ${whereClause}`,
+        params,
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT * FROM alteration_services ${whereClause} ORDER BY section ASC, id DESC LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ alterations: rows, pagination: buildPaginationMeta(page, limit, total) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const alterationSchema = z.object({
+  title: z.string().trim().min(2).max(160),
+  description: z.string().trim().max(500).default(''),
+  price: z.coerce.number().min(10).max(50000),
+  unit: z.string().trim().min(1).max(40).default('item'),
+  badge: z.string().trim().min(1).max(60).default('POPULAR'),
+  badgeColor: z.enum(['amber', 'orange', 'blue', 'emerald', 'rose', 'purple']).default('amber'),
+  section: z.enum(['garment', 'saree']).default('garment'),
+  iconType: z
+    .enum([
+      'button',
+      'tear',
+      'waist',
+      'length',
+      'zip-small',
+      'sleeve',
+      'slim-fit',
+      'zip-large',
+      'jeans',
+      'double-stitch',
+      'saree-fall',
+      'saree-pleat',
+    ])
+    .default('waist'),
+  isActive: z.boolean().default(true),
+});
+
+router.post('/alterations', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const parsed = alterationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid alteration data' });
+      return;
+    }
+    const d = parsed.data;
+    const slug = `alt-${Date.now().toString(36)}`;
+    const result = await executeSql(
+      `INSERT INTO alteration_services (
+         slug, title, description, price, unit, badge, badge_color, section, icon_type, is_active
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        slug,
+        d.title,
+        d.description,
+        d.price,
+        d.unit,
+        d.badge,
+        d.badgeColor,
+        d.section,
+        d.iconType,
+        d.isActive ? 1 : 0,
+      ],
+    );
+    res.status(201).json({ id: result.insertId, message: 'Alteration service added.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/alterations/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'Invalid alteration ID.' });
+      return;
+    }
+    const parsed = alterationSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid update' });
+      return;
+    }
+    const d = parsed.data;
+    const resUpd = await executeSql(
+      `UPDATE alteration_services
+       SET title = COALESCE(?, title),
+           description = COALESCE(?, description),
+           price = COALESCE(?, price),
+           unit = COALESCE(?, unit),
+           badge = COALESCE(?, badge),
+           badge_color = COALESCE(?, badge_color),
+           section = COALESCE(?, section),
+           icon_type = COALESCE(?, icon_type),
+           is_active = COALESCE(?, is_active)
+       WHERE id = ?`,
+      [
+        d.title ?? null,
+        d.description ?? null,
+        d.price ?? null,
+        d.unit ?? null,
+        d.badge ?? null,
+        d.badgeColor ?? null,
+        d.section ?? null,
+        d.iconType ?? null,
+        d.isActive !== undefined ? (d.isActive ? 1 : 0) : null,
+        id,
+      ],
+    );
+    if (resUpd.affectedRows === 0) {
+      res.status(404).json({ error: 'Alteration service not found.' });
+      return;
+    }
+    res.json({ message: 'Alteration service updated.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/alterations/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'Invalid alteration ID.' });
+      return;
+    }
+    await executeSql(`DELETE FROM alteration_services WHERE id = ?`, [id]);
+    res.json({ message: 'Alteration service removed.' });
   } catch (err) {
     next(err);
   }

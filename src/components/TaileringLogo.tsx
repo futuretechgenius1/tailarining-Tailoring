@@ -22,7 +22,7 @@ export const TaileringLogo: React.FC<TaileringLogoProps> = ({
           compact ? 'text-xl' : 'text-2xl'
         } ${className}`}
       >
-        <span className={inverted ? 'text-white' : 'text-[#0B1F3A]'}>Tailer</span>
+        <span className={inverted ? 'text-white' : 'text-[#1A103D]'}>Tailer</span>
         <span className="text-[#C8922A]">ing</span>
       </span>
     );
@@ -37,6 +37,9 @@ export const TaileringLogo: React.FC<TaileringLogoProps> = ({
       <img
         src={TAILERING_LOGO_SRC}
         alt="Tailering"
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
         referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className={`${

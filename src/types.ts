@@ -2,6 +2,7 @@ export type PageRoute =
   | 'home'
   | 'designs'
   | 'custom-stitching'
+  | 'fabric-calculator'
   | 'alterations'
   | 'uniforms'
   | 'measurements'
@@ -9,6 +10,13 @@ export type PageRoute =
   | 'auth'
   | 'partner'
   | 'dashboard';
+
+export interface FabricBookingPreset {
+  garmentOptionId: string;
+  garmentLabel: string;
+  includeLining: boolean;
+  summaryNote: string;
+}
 
 export type AuthMode = 'login' | 'signup';
 
@@ -113,9 +121,12 @@ export type OrderLifecycleStage =
 
 export interface OrderRecord {
   id: string;
+  dbId?: number;
   serviceTitle: string;
   type: 'alteration' | 'custom' | 'design' | 'uniform';
   tailorName: string;
+  tailorId?: number | null;
+  serviceId?: number | null;
   locality: string;
   createdAt: string;
   deliveryDate: string;
@@ -123,10 +134,15 @@ export interface OrderRecord {
   stage: OrderLifecycleStage;
   itemsSummary: string;
   quoteApproved: boolean;
+  pickupMode?: 'doorstep_pickup' | 'shop_visit';
+  pickupDate?: string;
+  pickupSlot?: string;
+  pickupAddress?: string;
 }
 
 export interface MeasurementProfile {
   id: string;
+  dbId?: number;
   label: string;
   garmentType: 'Blouse' | 'Kurti / Salwar' | 'Men Shirt / Kurta' | 'Trousers / Bottom';
   ownerName: string;
@@ -138,6 +154,7 @@ export interface MeasurementProfile {
 
 export interface TailorServiceItem {
   id: string;
+  dbId?: number;
   name: string;
   category: string;
   price: number;
@@ -149,23 +166,73 @@ export interface TailorPortfolioWork {
   id: string;
   title: string;
   category: string;
+  caption?: string;
   image: string;
   price: number;
   days: number;
   tags: string[];
+  isFeatured?: boolean;
 }
+
+export interface TailorReviewItem {
+  id: number;
+  tailorId: number;
+  reviewerName: string;
+  reviewerLocality: string;
+  serviceName: string | null;
+  rating: number;
+  comment: string;
+  isVerifiedBooking: boolean;
+  createdAt: string;
+}
+
+export type TailorRatingBreakdown = Record<'5' | '4' | '3' | '2' | '1', number>;
+
+export interface ServiceLocality {
+  id: number;
+  name: string;
+  city: string;
+  lat: number;
+  lng: number;
+  isDefault?: boolean;
+}
+
+export interface CraftReelScene {
+  id: string;
+  chapter: string;
+  title: string;
+  subtitle: string;
+  durationSec: number;
+  image: string;
+  intentId: string;
+  motionVariant: 'zoom' | 'pan';
+}
+
+export interface PlatformServiceItem {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+  basePrice: number;
+  turnaroundDays: number;
+}
+
+export type StorefrontMediaMap = Record<string, string>;
 
 export interface TailorPartner {
   id: string;
+  dbId?: number;
   shopName: string;
   masterTailor: string;
   locality: string;
+  address?: string;
   distanceKm: number;
   rating: number;
   reviewCount: number;
   completedOrders: number;
   yearsExperience: number;
   bio: string;
+  logoUrl?: string;
   coverImage: string;
   specialties: string[];
   homeVisitFee: number;

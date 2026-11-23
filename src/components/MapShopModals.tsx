@@ -19,8 +19,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ASSETS } from '../data/catalogData';
-import { OrderRecord } from '../types';
+import { OrderRecord, StorefrontMediaMap } from '../types';
 import {
   EvaluatedTailorShop,
   MatchingRulesConfig,
@@ -139,13 +138,13 @@ function buildUpcomingDates(): { iso: string; dayLabel: string; dateLabel: strin
   return out;
 }
 
-export function getShopFallbackImage(shopId: string): string {
+export function getShopFallbackImage(shopId: string, media?: StorefrontMediaMap): string {
   const fallbacks = [
-    ASSETS.atelierBoutiqueInterior,
-    ASSETS.atelierHeroStitching,
-    ASSETS.atelierMaggamCraft,
-    ASSETS.atelierBespokeChalk,
-    ASSETS.heroStudio,
+    media?.atelierBoutiqueInterior || '/src/assets/images/atelier_boutique_interior_1795277826258.jpg',
+    media?.atelierHeroStitching || '/src/assets/images/atelier_hero_stitching_1795277761139.jpg',
+    media?.atelierMaggamCraft || '/src/assets/images/atelier_maggam_craft_1795277781373.jpg',
+    media?.atelierBespokeChalk || '/src/assets/images/atelier_bespoke_chalk_1795277807957.jpg',
+    media?.heroStudio || '/src/assets/images/hero_tailoring_studio_1795271871856.jpg',
   ];
   let hash = 0;
   for (let i = 0; i < shopId.length; i++) {
@@ -177,43 +176,43 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#0B1F3A]/65 backdrop-blur-xs p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#1A103D]/65 backdrop-blur-xs p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`${shop.place.name} details`}
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden flex flex-col max-h-[92vh]"
+        className="w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl border border-[#EAE0FA] overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Photo Header */}
-        <div className="relative h-48 sm:h-56 bg-[#0B1F3A] shrink-0">
+        <div className="relative h-48 sm:h-56 bg-[#1A103D] shrink-0">
           <SafeImage
             src={coverSrc}
             alt={shop.place.name}
             className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A] via-[#0B1F3A]/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A103D] via-[#1A103D]/45 to-transparent" />
 
           <button
             type="button"
             onClick={onClose}
             aria-label="Close shop details"
-            className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-[#0B1F3A]/80 hover:bg-[#0B1F3A] text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-[#1A103D]/80 hover:bg-[#1A103D] text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
 
           {shop.place.photoAttribution && (
-            <span className="absolute top-3.5 left-4 text-[10px] text-white/75 bg-[#0B1F3A]/70 px-2 py-0.5 rounded">
+            <span className="absolute top-3.5 left-4 text-[10px] text-white/75 bg-[#1A103D]/70 px-2 py-0.5 rounded">
               Photo: {shop.place.photoAttribution}
             </span>
           )}
 
           <div className="absolute bottom-4 left-5 right-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#5EEAD4] font-semibold">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#C4B5FD] font-semibold">
                 {shop.rank !== null ? (
                   <span>
                     #{shop.rank} Match · {shop.dispatchWave === 1 ? 'Wave 1 Priority' : 'Wave 2 Backup'}
@@ -246,7 +245,7 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
               )}
               <span className="text-white/35">|</span>
               <span className="inline-flex items-center gap-1 font-semibold">
-                <MapPin className="w-3.5 h-3.5 text-[#5EEAD4]" />
+                <MapPin className="w-3.5 h-3.5 text-[#C4B5FD]" />
                 {hasLiveRoute
                   ? `${(routeSummary.distanceMeters / 1000).toFixed(2)} km`
                   : `${shop.distanceKm.toFixed(2)} km`}
@@ -258,10 +257,10 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
         {/* Scrollable Details Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Live Route & Contact Summary Row */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#E2E8F0] text-xs text-[#334155]">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#EAE0FA] text-xs text-[#334155]">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
               {hasLiveRoute && (
-                <span className="inline-flex items-center gap-1.5 font-semibold text-[#0B7285] tabular-nums">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-[#6B21D9] tabular-nums">
                   <Navigation className="w-3.5 h-3.5" />
                   Live Route: {(routeSummary.distanceMeters / 1000).toFixed(2)} km · ~
                   {formatDurationMinutes(routeSummary.durationMillis)}
@@ -270,8 +269,8 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
               {shop.place.phoneNumber && (
                 <>
                   {hasLiveRoute && <span className="text-[#CBD5E1]">·</span>}
-                  <span className="inline-flex items-center gap-1 font-semibold text-[#0B1F3A] tabular-nums">
-                    <Phone className="w-3.5 h-3.5 text-[#0B7285]" />
+                  <span className="inline-flex items-center gap-1 font-semibold text-[#1A103D] tabular-nums">
+                    <Phone className="w-3.5 h-3.5 text-[#6B21D9]" />
                     {shop.place.phoneNumber}
                   </span>
                 </>
@@ -289,7 +288,7 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
                 href={shop.place.googleMapsURI}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-[#0B7285] hover:text-[#085463]"
+                className="inline-flex items-center gap-1 font-semibold text-[#6B21D9] hover:text-[#5B21B6]"
               >
                 Open in Google Maps
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -303,7 +302,7 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                 Tailering Real-Time Matching Evaluation
               </h3>
-              <span className="text-xs font-bold text-[#0B7285] tabular-nums">
+              <span className="text-xs font-bold text-[#6B21D9] tabular-nums">
                 Composite Score: {shop.matchScore} / 100
               </span>
             </div>
@@ -315,16 +314,16 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
                 { label: 'Review Trust', val: `${shop.scoreBreakdown.trustVolume}/15` },
                 { label: 'Availability', val: `${shop.scoreBreakdown.availability}/10` },
               ].map((m) => (
-                <div key={m.label} className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-2.5">
+                <div key={m.label} className="rounded-xl bg-[#FAF8FF] border border-[#EAE0FA] p-2.5">
                   <span className="block text-[11px] text-[#64748B]">{m.label}</span>
-                  <span className="block text-sm font-bold text-[#0B1F3A] tabular-nums mt-0.5">
+                  <span className="block text-sm font-bold text-[#1A103D] tabular-nums mt-0.5">
                     {m.val}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-3 divide-y divide-[#F1F5F9] border border-[#E2E8F0] rounded-xl overflow-hidden">
+            <div className="mt-3 divide-y divide-[#F1F5F9] border border-[#EAE0FA] rounded-xl overflow-hidden">
               {shop.ruleChecks.map((check) => (
                 <div
                   key={check.ruleId}
@@ -332,11 +331,11 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {check.passed ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#0B7285] shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#6B21D9] shrink-0" />
                     ) : (
                       <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
                     )}
-                    <span className="font-semibold text-[#0B1F3A]">{check.label}</span>
+                    <span className="font-semibold text-[#1A103D]">{check.label}</span>
                   </div>
                   <span
                     className={`text-right shrink-0 ${
@@ -356,7 +355,7 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B] mb-2">
                 Live Google Maps Opening Hours
               </h3>
-              <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-[#334155]">
+              <div className="rounded-xl bg-[#FAF8FF] border border-[#EAE0FA] p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-[#334155]">
                 {shop.place.openingHoursText.map((line) => (
                   <p key={line} className="tabular-nums">
                     {line}
@@ -368,9 +367,9 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
         </div>
 
         {/* Sticky Footer CTA */}
-        <div className="px-5 py-3.5 bg-white border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-3.5 bg-white border-t border-[#EAE0FA] flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="text-xs text-[#475569]">
-            <span className="font-semibold text-[#0B1F3A] block">
+            <span className="font-semibold text-[#1A103D] block">
               Doorstep Pickup or Direct Shop Visit
             </span>
             <span>Quote approval required before any fabric is cut.</span>
@@ -379,7 +378,7 @@ export const MapShopDetailModal: React.FC<MapShopDetailModalProps> = ({
           <button
             type="button"
             onClick={() => onBookShop(shop)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
           >
             <Calendar className="w-4 h-4" />
             Book Appointment &amp; Schedule Pickup
@@ -531,20 +530,20 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#0B1F3A]/65 backdrop-blur-xs p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#1A103D]/65 backdrop-blur-xs p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`Schedule appointment with ${shop.place.name}`}
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden flex flex-col max-h-[92vh]"
+        className="w-full sm:max-w-xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl border border-[#EAE0FA] overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 bg-[#0B1F3A] text-white flex items-start justify-between gap-3 shrink-0">
+        <div className="px-5 py-4 bg-[#1A103D] text-white flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#5EEAD4]">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C4B5FD]">
               Live Map Shop Appointment &amp; Pickup Booking
             </p>
             <h2 className="font-serif-accent text-lg sm:text-xl font-bold mt-0.5 truncate">
@@ -573,38 +572,38 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
         {confirmedOrder ? (
           <div className="p-6 overflow-y-auto space-y-5">
             <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-full bg-[#F0F9FA] text-[#0B7285] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-[#F4EEFF] text-[#6B21D9] flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-serif-accent text-xl font-bold text-[#0B1F3A]">
+                <h3 className="font-serif-accent text-xl font-bold text-[#1A103D]">
                   Appointment &amp; Booking Confirmed
                 </h3>
                 <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
-                  Your request is confirmed with <strong className="text-[#0B1F3A]">{shop.place.name}</strong> and
+                  Your request is confirmed with <strong className="text-[#1A103D]">{shop.place.name}</strong> and
                   synced to your Orders &amp; Partner Portal.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-4 space-y-2.5 text-xs sm:text-sm">
+            <div className="rounded-xl bg-[#FAF8FF] border border-[#EAE0FA] p-4 space-y-2.5 text-xs sm:text-sm">
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Booking Reference</span>
-                <span className="font-bold text-[#0B1F3A] tabular-nums">{confirmedOrder.id}</span>
+                <span className="font-bold text-[#1A103D] tabular-nums">{confirmedOrder.id}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Selected Shop</span>
-                <span className="font-semibold text-[#0B1F3A] text-right">{shop.place.name}</span>
+                <span className="font-semibold text-[#1A103D] text-right">{shop.place.name}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Service</span>
-                <span className="font-semibold text-[#0B1F3A] text-right">
+                <span className="font-semibold text-[#1A103D] text-right">
                   {confirmedOrder.serviceTitle}
                 </span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Appointment Mode</span>
-                <span className="font-semibold text-[#0B7285]">
+                <span className="font-semibold text-[#6B21D9]">
                   {appointmentMode === 'pickup'
                     ? 'Doorstep Pickup & Measurement'
                     : 'Direct Shop Visit'}
@@ -612,19 +611,19 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Scheduled Slot</span>
-                <span className="font-semibold text-[#0B1F3A] tabular-nums">
+                <span className="font-semibold text-[#1A103D] tabular-nums">
                   {formattedDate} · {selectedSlot}
                 </span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-[#64748B]">Estimated Delivery</span>
-                <span className="font-semibold text-[#0B1F3A] tabular-nums">
+                <span className="font-semibold text-[#1A103D] tabular-nums">
                   {confirmedOrder.deliveryDate}
                 </span>
               </div>
-              <div className="pt-2.5 border-t border-[#E2E8F0] flex justify-between gap-2">
-                <span className="font-semibold text-[#0B1F3A]">Estimated Total</span>
-                <span className="font-bold text-[#0B1F3A] tabular-nums">
+              <div className="pt-2.5 border-t border-[#EAE0FA] flex justify-between gap-2">
+                <span className="font-semibold text-[#1A103D]">Estimated Total</span>
+                <span className="font-bold text-[#1A103D] tabular-nums">
                   ₹{confirmedOrder.amount.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -633,7 +632,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
             <div className="rounded-xl bg-[#FBF5E6] border border-[#E8D5A8] p-3.5 flex items-start gap-2.5 text-xs text-[#475569]">
               <ShieldCheck className="w-4 h-4 text-[#A67418] shrink-0 mt-0.5" />
               <span>
-                <strong className="text-[#0B1F3A]">Quote-Approval Protection Active:</strong> Your
+                <strong className="text-[#1A103D]">Quote-Approval Protection Active:</strong> Your
                 tailor will submit a final written quotation after measurement. Stitching cannot
                 start until you approve it in <strong>Alterations → History</strong>.
               </span>
@@ -645,7 +644,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                   href={shop.place.googleMapsURI}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm font-semibold text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] transition-colors"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm font-semibold text-[#1A103D] hover:border-[#6B21D9] hover:text-[#6B21D9] transition-colors"
                 >
                   Directions in Maps
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -654,7 +653,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-xl bg-[#0B1F3A] hover:bg-[#15325B] text-white text-sm font-semibold transition-colors cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl bg-[#1A103D] hover:bg-[#2E1065] text-white text-sm font-semibold transition-colors cursor-pointer"
               >
                 Done &amp; Return to Live Map
               </button>
@@ -666,7 +665,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
             <div>
               <label
                 htmlFor="map-booking-service"
-                className="block text-xs font-bold uppercase tracking-wider text-[#0B1F3A] mb-2"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1A103D] mb-2"
               >
                 1. Select Tailoring Service
               </label>
@@ -674,7 +673,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                 id="map-booking-service"
                 value={selectedServiceId}
                 onChange={(e) => setSelectedServiceId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] bg-white text-sm font-medium text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] bg-white text-sm font-medium text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
               >
                 {MAP_SERVICE_OPTIONS.map((opt) => (
                   <option key={opt.id} value={opt.id}>
@@ -687,7 +686,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
 
             {/* Step 2: Doorstep Pickup vs Shop Visit */}
             <div>
-              <span className="block text-xs font-bold uppercase tracking-wider text-[#0B1F3A] mb-2">
+              <span className="block text-xs font-bold uppercase tracking-wider text-[#1A103D] mb-2">
                 2. Choose Appointment Mode
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -696,16 +695,16 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                   onClick={() => setAppointmentMode('pickup')}
                   className={`p-3 rounded-xl border text-left transition-colors cursor-pointer ${
                     appointmentMode === 'pickup'
-                      ? 'border-[#0B7285] bg-[#F0F9FA]'
-                      : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                      ? 'border-[#6B21D9] bg-[#F4EEFF]'
+                      : 'border-[#EAE0FA] hover:border-[#CBD5E1]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1F3A]">
-                      <Truck className="w-4 h-4 text-[#0B7285]" />
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1A103D]">
+                      <Truck className="w-4 h-4 text-[#6B21D9]" />
                       Doorstep Pickup
                     </span>
-                    {appointmentMode === 'pickup' && <Check className="w-4 h-4 text-[#0B7285]" />}
+                    {appointmentMode === 'pickup' && <Check className="w-4 h-4 text-[#6B21D9]" />}
                   </div>
                   <p className="text-xs text-[#475569] mt-1">
                     {visitFeeEval.creditedBack
@@ -719,16 +718,16 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                   onClick={() => setAppointmentMode('studio')}
                   className={`p-3 rounded-xl border text-left transition-colors cursor-pointer ${
                     appointmentMode === 'studio'
-                      ? 'border-[#0B7285] bg-[#F0F9FA]'
-                      : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                      ? 'border-[#6B21D9] bg-[#F4EEFF]'
+                      : 'border-[#EAE0FA] hover:border-[#CBD5E1]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1F3A]">
-                      <Store className="w-4 h-4 text-[#0B7285]" />
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1A103D]">
+                      <Store className="w-4 h-4 text-[#6B21D9]" />
                       Visit Tailor Shop
                     </span>
-                    {appointmentMode === 'studio' && <Check className="w-4 h-4 text-[#0B7285]" />}
+                    {appointmentMode === 'studio' && <Check className="w-4 h-4 text-[#6B21D9]" />}
                   </div>
                   <p className="text-xs text-[#475569] mt-1 tabular-nums">
                     Zero visit fee · {shop.distanceKm.toFixed(2)} km from you.
@@ -740,17 +739,17 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
             {/* Step 3: Convenient Date & Time Slot */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#0B1F3A]">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#1A103D]">
                   3. Select {appointmentMode === 'pickup' ? 'Pickup' : 'Visit'} Date &amp; Time
                 </span>
-                <label className="text-[11px] font-medium text-[#0B7285] inline-flex items-center gap-1">
+                <label className="text-[11px] font-medium text-[#6B21D9] inline-flex items-center gap-1">
                   <span>Custom date:</span>
                   <input
                     type="date"
                     value={selectedDate}
                     min={dateOptions[0].iso}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="border border-[#CBD5E1] rounded px-1.5 py-0.5 text-[11px] text-[#0B1F3A]"
+                    className="border border-[#CBD5E1] rounded px-1.5 py-0.5 text-[11px] text-[#1A103D]"
                   />
                 </label>
               </div>
@@ -765,8 +764,8 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                       onClick={() => setSelectedDate(d.iso)}
                       className={`py-2 px-1 rounded-lg border text-center transition-colors cursor-pointer ${
                         active
-                          ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
-                          : 'border-[#E2E8F0] bg-white text-[#334155] hover:border-[#0B7285]'
+                          ? 'border-[#1A103D] bg-[#1A103D] text-white'
+                          : 'border-[#EAE0FA] bg-white text-[#334155] hover:border-[#6B21D9]'
                       }`}
                     >
                       <span className="block text-[11px] font-semibold">{d.dayLabel}</span>
@@ -792,8 +791,8 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                       onClick={() => setSelectedSlot(slot)}
                       className={`px-3 py-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer tabular-nums ${
                         active
-                          ? 'border-[#0B7285] bg-[#F0F9FA] text-[#0B7285]'
-                          : 'border-[#E2E8F0] text-[#334155] hover:border-[#CBD5E1]'
+                          ? 'border-[#6B21D9] bg-[#F4EEFF] text-[#6B21D9]'
+                          : 'border-[#EAE0FA] text-[#334155] hover:border-[#CBD5E1]'
                       }`}
                     >
                       <Clock className="w-3.5 h-3.5" />
@@ -806,7 +805,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
 
             {/* Step 4: Customer Details & Address Privacy */}
             <div className="space-y-3">
-              <span className="block text-xs font-bold uppercase tracking-wider text-[#0B1F3A]">
+              <span className="block text-xs font-bold uppercase tracking-wider text-[#1A103D]">
                 4. Customer &amp; Pickup Details
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -818,7 +817,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Full Name"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                   />
                 </div>
                 <div className="relative">
@@ -829,7 +828,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="10-digit Mobile Number"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                   />
                 </div>
               </div>
@@ -844,11 +843,11 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                       value={pickupAddress}
                       onChange={(e) => setPickupAddress(e.target.value)}
                       placeholder={`Flat / Villa No., Street (${locality})`}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#CBD5E1] text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                     />
                   </div>
                   {rules.maskAddressUntilAccepted && (
-                    <p className="text-[11px] text-[#0B7285] inline-flex items-center gap-1.5">
+                    <p className="text-[11px] text-[#6B21D9] inline-flex items-center gap-1.5">
                       <Lock className="w-3 h-3 shrink-0" />
                       Privacy protection: exact flat/street is revealed only after shop confirms.
                     </p>
@@ -863,7 +862,7 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                   value={garmentNotes}
                   onChange={(e) => setGarmentNotes(e.target.value)}
                   placeholder="Optional garment instructions (e.g., 2 silk blouses + 1 trouser hem, bring lining swatch)..."
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285] resize-none"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9] resize-none"
                 />
               </div>
             </div>
@@ -875,13 +874,13 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
             )}
 
             {/* Estimate Breakdown & Confirm Button */}
-            <div className="pt-3 border-t border-[#E2E8F0] space-y-3">
+            <div className="pt-3 border-t border-[#EAE0FA] space-y-3">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <div>
-                  <span className="font-semibold text-[#0B1F3A] block">
+                  <span className="font-semibold text-[#1A103D] block">
                     Estimated Total{' '}
                     {appointmentMode === 'pickup' && (
-                      <span className="font-normal text-[#0B7285]">
+                      <span className="font-normal text-[#6B21D9]">
                         ({payableVisitFee === 0 ? 'Free Pickup' : `incl. ₹${payableVisitFee} visit fee`})
                       </span>
                     )}
@@ -890,14 +889,14 @@ export const MapShopBookingModal: React.FC<MapShopBookingModalProps> = ({
                     {formattedDate} · {selectedSlot} · Pay after quote approval
                   </span>
                 </div>
-                <span className="text-lg font-bold text-[#0B1F3A] tabular-nums">
+                <span className="text-lg font-bold text-[#1A103D] tabular-nums">
                   ₹{estimatedTotal.toLocaleString('en-IN')}
                 </span>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                className="w-full py-3 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-4 h-4" />
                 Confirm {appointmentMode === 'pickup' ? 'Doorstep Pickup & Booking' : 'Shop Appointment'}

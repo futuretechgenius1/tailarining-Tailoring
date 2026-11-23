@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#1A103D"/>
+  <rect x="8" y="8" width="104" height="104" rx="18" stroke="#A78BFA" stroke-width="2"/>
+  <path d="M44 38L60 24L76 38" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="60" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="2">NS</text>
+  <text x="60" y="96" text-anchor="middle" fill="#C4B5FD" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="2">NIZAM SAVILE</text>
+</svg>

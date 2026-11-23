@@ -8,11 +8,13 @@ import {
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
-import { CATEGORIES, DESIGNS_CATALOG } from '../data/catalogData';
-import { DesignProduct } from '../types';
+import { CategoryItem, DesignProduct } from '../types';
 import { SafeImage } from './SafeImage';
 
 interface DesignsCatalogPageProps {
+  designs: DesignProduct[];
+  categories: CategoryItem[];
+  loading?: boolean;
   initialCategory?: string;
   initialSearch?: string;
   wishlistIds: string[];
@@ -22,6 +24,9 @@ interface DesignsCatalogPageProps {
 }
 
 export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
+  designs,
+  categories,
+  loading = false,
   initialCategory = 'all',
   initialSearch = '',
   wishlistIds,
@@ -44,7 +49,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
     }
   }, [initialSearch]);
 
-  const filtered = DESIGNS_CATALOG.filter((item) => {
+  const filtered = designs.filter((item) => {
     const matchesGender = genderFilter === 'all' || item.gender === genderFilter;
     const matchesCategory =
       selectedCategory === 'all' ||
@@ -66,22 +71,22 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-7 sm:py-9 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#EAE0FA]">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0B7285]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#6B21D9]">
             TAILERING LOOKBOOK ARCHIVE
           </p>
-          <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-[#0B1F3A] font-serif-accent">
+          <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold text-[#1A103D]">
             Curated Stitching Designs
           </h1>
-          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#5B4E7A] mt-0.5">
             Select a silhouette and our verified Hyderabad master ateliers will tailor it to your
             exact fit.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="inline-flex items-center bg-[#F1F5F9] border border-[#E2E8F0] p-1 rounded-xl">
+          <div className="inline-flex items-center bg-[#F4EEFF] border border-[#EAE0FA] p-1 rounded-full">
             {(['all', 'women', 'men'] as const).map((g) => (
               <button
                 key={g}
@@ -90,10 +95,10 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                   setGenderFilter(g);
                   setSelectedCategory('all');
                 }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold capitalize transition-all cursor-pointer ${
                   genderFilter === g
-                    ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                    : 'text-[#475569] hover:text-[#0B1F3A]'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#6B21D9] text-white shadow-2xs'
+                    : 'text-[#4B3F6B] hover:text-[#1A103D]'
                 }`}
               >
                 {g}
@@ -101,13 +106,13 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
             ))}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 bg-white border border-[#CBD5E1] rounded-xl px-3 py-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#64748B]" />
+          <div className="inline-flex items-center gap-1.5 bg-white border border-[#EAE0FA] rounded-full px-3.5 py-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B21D9]" />
             <select
               aria-label="Sort designs"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'popular' | 'price-low' | 'price-high')}
-              className="text-xs font-semibold text-[#0B1F3A] bg-transparent focus:outline-none cursor-pointer"
+              className="text-xs font-bold text-[#1A103D] bg-transparent focus:outline-none cursor-pointer"
             >
               <option value="popular">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
@@ -120,13 +125,13 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
       {/* Search + Horizontal Category Filters */}
       <div className="space-y-3">
         <div className="relative max-w-xl">
-          <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#6B21D9] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search maggam blouse, lehenga, sherwani, gown..."
-            className="w-full bg-white border border-[#CBD5E1] rounded-xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B7285]"
+            className="w-full bg-white border border-[#EAE0FA] rounded-full pl-11 pr-4 py-2.5 text-xs sm:text-sm text-[#1A103D] placeholder:text-[#746894] focus:outline-none focus:border-[#6B21D9]"
           />
         </div>
 
@@ -134,25 +139,26 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
               selectedCategory === 'all'
-                ? 'bg-[#0B7285] text-white'
-                : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
+                ? 'bg-gradient-to-r from-[#7C3AED] to-[#6B21D9] text-white shadow-xs'
+                : 'bg-white border border-[#EAE0FA] text-[#4B3F6B] hover:border-[#6B21D9]'
             }`}
           >
             All Categories
           </button>
-          {CATEGORIES.filter((c) => genderFilter === 'all' || c.gender === genderFilter)
+          {categories
+            .filter((c) => genderFilter === 'all' || c.gender === genderFilter)
             .slice(0, 14)
             .map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
                   selectedCategory === cat.id
-                    ? 'bg-[#0B7285] text-white'
-                    : 'bg-white border border-[#E2E8F0] text-[#334155] hover:border-[#0B7285]'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#6B21D9] text-white shadow-xs'
+                    : 'bg-white border border-[#EAE0FA] text-[#4B3F6B] hover:border-[#6B21D9]'
                 }`}
               >
                 {cat.name}
@@ -162,9 +168,25 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
       </div>
 
       {/* Designs Grid */}
-      {filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 text-center">
-          <p className="text-base font-bold text-[#0B1F3A]">No designs matched your filter.</p>
+      {loading && designs.length === 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <div
+              key={n}
+              className="bg-white rounded-2xl border border-[#EAE0FA] overflow-hidden animate-pulse"
+            >
+              <div className="aspect-[3/4] bg-[#EAE0FA]" />
+              <div className="p-3.5 space-y-2">
+                <div className="h-3 w-16 bg-[#EAE0FA] rounded" />
+                <div className="h-4 w-3/4 bg-[#EAE0FA] rounded" />
+                <div className="h-5 w-20 bg-[#EAE0FA] rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#EAE0FA] p-12 text-center">
+          <p className="text-base font-bold text-[#1A103D]">No designs matched your filter.</p>
           <p className="text-xs text-[#64748B] mt-1">
             Try clearing your search or explore all curated Tailering styles.
           </p>
@@ -175,7 +197,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
               setGenderFilter('all');
               setSearchQuery('');
             }}
-            className="mt-4 bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer transition-colors"
+            className="mt-4 bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer transition-colors"
           >
             Show All Designs
           </button>
@@ -187,7 +209,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
             return (
               <div
                 key={design.id}
-                className="group bg-white rounded-2xl border border-[#E2E8F0] hover:border-[#0B7285]/45 hover:shadow-md overflow-hidden flex flex-col transition-all"
+                className="group bg-white rounded-2xl border border-[#EAE0FA] hover:border-[#6B21D9]/45 hover:shadow-md overflow-hidden flex flex-col transition-all"
               >
                 <div
                   onClick={() => onSelectDesign(design)}
@@ -199,7 +221,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                   />
                   {design.trusted && (
-                    <span className="absolute top-2.5 left-2.5 bg-[#0B1F3A]/85 backdrop-blur-xs text-[#E2B14B] text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+                    <span className="absolute top-2.5 left-2.5 bg-[#1A103D]/85 backdrop-blur-xs text-[#E2B14B] text-[10px] font-bold px-2.5 py-0.5 rounded-md">
                       Atelier Verified
                     </span>
                   )}
@@ -218,8 +240,8 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                       }`}
                     />
                   </button>
-                  <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#0B1F3A] text-[10.5px] font-bold px-2 py-0.5 rounded-md tabular-nums">
-                    <Clock className="w-3 h-3 text-[#0B7285]" />
+                  <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 bg-white/90 text-[#1A103D] text-[10.5px] font-bold px-2 py-0.5 rounded-md tabular-nums">
+                    <Clock className="w-3 h-3 text-[#6B21D9]" />
                     {design.turnaroundDays}d
                   </span>
                 </div>
@@ -227,17 +249,17 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                 <div className="p-3.5 flex flex-col flex-1 justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#0B7285] truncate">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#6B21D9] truncate">
                         {design.category}
                       </p>
-                      <span className="inline-flex items-center gap-0.5 text-[10.5px] font-bold text-[#0B1F3A] shrink-0 tabular-nums">
+                      <span className="inline-flex items-center gap-0.5 text-[10.5px] font-bold text-[#1A103D] shrink-0 tabular-nums">
                         <Star className="w-3 h-3 fill-[#C8922A] text-[#C8922A]" />
                         {design.rating}
                       </span>
                     </div>
                     <h3
                       onClick={() => onSelectDesign(design)}
-                      className="mt-1 text-xs sm:text-sm font-bold text-[#0B1F3A] line-clamp-2 hover:text-[#0B7285] cursor-pointer"
+                      className="mt-1 text-xs sm:text-sm font-bold text-[#1A103D] line-clamp-2 hover:text-[#6B21D9] cursor-pointer"
                     >
                       {design.title}
                     </h3>
@@ -245,7 +267,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                       by {design.boutique}
                     </p>
                     <div className="mt-2 flex items-baseline gap-2 tabular-nums">
-                      <span className="text-base font-extrabold text-[#0B1F3A]">
+                      <span className="text-base font-extrabold text-[#1A103D]">
                         ₹{design.price.toLocaleString('en-IN')}
                       </span>
                       {design.originalPrice && (
@@ -258,7 +280,7 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
 
                   <div className="mt-3 pt-2.5 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B] tabular-nums">
-                      <Eye className="w-3.5 h-3.5 text-[#0B7285]" />
+                      <Eye className="w-3.5 h-3.5 text-[#6B21D9]" />
                       {design.views}
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -266,14 +288,14 @@ export const DesignsCatalogPage: React.FC<DesignsCatalogPageProps> = ({
                         type="button"
                         aria-label="Add to bag"
                         onClick={() => onQuickAddDesign(design)}
-                        className="w-8 h-8 rounded-lg border border-[#CBD5E1] text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] flex items-center justify-center cursor-pointer transition-colors"
+                        className="w-8 h-8 rounded-lg border border-[#CBD5E1] text-[#1A103D] hover:border-[#6B21D9] hover:text-[#6B21D9] flex items-center justify-center cursor-pointer transition-colors"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => onSelectDesign(design)}
-                        className="bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                        className="bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                       >
                         Stitch
                       </button>

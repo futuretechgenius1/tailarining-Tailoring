@@ -37,8 +37,12 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ASSETS } from '../data/catalogData';
-import { OrderLifecycleStage, OrderRecord } from '../types';
+import {
+  OrderLifecycleStage,
+  OrderRecord,
+  ServiceLocality,
+  StorefrontMediaMap,
+} from '../types';
 import {
   DEFAULT_MATCHING_RULES,
   EvaluatedTailorShop,
@@ -61,14 +65,6 @@ import {
 
 const MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 
-const HYDERABAD_ZONES: { label: string; center: { lat: number; lng: number } }[] = [
-  { label: 'Alkapur Township, Manikonda', center: { lat: 17.3984, lng: 78.3746 } },
-  { label: 'Gachibowli, Hyderabad', center: { lat: 17.4401, lng: 78.3489 } },
-  { label: 'Kondapur, Hyderabad', center: { lat: 17.4622, lng: 78.3568 } },
-  { label: 'Jubilee Hills, Hyderabad', center: { lat: 17.4326, lng: 78.4071 } },
-  { label: 'Madhapur, Hyderabad', center: { lat: 17.4483, lng: 78.3915 } },
-];
-
 const SPECIALTY_TABS: { id: ServiceSpecialtyRule; label: string }[] = [
   { id: 'all', label: 'All Tailors & Boutiques' },
   { id: 'blouse-maggam', label: 'Blouses & Maggam' },
@@ -77,16 +73,12 @@ const SPECIALTY_TABS: { id: ServiceSpecialtyRule; label: string }[] = [
   { id: 'uniforms', label: 'Uniforms & Institutional' },
 ];
 
-const HERO_BACKDROP_SCENES = [
-  ASSETS.atelierBespokeChalk,
-  ASSETS.atelierHeroStitching,
-  ASSETS.atelierMaggamCraft,
-];
-
 type TravelModeOption = 'DRIVING' | 'TWO_WHEELER' | 'WALKING';
 
 interface NearbyShopsPageProps {
   locality: string;
+  localities: ServiceLocality[];
+  media: StorefrontMediaMap;
   onUpdateLocality: (newLocality: string) => void;
   onCreateOrder: (order: OrderRecord) => void;
   onNotifyToast: (msg: string) => void;
@@ -142,10 +134,10 @@ const ServiceRadiusCircle: React.FC<{
       map,
       center,
       radius: radiusKm * 1000,
-      strokeColor: '#0B7285',
+      strokeColor: '#6B21D9',
       strokeOpacity: 0.72,
       strokeWeight: 2,
-      fillColor: '#0B7285',
+      fillColor: '#7C3AED',
       fillOpacity: 0.08,
       clickable: false,
     });
@@ -255,7 +247,7 @@ const LiveRoutePolyline: React.FC<{
           const lines = primaryRoute.createPolylines();
           lines.forEach((poly) => {
             poly.setOptions({
-              strokeColor: '#0B7285',
+              strokeColor: '#6B21D9',
               strokeOpacity: 0.92,
               strokeWeight: 5,
             });
@@ -331,16 +323,16 @@ const ShopAdvancedMarker: React.FC<{
   const markerClasses = !shop.eligible
     ? 'bg-[#64748B] border-[#CBD5E1] text-white'
     : isSelected
-      ? 'bg-[#0B1F3A] border-[#E2B14B] text-white scale-110 shadow-xl ring-4 ring-[#0B7285]/35'
+      ? 'bg-[#1A103D] border-[#E2B14B] text-white scale-110 shadow-xl ring-4 ring-[#6B21D9]/35'
       : isTopWave
-        ? 'bg-[#0B7285] border-white text-white shadow-lg hover:scale-105'
+        ? 'bg-[#6B21D9] border-white text-white shadow-lg hover:scale-105'
         : 'bg-[#C8922A] border-white text-white shadow-md hover:scale-105';
   const pointerColor = !shop.eligible
     ? 'border-t-[#64748B]'
     : isSelected
-      ? 'border-t-[#0B1F3A]'
+      ? 'border-t-[#1A103D]'
       : isTopWave
-        ? 'border-t-[#0B7285]'
+        ? 'border-t-[#6B21D9]'
         : 'border-t-[#C8922A]';
 
   return (
@@ -354,7 +346,7 @@ const ShopAdvancedMarker: React.FC<{
       >
         <div className="relative flex flex-col items-center cursor-pointer select-none group">
           {isSelected && (
-            <span className="absolute -inset-2 rounded-full bg-[#0B7285]/25 animate-ping pointer-events-none" />
+            <span className="absolute -inset-2 rounded-full bg-[#6B21D9]/25 animate-ping pointer-events-none" />
           )}
           <div
             className={`relative inline-flex items-center gap-1 px-2.5 py-1 rounded-full border-2 transition-all duration-150 tabular-nums ${markerClasses}`}
@@ -377,10 +369,10 @@ const ShopAdvancedMarker: React.FC<{
 
       {isSelected && marker && (
         <InfoWindow anchor={marker} maxWidth={310} onCloseClick={onCloseInfo}>
-          <div className="p-1 text-[#0B1F3A] space-y-2.5 font-sans">
+          <div className="p-1 text-[#1A103D] space-y-2.5 font-sans">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-extrabold leading-snug text-[#0B1F3A]">
+                <p className="text-xs font-extrabold leading-snug text-[#1A103D]">
                   {shop.place.name}
                 </p>
                 <p className="text-[11px] text-[#475569] leading-snug mt-0.5 line-clamp-2">
@@ -388,7 +380,7 @@ const ShopAdvancedMarker: React.FC<{
                 </p>
               </div>
               {shop.eligible ? (
-                <span className="shrink-0 text-[10px] font-extrabold text-[#0B7285] tabular-nums">
+                <span className="shrink-0 text-[10px] font-extrabold text-[#6B21D9] tabular-nums">
                   {shop.matchScore}/100
                 </span>
               ) : (
@@ -422,11 +414,11 @@ const ShopAdvancedMarker: React.FC<{
             </div>
 
             {routeSummary && routeSummary.shopId === shop.place.id && (
-              <div className="bg-[#F0F9FA] border border-[#CBE7EC] rounded-lg px-2.5 py-1.5 text-[11px] text-[#0B1F3A] flex items-center justify-between tabular-nums">
+              <div className="bg-[#F4EEFF] border border-[#DCD0F5] rounded-lg px-2.5 py-1.5 text-[11px] text-[#1A103D] flex items-center justify-between tabular-nums">
                 <span className="font-bold">
                   Route: {(routeSummary.distanceMeters / 1000).toFixed(2)} km
                 </span>
-                <span className="font-extrabold text-[#0B7285]">
+                <span className="font-extrabold text-[#6B21D9]">
                   ~{formatDurationMinutes(routeSummary.durationMillis)}
                 </span>
               </div>
@@ -436,14 +428,14 @@ const ShopAdvancedMarker: React.FC<{
               <button
                 type="button"
                 onClick={() => onInspectShop(shop)}
-                className="px-2.5 py-1.5 rounded-lg border border-[#CBD5E1] hover:border-[#0B7285] text-[11px] font-bold text-[#0B1F3A] cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg border border-[#CBD5E1] hover:border-[#6B21D9] text-[11px] font-bold text-[#1A103D] cursor-pointer"
               >
                 Details
               </button>
               <button
                 type="button"
                 onClick={() => onBookShop(shop)}
-                className="flex-1 bg-[#0B7285] hover:bg-[#085463] text-white text-[11px] font-bold py-1.5 px-2.5 rounded-lg cursor-pointer inline-flex items-center justify-center gap-1"
+                className="flex-1 bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-[11px] font-bold py-1.5 px-2.5 rounded-lg cursor-pointer inline-flex items-center justify-center gap-1"
               >
                 Choose Service
                 <ArrowRight className="w-3 h-3" />
@@ -464,6 +456,8 @@ interface InnerLocatorProps extends NearbyShopsPageProps {
 
 const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
   locality,
+  localities,
+  media,
   onUpdateLocality,
   onCreateOrder,
   onNotifyToast,
@@ -472,18 +466,38 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 }) => {
   const placesLib = useMapsLibrary('places');
 
+  const quickZones = useMemo(() => {
+    const fromDb = localities.slice(0, 6).map((loc) => ({
+      label: loc.name,
+      center: { lat: Number(loc.lat) || 17.3984, lng: Number(loc.lng) || 78.3746 },
+    }));
+    if (fromDb.length > 0) return fromDb;
+    return [{ label: locality || 'Alkapur Township, Manikonda', center: { lat: 17.3984, lng: 78.3746 } }];
+  }, [localities, locality]);
+
+  const heroBackdropScenes = useMemo(
+    () =>
+      [
+        media.atelierBespokeChalk,
+        media.atelierHeroStitching,
+        media.atelierMaggamCraft,
+      ].filter((u): u is string => Boolean(u && u.trim())),
+    [media],
+  );
+
   // Subtle hero cinema backdrop cycle
   const [heroSceneIdx, setHeroSceneIdx] = useState(0);
   useEffect(() => {
+    if (heroBackdropScenes.length <= 1) return;
     const id = window.setInterval(() => {
-      setHeroSceneIdx((prev) => (prev + 1) % HERO_BACKDROP_SCENES.length);
+      setHeroSceneIdx((prev) => (prev + 1) % heroBackdropScenes.length);
     }, 7000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [heroBackdropScenes.length]);
 
   // Real-time location state
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(
-    HYDERABAD_ZONES[0].center,
+    quickZones[0].center,
   );
   const [locationSource, setLocationSource] = useState<'zone' | 'gps' | 'search'>('zone');
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -935,9 +949,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-16">
+    <div className="min-h-screen bg-[#FAF8FF] pb-16">
       {/* SECTION 1: CINEMATIC CENTERED LUXURY HERO FOR REAL-TIME MAP DISCOVERY */}
-      <section className="relative bg-[#0B1F3A] text-white overflow-hidden">
+      <section className="relative bg-[#1A103D] text-white overflow-hidden">
         <div className="absolute inset-0 pointer-events-none select-none">
           <AnimatePresence mode="sync">
             <motion.div
@@ -948,15 +962,17 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
               transition={{ duration: 1.2, ease: 'easeInOut' }}
               className="absolute inset-0"
             >
-              <SafeImage
-                src={HERO_BACKDROP_SCENES[heroSceneIdx]}
-                alt=""
-                className="w-full h-full object-cover object-center animate-ken-burns"
-              />
+              {heroBackdropScenes.length > 0 && (
+                <SafeImage
+                  src={heroBackdropScenes[heroSceneIdx % heroBackdropScenes.length]}
+                  alt=""
+                  className="w-full h-full object-cover object-center animate-ken-burns"
+                />
+              )}
             </motion.div>
           </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#071529]/84 via-[#0B1F3A]/75 to-[#0B1F3A]/96" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(11,114,133,0.22)_0%,transparent_68%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1A103D]/86 via-[#2E1065]/78 to-[#1A103D]/96" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.28)_0%,transparent_68%)]" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-11 sm:pt-14 sm:pb-14 text-center">
@@ -976,7 +992,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 className="animate-stitch-flow"
               />
             </svg>
-            <p className="text-xs sm:text-[13px] font-medium tracking-wide text-[#5EEAD4]">
+            <p className="text-xs sm:text-[13px] font-medium tracking-wide text-[#C4B5FD]">
               Live Google Maps Discovery · Real-Time Road ETA · Instant Pickup &amp; Studio Booking
             </p>
           </motion.div>
@@ -1010,14 +1026,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             <div className="bg-white rounded-2xl p-2 shadow-2xl ring-1 ring-white/25 flex flex-col md:flex-row items-stretch md:items-center gap-1.5">
               {/* Places Autocomplete Input */}
               <div className="relative flex-1 flex items-center">
-                <Search className="w-4 h-4 text-[#0B7285] absolute left-4 pointer-events-none" />
+                <Search className="w-4 h-4 text-[#6B21D9] absolute left-4 pointer-events-none" />
                 <input
                   type="text"
                   value={locationQuery}
                   onChange={(e) => setLocationQuery(e.target.value)}
                   onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
                   placeholder="Search street, landmark, apartment, or pincode via Google Places..."
-                  className="w-full pl-11 pr-9 py-3 rounded-xl text-sm text-[#0B1F3A] placeholder:text-[#64748B] focus:outline-none"
+                  className="w-full pl-11 pr-9 py-3 rounded-xl text-sm text-[#1A103D] placeholder:text-[#64748B] focus:outline-none"
                 />
                 {locationQuery && (
                   <button
@@ -1028,14 +1044,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       setSuggestionsOpen(false);
                     }}
                     aria-label="Clear location search"
-                    className="absolute right-2.5 p-1 text-[#64748B] hover:text-[#0B1F3A] cursor-pointer"
+                    className="absolute right-2.5 p-1 text-[#64748B] hover:text-[#1A103D] cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              <div className="hidden md:block w-px h-8 bg-[#E2E8F0]" aria-hidden="true" />
+              <div className="hidden md:block w-px h-8 bg-[#EAE0FA]" aria-hidden="true" />
 
               {/* Radius Quick Selector */}
               <div className="flex items-center gap-1 bg-[#F1F5F9] rounded-xl p-1 shrink-0">
@@ -1046,8 +1062,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     onClick={() => setRules((r) => ({ ...r, maxRadiusKm: km }))}
                     className={`px-2.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer tabular-nums whitespace-nowrap ${
                       rules.maxRadiusKm === km
-                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                        ? 'bg-[#1A103D] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#1A103D]'
                     }`}
                   >
                     {km} km
@@ -1060,7 +1076,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 type="button"
                 onClick={handleLocateOnce}
                 disabled={gpsLoading}
-                className="inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer disabled:opacity-60 whitespace-nowrap"
               >
                 <Navigation className={`w-4 h-4 ${gpsLoading ? 'animate-spin' : ''}`} />
                 {gpsLoading ? 'Locating...' : 'Use Live GPS'}
@@ -1069,15 +1085,15 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
             {/* Places Autocomplete Dropdown */}
             {suggestionsOpen && suggestions.length > 0 && (
-              <ul className="absolute left-0 right-0 top-full mt-2 bg-white border border-[#E2E8F0] rounded-xl shadow-2xl z-40 max-h-64 overflow-y-auto divide-y divide-[#F1F5F9] text-left">
+              <ul className="absolute left-0 right-0 top-full mt-2 bg-white border border-[#EAE0FA] rounded-xl shadow-2xl z-40 max-h-64 overflow-y-auto divide-y divide-[#F1F5F9] text-left">
                 {suggestions.map((sug, idx) => (
                   <li key={`${sug.placePrediction?.placeId ?? idx}`}>
                     <button
                       type="button"
                       onClick={() => void handleSelectSuggestion(sug)}
-                      className="w-full text-left px-4 py-3 text-xs sm:text-sm text-[#0B1F3A] hover:bg-[#F0F9FA] hover:text-[#0B7285] flex items-center gap-2.5 cursor-pointer"
+                      className="w-full text-left px-4 py-3 text-xs sm:text-sm text-[#1A103D] hover:bg-[#F4EEFF] hover:text-[#6B21D9] flex items-center gap-2.5 cursor-pointer"
                     >
-                      <MapPin className="w-4 h-4 text-[#0B7285] shrink-0" />
+                      <MapPin className="w-4 h-4 text-[#6B21D9] shrink-0" />
                       <span className="truncate">{sug.placePrediction?.text.text}</span>
                     </button>
                   </li>
@@ -1110,7 +1126,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
           {/* CENTERED QUICK HYDERABAD ZONES + LIVE TRACK TOGGLE */}
           <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs">
             <span className="text-white/65 font-medium">Quick zones:</span>
-            {HYDERABAD_ZONES.map((z) => (
+            {quickZones.map((z) => (
               <button
                 key={z.label}
                 type="button"
@@ -1123,7 +1139,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 }}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                   locality === z.label
-                    ? 'bg-white text-[#0B1F3A]'
+                    ? 'bg-white text-[#1A103D]'
                     : 'text-white/85 hover:text-white hover:bg-white/10'
                 }`}
               >
@@ -1141,7 +1157,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 liveTracking
                   ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
-                  : 'text-[#5EEAD4] hover:text-white hover:bg-white/10'
+                  : 'text-[#C4B5FD] hover:text-white hover:bg-white/10'
               }`}
             >
               <Radio className={`w-3.5 h-3.5 ${liveTracking ? 'animate-pulse' : ''}`} />
@@ -1176,11 +1192,11 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
         {/* Clean Live Status Summary Strip */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#475569]">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 tabular-nums">
-            <span className="font-semibold text-[#0B1F3A]">{locality}</span>
+            <span className="font-semibold text-[#1A103D]">{locality}</span>
             <span className="text-[#CBD5E1]" aria-hidden="true">
               ·
             </span>
-            <span className="font-semibold text-[#0B7285]">
+            <span className="font-semibold text-[#6B21D9]">
               {eligibleShops.length} rule-matched / {evaluatedShops.length} live shops
             </span>
             <span className="text-[#CBD5E1]" aria-hidden="true">
@@ -1201,15 +1217,15 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             type="button"
             onClick={handleStartTopKDispatch}
             disabled={wave1Shops.length === 0}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#15325B] disabled:bg-[#CBD5E1] text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1A103D] hover:bg-[#2E1065] disabled:bg-[#CBD5E1] text-white text-xs font-semibold transition-colors cursor-pointer"
           >
-            <Send className="w-3.5 h-3.5 text-[#5EEAD4]" />
+            <Send className="w-3.5 h-3.5 text-[#C4B5FD]" />
             Auto-Broadcast Top {rules.topKBroadcastCount} Shops
           </button>
         </div>
 
         {/* INTERACTIVE 3-STEP MAP BOOKING PROGRESS BAR */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-4 py-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="bg-white rounded-2xl border border-[#EAE0FA] px-4 py-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
             {(
               [
@@ -1251,21 +1267,21 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   }}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all ${
                     isActive
-                      ? 'border-[#0B7285] bg-[#F0F9FA] shadow-2xs cursor-pointer'
+                      ? 'border-[#6B21D9] bg-[#F4EEFF] shadow-2xs cursor-pointer'
                       : isCompleted
-                        ? 'border-[#CBE7EC] bg-white hover:border-[#0B7285] cursor-pointer'
+                        ? 'border-[#DCD0F5] bg-white hover:border-[#6B21D9] cursor-pointer'
                         : s.enabled
-                          ? 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1] cursor-pointer'
-                          : 'border-[#F1F5F9] bg-[#F8FAFC] opacity-60 cursor-not-allowed'
+                          ? 'border-[#EAE0FA] bg-white hover:border-[#CBD5E1] cursor-pointer'
+                          : 'border-[#F1F5F9] bg-[#FAF8FF] opacity-60 cursor-not-allowed'
                   }`}
                 >
                   <span
                     className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 tabular-nums ${
                       isCompleted
-                        ? 'bg-[#0B7285] text-white'
+                        ? 'bg-[#6B21D9] text-white'
                         : isActive
-                          ? 'bg-[#0B1F3A] text-white'
-                          : 'bg-[#E2E8F0] text-[#475569]'
+                          ? 'bg-[#1A103D] text-white'
+                          : 'bg-[#EAE0FA] text-[#475569]'
                     }`}
                   >
                     {isCompleted ? <Check className="w-3.5 h-3.5" /> : s.num}
@@ -1273,7 +1289,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   <span className="min-w-0">
                     <span
                       className={`block text-xs font-bold truncate ${
-                        isActive ? 'text-[#0B1F3A]' : 'text-[#334155]'
+                        isActive ? 'text-[#1A103D]' : 'text-[#334155]'
                       }`}
                     >
                       {s.title}
@@ -1289,7 +1305,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             <button
               type="button"
               onClick={() => handleStartBookingForShop(selectedShop)}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-semibold transition-colors cursor-pointer shrink-0 shadow-xs whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-xs font-semibold transition-colors cursor-pointer shrink-0 shadow-xs whitespace-nowrap"
             >
               Continue with {selectedShop.place.name.split(' ').slice(0, 2).join(' ')}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -1300,7 +1316,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             <button
               type="button"
               onClick={() => setBookingStep(1)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#CBD5E1] hover:border-[#0B7285] text-xs font-semibold text-[#0B1F3A] hover:text-[#0B7285] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#CBD5E1] hover:border-[#6B21D9] text-xs font-semibold text-[#1A103D] hover:text-[#6B21D9] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
             >
               Browse All Shops
             </button>
@@ -1312,9 +1328,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
           {/* LEFT COLUMN: Real-Time Map + Selected Shop Action Spotlight */}
           <div className="lg:col-span-7 space-y-4">
             {/* Explicit CSS height container to guarantee zero map collapse */}
-            <div className="relative w-full h-[390px] sm:h-[480px] lg:h-[560px] rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F1F5F9]">
+            <div className="relative w-full h-[390px] sm:h-[480px] lg:h-[560px] rounded-2xl overflow-hidden border border-[#EAE0FA] shadow-md bg-[#F1F5F9]">
               <GoogleMap
-                defaultCenter={HYDERABAD_ZONES[0].center}
+                defaultCenter={quickZones[0].center}
                 defaultZoom={13}
                 mapId="DEMO_MAP_ID"
                 gestureHandling="greedy"
@@ -1341,8 +1357,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   zIndex={100}
                 >
                   <div className="relative flex items-center justify-center">
-                    <span className="absolute w-8 h-8 rounded-full bg-[#0B7285]/25 animate-ping" />
-                    <span className="relative w-4 h-4 rounded-full bg-[#0B1F3A] border-2 border-white shadow-md" />
+                    <span className="absolute w-8 h-8 rounded-full bg-[#6B21D9]/25 animate-ping" />
+                    <span className="relative w-4 h-4 rounded-full bg-[#1A103D] border-2 border-white shadow-md" />
                   </div>
                 </AdvancedMarker>
 
@@ -1365,12 +1381,12 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
               </GoogleMap>
 
               {/* Map Legend Overlay */}
-              <div className="absolute bottom-3 left-3 z-10 bg-white/95 backdrop-blur-xs border border-[#E2E8F0] rounded-xl px-3 py-2 shadow-md flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#334155]">
+              <div className="absolute bottom-3 left-3 z-10 bg-white/95 backdrop-blur-xs border border-[#EAE0FA] rounded-xl px-3 py-2 shadow-md flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#334155]">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#0B1F3A]" /> You
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#1A103D]" /> You
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#0B7285]" /> Top{' '}
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#6B21D9]" /> Top{' '}
                   {rules.topKBroadcastCount} Match
                 </span>
                 <span className="inline-flex items-center gap-1.5">
@@ -1382,8 +1398,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
               </div>
 
               {searchingPlaces && (
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-[#0B1F3A]/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5EEAD4]" />
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-[#1A103D]/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C4B5FD]" />
                   Scanning live tailor shops on Google Maps...
                 </div>
               )}
@@ -1398,7 +1414,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  className="bg-white rounded-2xl border border-[#0B7285]/40 shadow-md overflow-hidden"
+                  className="bg-white rounded-2xl border border-[#6B21D9]/40 shadow-md overflow-hidden"
                 >
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                     <div className="w-full sm:w-28 h-32 sm:h-24 rounded-xl overflow-hidden bg-[#F1F5F9] shrink-0">
@@ -1414,7 +1430,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
                         {selectedShop.rank !== null && (
-                          <span className="font-bold text-[#0B7285] tabular-nums">
+                          <span className="font-bold text-[#6B21D9] tabular-nums">
                             #{selectedShop.rank} Best Match · Score {selectedShop.matchScore}/100
                           </span>
                         )}
@@ -1432,7 +1448,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         )}
                       </div>
 
-                      <h3 className="font-serif-accent text-lg font-bold text-[#0B1F3A] truncate">
+                      <h3 className="font-serif-accent text-lg font-bold text-[#1A103D] truncate">
                         {selectedShop.place.name}
                       </h3>
 
@@ -1442,7 +1458,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums">
                         {selectedShop.place.rating !== null && (
-                          <span className="inline-flex items-center gap-1 font-bold text-[#0B1F3A]">
+                          <span className="inline-flex items-center gap-1 font-bold text-[#1A103D]">
                             <Star className="w-3.5 h-3.5 fill-[#C8922A] text-[#C8922A]" />
                             {selectedShop.place.rating.toFixed(1)} (
                             {selectedShop.place.userRatingCount})
@@ -1452,7 +1468,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         {routeLoading ? (
                           <span className="text-[#64748B]">Computing road route &amp; ETA...</span>
                         ) : routeSummary && routeSummary.shopId === selectedShop.place.id ? (
-                          <span className="font-semibold text-[#0B7285]">
+                          <span className="font-semibold text-[#6B21D9]">
                             {(routeSummary.distanceMeters / 1000).toFixed(2)} km road route ·{' '}
                             {formatDurationMinutes(routeSummary.durationMillis)} ETA
                           </span>
@@ -1466,8 +1482,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   </div>
 
                   {/* Bottom Control Strip: Travel Mode + Direct Appointment Actions */}
-                  <div className="px-4 sm:px-5 py-3 bg-[#F8FAFC] border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
-                    <div className="inline-flex items-center bg-white border border-[#E2E8F0] p-0.5 rounded-xl">
+                  <div className="px-4 sm:px-5 py-3 bg-[#FAF8FF] border-t border-[#EAE0FA] flex flex-wrap items-center justify-between gap-3">
+                    <div className="inline-flex items-center bg-white border border-[#EAE0FA] p-0.5 rounded-xl">
                       {(
                         [
                           { id: 'DRIVING', label: 'Car', icon: Car },
@@ -1483,8 +1499,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                             onClick={() => setTravelMode(m.id)}
                             className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
                               travelMode === m.id
-                                ? 'bg-[#0B1F3A] text-white'
-                                : 'text-[#475569] hover:text-[#0B1F3A]'
+                                ? 'bg-[#1A103D] text-white'
+                                : 'text-[#475569] hover:text-[#1A103D]'
                             }`}
                           >
                             <Icon className="w-3.5 h-3.5" />
@@ -1498,7 +1514,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       <button
                         type="button"
                         onClick={() => setDetailModalShop(selectedShop)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#CBD5E1] bg-white hover:border-[#0B7285] text-xs font-semibold text-[#0B1F3A] hover:text-[#0B7285] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#CBD5E1] bg-white hover:border-[#6B21D9] text-xs font-semibold text-[#1A103D] hover:text-[#6B21D9] transition-colors cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         Details &amp; Hours
@@ -1507,7 +1523,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleStartBookingForShop(selectedShop)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                       >
                         <Calendar className="w-3.5 h-3.5" />
                         {bookingStep === 1
@@ -1522,13 +1538,13 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   </div>
                 </motion.div>
               ) : (
-                <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="bg-white rounded-2xl border border-[#EAE0FA] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-[#F0F9FA] border border-[#CBE7EC] text-[#0B7285] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#F4EEFF] border border-[#DCD0F5] text-[#6B21D9] flex items-center justify-center shrink-0">
                       <RouteIcon className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs sm:text-sm font-bold text-[#0B1F3A]">
+                      <p className="text-xs sm:text-sm font-bold text-[#1A103D]">
                         Click any shop pin on the map to preview route, hours &amp; instant booking
                       </p>
                       <p className="text-xs text-[#64748B]">
@@ -1541,7 +1557,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     <button
                       type="button"
                       onClick={() => setSelectedShopId(eligibleShops[0].place.id)}
-                      className="px-3.5 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors"
+                      className="px-3.5 py-2 rounded-xl bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors"
                     >
                       Select #1 Nearest Shop
                     </button>
@@ -1559,7 +1575,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 href="https://maps.google.com/help/terms_maps/?utm_campaign=gmp_mcp_codeassist_v1_aistudio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-[#0B7285]"
+                className="underline hover:text-[#6B21D9]"
               >
                 Google Maps/Google Earth Additional Terms of Service
               </a>{' '}
@@ -1568,7 +1584,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-[#0B7285]"
+                className="underline hover:text-[#6B21D9]"
               >
                 Google Privacy Policy
               </a>
@@ -1577,7 +1593,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
           </div>
 
           {/* RIGHT COLUMN: Inline 3-Step Map Booking Flow OR Ranked Live Shops / Rules / Dispatch */}
-          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#EAE0FA] shadow-sm overflow-hidden">
             {bookingStep >= 2 && selectedShop ? (
               <MapBookingFlowPanel
                 step={bookingStep}
@@ -1598,14 +1614,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             ) : (
               <>
                 {/* Tab Header */}
-                <div className="grid grid-cols-3 border-b border-[#E2E8F0] bg-[#F8FAFC] p-1.5 gap-1">
+                <div className="grid grid-cols-3 border-b border-[#EAE0FA] bg-[#FAF8FF] p-1.5 gap-1">
                   <button
                     type="button"
                     onClick={() => setActiveRightTab('shops')}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       activeRightTab === 'shops'
-                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                        ? 'bg-[#1A103D] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#1A103D]'
                     }`}
                   >
                     Nearest ({eligibleShops.length})
@@ -1615,8 +1631,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     onClick={() => setActiveRightTab('rules')}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
                       activeRightTab === 'rules'
-                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                        ? 'bg-[#1A103D] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#1A103D]'
                     }`}
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1627,8 +1643,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     onClick={() => setActiveRightTab('dispatch')}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
                       activeRightTab === 'dispatch'
-                        ? 'bg-[#0B1F3A] text-white shadow-2xs'
-                        : 'text-[#475569] hover:text-[#0B1F3A]'
+                        ? 'bg-[#1A103D] text-white shadow-2xs'
+                        : 'text-[#475569] hover:text-[#1A103D]'
                     }`}
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -1665,14 +1681,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       }}
                       className={`rounded-xl border p-3 transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[#0B7285] bg-[#F0F9FA]/70 shadow-sm'
+                          ? 'border-[#6B21D9] bg-[#F4EEFF]/70 shadow-sm'
                           : shop.eligible
-                            ? 'border-[#E2E8F0] bg-white hover:border-[#0B7285]/45'
-                            : 'border-[#E2E8F0] bg-[#F8FAFC] opacity-75'
+                            ? 'border-[#EAE0FA] bg-white hover:border-[#6B21D9]/45'
+                            : 'border-[#EAE0FA] bg-[#FAF8FF] opacity-75'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#F1F5F9] shrink-0 border border-[#E2E8F0]">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#F1F5F9] shrink-0 border border-[#EAE0FA]">
                           <SafeImage
                             src={thumbSrc}
                             alt={shop.place.name}
@@ -1686,7 +1702,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                               className={`font-bold ${
                                 shop.rank !== null
                                   ? shop.dispatchWave === 1
-                                    ? 'text-[#0B7285]'
+                                    ? 'text-[#6B21D9]'
                                     : 'text-[#A67418]'
                                   : 'text-[#64748B]'
                               }`}
@@ -1695,12 +1711,12 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                                 ? `#${shop.rank} · Score ${shop.matchScore}`
                                 : 'Rule Excluded'}
                             </span>
-                            <span className="font-bold text-[#0B1F3A]">
+                            <span className="font-bold text-[#1A103D]">
                               {shop.distanceKm.toFixed(2)} km
                             </span>
                           </div>
 
-                          <h3 className="text-sm font-bold text-[#0B1F3A] truncate mt-0.5">
+                          <h3 className="text-sm font-bold text-[#1A103D] truncate mt-0.5">
                             {shop.place.name}
                           </h3>
 
@@ -1708,7 +1724,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                           <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
                             <div className="flex items-center gap-1.5 tabular-nums text-[#475569]">
-                              <span className="inline-flex items-center gap-0.5 font-bold text-[#0B1F3A]">
+                              <span className="inline-flex items-center gap-0.5 font-bold text-[#1A103D]">
                                 <Star className="w-3 h-3 fill-[#C8922A] text-[#C8922A]" />
                                 {shop.place.rating !== null ? shop.place.rating.toFixed(1) : 'New'}
                               </span>
@@ -1735,7 +1751,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                                 e.stopPropagation();
                                 handleStartBookingForShop(shop);
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-[#0B1F3A] hover:bg-[#0B7285] text-white text-[11px] font-semibold transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1"
+                              className="px-2.5 py-1 rounded-lg bg-[#1A103D] hover:bg-[#6B21D9] text-white text-[11px] font-semibold transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1"
                             >
                               Select
                               <ArrowRight className="w-3 h-3" />
@@ -1745,7 +1761,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       </div>
 
                       {shop.failedReasons.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-[#E2E8F0] space-y-0.5">
+                        <div className="mt-2 pt-2 border-t border-[#EAE0FA] space-y-0.5">
                           {shop.failedReasons.map((reason) => (
                             <p
                               key={reason}
@@ -1767,14 +1783,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             {activeRightTab === 'rules' && (
               <div className="p-4 space-y-4 max-h-[640px] overflow-y-auto">
                 <div className="space-y-3">
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#0B7285]">
+                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#6B21D9]">
                     1. Hyperlocal Matching Rules
                   </h2>
 
                   <div>
-                    <div className="flex justify-between text-xs font-bold text-[#0B1F3A] mb-1">
+                    <div className="flex justify-between text-xs font-bold text-[#1A103D] mb-1">
                       <span>Max Service Radius (Pilot: 3–5 km)</span>
-                      <span className="text-[#0B7285] tabular-nums">{rules.maxRadiusKm} km</span>
+                      <span className="text-[#6B21D9] tabular-nums">{rules.maxRadiusKm} km</span>
                     </div>
                     <input
                       type="range"
@@ -1785,14 +1801,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       onChange={(e) =>
                         setRules((r) => ({ ...r, maxRadiusKm: Number(e.target.value) }))
                       }
-                      className="w-full accent-[#0B7285]"
+                      className="w-full accent-[#6B21D9]"
                     />
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-xs font-bold text-[#0B1F3A] mb-1">
+                    <div className="flex justify-between text-xs font-bold text-[#1A103D] mb-1">
                       <span>Minimum Google Rating Gate</span>
-                      <span className="text-[#0B7285] tabular-nums">
+                      <span className="text-[#6B21D9] tabular-nums">
                         {rules.minRating === 0 ? 'Any' : `${rules.minRating.toFixed(1)}★`}
                       </span>
                     </div>
@@ -1804,8 +1820,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           onClick={() => setRules((r) => ({ ...r, minRating: val }))}
                           className={`py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
                             rules.minRating === val
-                              ? 'bg-[#F0F9FA] border-[#0B7285] text-[#0B7285]'
-                              : 'bg-white border-[#E2E8F0] text-[#475569]'
+                              ? 'bg-[#F4EEFF] border-[#6B21D9] text-[#6B21D9]'
+                              : 'bg-white border-[#EAE0FA] text-[#475569]'
                           }`}
                         >
                           {val === 0 ? 'Any' : `${val.toFixed(1)}★+`}
@@ -1814,9 +1830,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     </div>
                   </div>
 
-                  <label className="flex items-center justify-between bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2.5 cursor-pointer">
+                  <label className="flex items-center justify-between bg-[#FAF8FF] border border-[#EAE0FA] rounded-xl px-3 py-2.5 cursor-pointer">
                     <div>
-                      <p className="text-xs font-bold text-[#0B1F3A]">Require &quot;Open Now&quot;</p>
+                      <p className="text-xs font-bold text-[#1A103D]">Require &quot;Open Now&quot;</p>
                       <p className="text-[10.5px] text-[#64748B]">
                         Exclude closed shops using real-time Google hours
                       </p>
@@ -1827,13 +1843,13 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       onChange={(e) =>
                         setRules((r) => ({ ...r, requireOpenNow: e.target.checked }))
                       }
-                      className="w-4 h-4 accent-[#0B7285]"
+                      className="w-4 h-4 accent-[#6B21D9]"
                     />
                   </label>
 
-                  <label className="flex items-center justify-between bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2.5 cursor-pointer">
+                  <label className="flex items-center justify-between bg-[#FAF8FF] border border-[#EAE0FA] rounded-xl px-3 py-2.5 cursor-pointer">
                     <div>
-                      <p className="text-xs font-bold text-[#0B1F3A]">
+                      <p className="text-xs font-bold text-[#1A103D]">
                         Mask Customer Address Until Accepted
                       </p>
                       <p className="text-[10.5px] text-[#64748B]">
@@ -1846,14 +1862,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       onChange={(e) =>
                         setRules((r) => ({ ...r, maskAddressUntilAccepted: e.target.checked }))
                       }
-                      className="w-4 h-4 accent-[#0B7285]"
+                      className="w-4 h-4 accent-[#6B21D9]"
                     />
                   </label>
                 </div>
 
                 {/* Rule Group 2: Home Visit Fee & Minimum Order Waiver */}
-                <div className="pt-3 border-t border-[#E2E8F0] space-y-2.5">
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#0B7285]">
+                <div className="pt-3 border-t border-[#EAE0FA] space-y-2.5">
+                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#6B21D9]">
                     2. Home Visit Fee &amp; Waiver Rule (₹49–₹99)
                   </h2>
                   <div className="grid grid-cols-2 gap-2">
@@ -1867,7 +1883,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         step={50}
                         value={estimatedOrderInr}
                         onChange={(e) => setEstimatedOrderInr(Math.max(0, Number(e.target.value)))}
-                        className="w-full border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#0B1F3A]"
+                        className="w-full border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#1A103D]"
                       />
                     </div>
                     <div>
@@ -1885,7 +1901,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                             minOrderForFreeVisitInr: Math.max(0, Number(e.target.value)),
                           }))
                         }
-                        className="w-full border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#0B1F3A]"
+                        className="w-full border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#1A103D]"
                       />
                     </div>
                   </div>
@@ -1902,8 +1918,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 </div>
 
                 {/* Rule Group 3: Strict Order Lifecycle Transition Guard Tester */}
-                <div className="pt-3 border-t border-[#E2E8F0] space-y-2.5">
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#0B7285]">
+                <div className="pt-3 border-t border-[#EAE0FA] space-y-2.5">
+                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#6B21D9]">
                     3. Order Transition Rule Guard
                   </h2>
                   <p className="text-[11px] text-[#475569]">
@@ -1911,14 +1927,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     explicit customer quote approval.
                   </p>
 
-                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 space-y-2.5">
+                  <div className="bg-[#FAF8FF] border border-[#EAE0FA] rounded-xl p-3 space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[#64748B] font-semibold">Current Stage:</span>
-                      <span className="font-bold text-[#0B7285]">{simOrderStage}</span>
+                      <span className="font-bold text-[#6B21D9]">{simOrderStage}</span>
                     </div>
 
                     <label className="flex items-center justify-between text-xs cursor-pointer">
-                      <span className="font-bold text-[#0B1F3A]">
+                      <span className="font-bold text-[#1A103D]">
                         Customer Approved Final Quote?
                       </span>
                       <input
@@ -1936,14 +1952,14 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleTestTransitionGuard('Customer Approved')}
-                        className="text-[11px] font-bold bg-white border border-[#CBD5E1] hover:border-[#0B7285] text-[#0B1F3A] px-2.5 py-1.5 rounded-lg cursor-pointer"
+                        className="text-[11px] font-bold bg-white border border-[#CBD5E1] hover:border-[#6B21D9] text-[#1A103D] px-2.5 py-1.5 rounded-lg cursor-pointer"
                       >
                         Try: Customer Approved
                       </button>
                       <button
                         type="button"
                         onClick={() => handleTestTransitionGuard('Stitching Started')}
-                        className="text-[11px] font-bold bg-[#0B1F3A] hover:bg-[#15325B] text-white px-2.5 py-1.5 rounded-lg cursor-pointer"
+                        className="text-[11px] font-bold bg-[#1A103D] hover:bg-[#2E1065] text-white px-2.5 py-1.5 rounded-lg cursor-pointer"
                       >
                         Try: Start Stitching
                       </button>
@@ -1954,7 +1970,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           setSimQuoteApproved(false);
                           setGuardFeedback(null);
                         }}
-                        className="text-[11px] font-semibold text-[#64748B] hover:text-[#0B1F3A] px-2 py-1.5 cursor-pointer"
+                        className="text-[11px] font-semibold text-[#64748B] hover:text-[#1A103D] px-2 py-1.5 cursor-pointer"
                       >
                         Reset
                       </button>
@@ -1987,7 +2003,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       'Matching & operating rules reset to Tailering Hyderabad defaults.',
                     );
                   }}
-                  className="w-full text-xs font-bold text-[#475569] hover:text-[#0B7285] py-2 border border-[#E2E8F0] rounded-xl cursor-pointer transition-colors"
+                  className="w-full text-xs font-bold text-[#475569] hover:text-[#6B21D9] py-2 border border-[#EAE0FA] rounded-xl cursor-pointer transition-colors"
                 >
                   Reset Rules to Pilot Defaults (5 km, 4.0★)
                 </button>
@@ -1997,11 +2013,11 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
             {/* TAB 3: TOP-3 REQUEST ROUTING & AUTO RE-ROUTE SIMULATOR */}
             {activeRightTab === 'dispatch' && (
               <div className="p-4 space-y-4 max-h-[640px] overflow-y-auto">
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3.5 space-y-2">
+                <div className="rounded-xl border border-[#EAE0FA] bg-[#FAF8FF] p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#475569] flex items-center gap-1.5">
                       {privacyAddressPreview.isMasked ? (
-                        <Lock className="w-3.5 h-3.5 text-[#0B7285]" />
+                        <Lock className="w-3.5 h-3.5 text-[#6B21D9]" />
                       ) : (
                         <Unlock className="w-3.5 h-3.5 text-[#059669]" />
                       )}
@@ -2009,13 +2025,13 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     </span>
                     <span
                       className={`text-[10px] font-bold ${
-                        privacyAddressPreview.isMasked ? 'text-[#0B7285]' : 'text-[#047857]'
+                        privacyAddressPreview.isMasked ? 'text-[#6B21D9]' : 'text-[#047857]'
                       }`}
                     >
                       {privacyAddressPreview.isMasked ? 'Masked' : 'Unlocked'}
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-[#0B1F3A]">
+                  <p className="text-xs font-semibold text-[#1A103D]">
                     {privacyAddressPreview.visibleAddress}
                   </p>
                   <input
@@ -2028,8 +2044,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 </div>
 
                 {dispatchStatus === 'idle' && (
-                  <div className="bg-[#F0F9FA] border border-[#CBE7EC] rounded-xl p-4 text-center space-y-2.5">
-                    <p className="text-sm font-bold text-[#0B1F3A] font-serif-accent">
+                  <div className="bg-[#F4EEFF] border border-[#DCD0F5] rounded-xl p-4 text-center space-y-2.5">
+                    <p className="text-sm font-bold text-[#1A103D] font-serif-accent">
                       Ready to Route to Top {Math.min(rules.topKBroadcastCount, wave1Shops.length)}{' '}
                       Eligible Shops
                     </p>
@@ -2042,7 +2058,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       type="button"
                       onClick={handleStartTopKDispatch}
                       disabled={wave1Shops.length === 0}
-                      className="w-full bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-bold py-2.5 rounded-xl shadow-xs cursor-pointer disabled:opacity-50 transition-colors"
+                      className="w-full bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-bold py-2.5 rounded-xl shadow-xs cursor-pointer disabled:opacity-50 transition-colors"
                     >
                       Start Real-Time Top-{rules.topKBroadcastCount} Broadcast
                     </button>
@@ -2051,7 +2067,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                 {(dispatchStatus === 'wave1' || dispatchStatus === 'wave2') && (
                   <div className="space-y-3">
-                    <div className="bg-[#0B1F3A] text-white rounded-xl p-3.5 flex items-center justify-between">
+                    <div className="bg-[#1A103D] text-white rounded-xl p-3.5 flex items-center justify-between">
                       <div>
                         <p className="text-xs font-extrabold text-[#E2B14B]">
                           {dispatchStatus === 'wave1'
@@ -2063,7 +2079,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         </p>
                       </div>
                       <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-lg text-sm font-extrabold tabular-nums">
-                        <Clock className="w-4 h-4 text-[#5EEAD4]" />
+                        <Clock className="w-4 h-4 text-[#C4B5FD]" />
                         {dispatchCountdown}s
                       </div>
                     </div>
@@ -2072,10 +2088,10 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       {(dispatchStatus === 'wave1' ? wave1Shops : wave2Shops).map((shop) => (
                         <div
                           key={shop.place.id}
-                          className="rounded-xl border border-[#E2E8F0] p-3 flex items-center justify-between gap-2 bg-white"
+                          className="rounded-xl border border-[#EAE0FA] p-3 flex items-center justify-between gap-2 bg-white"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-extrabold text-[#0B1F3A] truncate">
+                            <p className="text-xs font-extrabold text-[#1A103D] truncate">
                               #{shop.rank} {shop.place.name}
                             </p>
                             <p className="text-[11px] text-[#64748B] tabular-nums">
@@ -2085,7 +2101,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleStartBookingForShop(shop)}
-                            className="bg-[#0B7285] hover:bg-[#085463] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
+                            className="bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
                           >
                             Accept &amp; Schedule
                           </button>
@@ -2096,7 +2112,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     <button
                       type="button"
                       onClick={() => setDispatchCountdown(0)}
-                      className="w-full text-xs font-bold text-[#0B7285] border border-[#CBE7EC] bg-[#F0F9FA] py-2 rounded-xl cursor-pointer hover:bg-[#E2F4F7] transition-colors"
+                      className="w-full text-xs font-bold text-[#6B21D9] border border-[#DCD0F5] bg-[#F4EEFF] py-2 rounded-xl cursor-pointer hover:bg-[#E2F4F7] transition-colors"
                     >
                       Simulate Timeout → Trigger Auto Re-Route Now
                     </button>
@@ -2142,7 +2158,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         setRules((r) => ({ ...r, maxRadiusKm: Math.min(10, r.maxRadiusKm + 3) }));
                         setDispatchStatus('idle');
                       }}
-                      className="bg-[#0B1F3A] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+                      className="bg-[#1A103D] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
                     >
                       Expand Radius +3 km &amp; Retry
                     </button>
@@ -2158,25 +2174,25 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
       {/* SECTION 3: CLEAN, VISUAL 3-COLUMN DIRECTORY OF LIVE MAP SHOPS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-5 border-b border-[#E2E8F0]">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-5 border-b border-[#EAE0FA]">
           <div>
-            <p className="text-xs font-semibold text-[#0B7285]">
+            <p className="text-xs font-semibold text-[#6B21D9]">
               Real-Time Google Maps Directory · Ranked by Tailering Rules
             </p>
-            <h2 className="font-serif-accent text-2xl sm:text-3xl font-bold text-[#0B1F3A] mt-0.5">
+            <h2 className="font-serif-accent text-2xl sm:text-3xl font-bold text-[#1A103D] mt-0.5">
               All Discovered Tailor Shops Near {locality.split(',')[0]}
             </h2>
           </div>
           <p className="text-xs text-[#64748B] tabular-nums">
-            Showing <strong className="text-[#0B1F3A]">{evaluatedShops.length}</strong> live
+            Showing <strong className="text-[#1A103D]">{evaluatedShops.length}</strong> live
             listings ({eligibleShops.length} eligible within {rules.maxRadiusKm} km)
           </p>
         </div>
 
         {evaluatedShops.length === 0 ? (
-          <div className="mt-8 bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center max-w-xl mx-auto">
-            <Scissors className="w-8 h-8 text-[#0B7285] mx-auto mb-3" />
-            <h3 className="font-serif-accent text-xl font-bold text-[#0B1F3A]">
+          <div className="mt-8 bg-white rounded-2xl border border-[#EAE0FA] p-10 text-center max-w-xl mx-auto">
+            <Scissors className="w-8 h-8 text-[#6B21D9] mx-auto mb-3" />
+            <h3 className="font-serif-accent text-xl font-bold text-[#1A103D]">
               {searchingPlaces ? 'Scanning nearby tailor shops...' : 'No live shops loaded yet'}
             </h3>
             <p className="text-sm text-[#475569] mt-1.5">
@@ -2204,10 +2220,10 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   }}
                   className={`group bg-white rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden ${
                     isSelected
-                      ? 'border-[#0B7285] ring-1 ring-[#0B7285]/30 shadow-lg'
+                      ? 'border-[#6B21D9] ring-1 ring-[#6B21D9]/30 shadow-lg'
                       : shop.eligible
-                        ? 'border-[#E2E8F0] hover:shadow-lg hover:border-[#CBD5E1]'
-                        : 'border-[#E2E8F0] opacity-80'
+                        ? 'border-[#EAE0FA] hover:shadow-lg hover:border-[#CBD5E1]'
+                        : 'border-[#EAE0FA] opacity-80'
                   }`}
                 >
                   <div>
@@ -2222,18 +2238,18 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           setDetailModalShop(shop);
                         }
                       }}
-                      className="relative h-40 bg-[#0B1F3A] overflow-hidden cursor-pointer"
+                      className="relative h-40 bg-[#1A103D] overflow-hidden cursor-pointer"
                     >
                       <SafeImage
                         src={coverSrc}
                         alt={shop.place.name}
                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/95 via-[#0B1F3A]/35 to-[#0B1F3A]/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1A103D]/95 via-[#1A103D]/35 to-[#1A103D]/20" />
 
                       {/* Top Clean Metrics Row */}
                       <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between text-xs text-white tabular-nums">
-                        <span className="inline-flex items-center gap-1.5 bg-[#0B1F3A]/75 backdrop-blur-xs px-2.5 py-1 rounded-lg font-semibold">
+                        <span className="inline-flex items-center gap-1.5 bg-[#1A103D]/75 backdrop-blur-xs px-2.5 py-1 rounded-lg font-semibold">
                           <Star className="w-3.5 h-3.5 fill-[#E2B14B] text-[#E2B14B]" />
                           {shop.place.rating !== null ? shop.place.rating.toFixed(1) : 'New'}
                           <span className="text-white/70 font-normal">
@@ -2247,9 +2263,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           className={`px-2.5 py-1 rounded-lg font-bold backdrop-blur-xs ${
                             shop.rank !== null
                               ? shop.dispatchWave === 1
-                                ? 'bg-[#0B7285]/90 text-white'
+                                ? 'bg-[#6B21D9]/90 text-white'
                                 : 'bg-[#C8922A]/90 text-white'
-                              : 'bg-[#0B1F3A]/80 text-slate-300'
+                              : 'bg-[#1A103D]/80 text-slate-300'
                           }`}
                         >
                           {shop.rank !== null ? `#${shop.rank} Match` : 'Filtered'}
@@ -2274,7 +2290,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                         {shop.place.isOpenNow !== null && (
                           <span
                             className={`font-semibold ${
-                              shop.place.isOpenNow ? 'text-[#0B7285]' : 'text-rose-700'
+                              shop.place.isOpenNow ? 'text-[#6B21D9]' : 'text-rose-700'
                             }`}
                           >
                             {shop.place.isOpenNow ? 'Open Now' : 'Currently Closed'}
@@ -2285,7 +2301,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                             ·
                           </span>
                         )}
-                        <span className="font-semibold text-[#0B1F3A]">
+                        <span className="font-semibold text-[#1A103D]">
                           Score {shop.matchScore}/100
                         </span>
                         <span className="text-[#CBD5E1]" aria-hidden="true">
@@ -2304,7 +2320,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
                       {/* Rule Breakdown or Exclusion Reasons */}
                       {shop.failedReasons.length > 0 ? (
-                        <div className="pt-2 border-t border-[#E2E8F0] space-y-1">
+                        <div className="pt-2 border-t border-[#EAE0FA] space-y-1">
                           {shop.failedReasons.map((reason) => (
                             <p
                               key={reason}
@@ -2316,28 +2332,28 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                           ))}
                         </div>
                       ) : (
-                        <div className="pt-2.5 border-t border-[#E2E8F0] grid grid-cols-4 gap-1.5 text-center text-[11px] tabular-nums">
+                        <div className="pt-2.5 border-t border-[#EAE0FA] grid grid-cols-4 gap-1.5 text-center text-[11px] tabular-nums">
                           <div>
                             <span className="text-[#64748B] block">Dist</span>
-                            <span className="font-bold text-[#0B1F3A]">
+                            <span className="font-bold text-[#1A103D]">
                               {shop.scoreBreakdown.proximity}/45
                             </span>
                           </div>
                           <div>
                             <span className="text-[#64748B] block">Rating</span>
-                            <span className="font-bold text-[#0B1F3A]">
+                            <span className="font-bold text-[#1A103D]">
                               {shop.scoreBreakdown.rating}/30
                             </span>
                           </div>
                           <div>
                             <span className="text-[#64748B] block">Trust</span>
-                            <span className="font-bold text-[#0B1F3A]">
+                            <span className="font-bold text-[#1A103D]">
                               {shop.scoreBreakdown.trustVolume}/15
                             </span>
                           </div>
                           <div>
                             <span className="text-[#64748B] block">Avail</span>
-                            <span className="font-bold text-[#0B1F3A]">
+                            <span className="font-bold text-[#1A103D]">
                               {shop.scoreBreakdown.availability}/10
                             </span>
                           </div>
@@ -2347,12 +2363,12 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   </div>
 
                   {/* Clean Action Footer */}
-                  <div className="px-4 py-3 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between gap-2">
+                  <div className="px-4 py-3 bg-[#FAF8FF] border-t border-[#EAE0FA] flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleFocusShopOnMap(shop)}
-                        className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold border border-[#CBD5E1] bg-white text-[#334155] hover:border-[#0B7285] hover:text-[#0B7285] transition-colors cursor-pointer whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold border border-[#CBD5E1] bg-white text-[#334155] hover:border-[#6B21D9] hover:text-[#6B21D9] transition-colors cursor-pointer whitespace-nowrap"
                       >
                         <RouteIcon className="w-3.5 h-3.5" />
                         Route
@@ -2361,7 +2377,7 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                       <button
                         type="button"
                         onClick={() => setDetailModalShop(shop)}
-                        className="px-2.5 py-2 rounded-lg text-xs font-semibold border border-[#CBD5E1] bg-white text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] transition-colors cursor-pointer whitespace-nowrap"
+                        className="px-2.5 py-2 rounded-lg text-xs font-semibold border border-[#CBD5E1] bg-white text-[#1A103D] hover:border-[#6B21D9] hover:text-[#6B21D9] transition-colors cursor-pointer whitespace-nowrap"
                       >
                         Details
                       </button>
@@ -2370,9 +2386,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleStartBookingForShop(shop, true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      <Calendar className="w-3.5 h-3.5 text-[#5EEAD4]" />
+                      <Calendar className="w-3.5 h-3.5 text-[#C4B5FD]" />
                       Book &amp; Schedule
                     </button>
                   </div>
@@ -2403,14 +2419,14 @@ export const NearbyShopsPage: React.FC<NearbyShopsPageProps> = (props) => {
   if (!MAPS_API_KEY) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 text-center space-y-3 shadow-sm">
-          <AlertCircle className="w-10 h-10 text-[#0B7285] mx-auto" />
-          <h1 className="text-xl font-bold text-[#0B1F3A] font-serif-accent">
+        <div className="bg-white rounded-2xl border border-[#EAE0FA] p-6 text-center space-y-3 shadow-sm">
+          <AlertCircle className="w-10 h-10 text-[#6B21D9] mx-auto" />
+          <h1 className="text-xl font-bold text-[#1A103D] font-serif-accent">
             Google Maps API Key Not Configured
           </h1>
           <p className="text-xs sm:text-sm text-[#475569]">
             Configure{' '}
-            <code className="bg-[#F0F9FA] text-[#0B7285] px-1.5 py-0.5 rounded font-mono">
+            <code className="bg-[#F4EEFF] text-[#6B21D9] px-1.5 py-0.5 rounded font-mono">
               VITE_GOOGLE_MAPS_API_KEY
             </code>{' '}
             in your environment to enable real-time nearby tailor discovery and live routing.

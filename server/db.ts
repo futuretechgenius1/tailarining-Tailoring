@@ -1,4 +1,5 @@
 import mysql, { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { seedInitialStorefrontData } from './seedStorefront';
 
 let pool: Pool | null = null;
 let schemaReadyPromise: Promise<void> | null = null;
@@ -34,6 +35,7 @@ export function getPool(): Pool {
       queueLimit: 0,
       connectTimeout: 12000,
       decimalNumbers: true,
+      charset: 'utf8mb4_unicode_ci',
     });
   }
 
@@ -276,6 +278,44 @@ async function runSchemaMigrations(): Promise<void> {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS tailor_portfolio_items (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      tailor_id INT UNSIGNED NOT NULL,
+      title VARCHAR(140) NOT NULL,
+      category ENUM('custom', 'alteration', 'uniform', 'bridal', 'menswear') NOT NULL DEFAULT 'custom',
+      caption TEXT NULL,
+      price_hint DECIMAL(10,2) NULL,
+      turnaround_days SMALLINT UNSIGNED NULL,
+      mime_type VARCHAR(40) NOT NULL,
+      image_data MEDIUMBLOB NOT NULL,
+      is_featured TINYINT(1) NOT NULL DEFAULT 0,
+      is_visible TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      CONSTRAINT fk_portfolio_tailor FOREIGN KEY (tailor_id) REFERENCES tailor_profiles(id) ON DELETE CASCADE,
+      INDEX idx_portfolio_tailor (tailor_id, is_visible, is_featured, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS tailor_reviews (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      tailor_id INT UNSIGNED NOT NULL,
+      customer_id INT UNSIGNED NULL,
+      reviewer_name VARCHAR(120) NOT NULL,
+      reviewer_locality VARCHAR(120) NOT NULL DEFAULT 'Hyderabad',
+      service_name VARCHAR(160) NULL,
+      rating TINYINT UNSIGNED NOT NULL,
+      comment TEXT NOT NULL,
+      is_verified_booking TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_reviews_tailor FOREIGN KEY (tailor_id) REFERENCES tailor_profiles(id) ON DELETE CASCADE,
+      CONSTRAINT fk_reviews_customer FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE SET NULL,
+      INDEX idx_tailor_reviews_tailor (tailor_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
   // Idempotent structural default settings (INSERT IGNORE never overwrites owner changes)
   const defaultSettings: [string, string, string, string][] = [
     ['platform_name', 'Tailering', 'brand', 'Display name of the tailoring marketplace'],
@@ -353,6 +393,152 @@ async function runSchemaMigrations(): Promise<void> {
       );
     }
   }
+
+  // Safe idempotent column migrations for storefront metadata on tailor_profiles
+  const ensureColumn = async (tableName: string, columnName: string, columnDef: string) => {
+    const [cols] = await p.execute<RowDataPacket[]>(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+       LIMIT 1`,
+      [tableName, columnName],
+    );
+    if (cols.length === 0) {
+      await p.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`);
+    }
+  };
+
+  await ensureColumn('tailor_profiles', 'cover_image_url', `VARCHAR(255) NULL`);
+  await ensureColumn('tailor_profiles', 'logo_url', `VARCHAR(255) NULL`);
+  await ensureColumn('tailor_profiles', 'logo_mime', `VARCHAR(40) NULL`);
+  await ensureColumn('tailor_profiles', 'logo_data', `MEDIUMBLOB NULL`);
+  await ensureColumn('tailor_profiles', 'distance_km', `DECIMAL(4,1) NOT NULL DEFAULT 2.0`);
+  await ensureColumn('tailor_profiles', 'turnaround_text', `VARCHAR(60) NOT NULL DEFAULT '3–5 Days'`);
+  await ensureColumn('tailor_profiles', 'turnaround_days', `SMALLINT UNSIGNED NOT NULL DEFAULT 4`);
+  await ensureColumn('tailor_profiles', 'pickup_slots_json', `JSON NULL`);
+  await ensureColumn('tailor_profiles', 'recent_review_json', `JSON NULL`);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS designs_catalog (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      slug VARCHAR(64) NULL UNIQUE,
+      tailor_id INT UNSIGNED NULL,
+      title VARCHAR(180) NOT NULL,
+      category VARCHAR(80) NOT NULL,
+      category_id VARCHAR(60) NOT NULL DEFAULT 'blouse',
+      gender ENUM('women', 'men') NOT NULL DEFAULT 'women',
+      boutique VARCHAR(160) NOT NULL DEFAULT 'Tailering Master Atelier',
+      price DECIMAL(10,2) NOT NULL,
+      original_price DECIMAL(10,2) NULL,
+      image_url VARCHAR(255) NOT NULL,
+      views INT UNSIGNED NOT NULL DEFAULT 40,
+      turnaround_days SMALLINT UNSIGNED NOT NULL DEFAULT 5,
+      trusted TINYINT(1) NOT NULL DEFAULT 1,
+      rating DECIMAL(3,2) NOT NULL DEFAULT 4.90,
+      description TEXT NULL,
+      fabric_note TEXT NULL,
+      is_trending TINYINT(1) NOT NULL DEFAULT 0,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      CONSTRAINT fk_designs_tailor FOREIGN KEY (tailor_id) REFERENCES tailor_profiles(id) ON DELETE SET NULL,
+      INDEX idx_designs_active_gender (is_active, gender, category_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS alteration_services (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      slug VARCHAR(64) NULL UNIQUE,
+      title VARCHAR(160) NOT NULL,
+      description TEXT NULL,
+      price DECIMAL(10,2) NOT NULL,
+      unit VARCHAR(40) NOT NULL DEFAULT 'item',
+      badge VARCHAR(60) NOT NULL DEFAULT 'POPULAR',
+      badge_color VARCHAR(20) NOT NULL DEFAULT 'amber',
+      section ENUM('garment', 'saree') NOT NULL DEFAULT 'garment',
+      icon_type VARCHAR(40) NOT NULL DEFAULT 'waist',
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_alterations_active_section (is_active, section)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS design_categories (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      slug VARCHAR(64) NOT NULL UNIQUE,
+      name VARCHAR(120) NOT NULL,
+      gender ENUM('women', 'men') NOT NULL DEFAULT 'women',
+      image_url VARCHAR(255) NOT NULL,
+      starting_price DECIMAL(10,2) NOT NULL DEFAULT 499.00,
+      design_count INT UNSIGNED NOT NULL DEFAULT 20,
+      sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_categories_active (is_active, sort_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS promo_offers (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(40) NOT NULL UNIQUE,
+      title VARCHAR(80) NOT NULL,
+      description VARCHAR(255) NOT NULL,
+      tag VARCHAR(60) NOT NULL DEFAULT 'Offer',
+      discount_amount DECIMAL(10,2) NOT NULL DEFAULT 100.00,
+      min_order DECIMAL(10,2) NOT NULL DEFAULT 999.00,
+      gradient VARCHAR(160) NOT NULL DEFAULT 'from-[#6B21D9] via-[#7C3AED] to-[#4C1D95]',
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS service_localities (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(160) NOT NULL UNIQUE,
+      city VARCHAR(80) NOT NULL DEFAULT 'Hyderabad',
+      lat DECIMAL(10,6) NOT NULL DEFAULT 17.398400,
+      lng DECIMAL(10,6) NOT NULL DEFAULT 78.374600,
+      sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_localities_active (is_active, sort_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS craft_reel_scenes (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      slug VARCHAR(64) NOT NULL UNIQUE,
+      chapter VARCHAR(12) NOT NULL,
+      title VARCHAR(160) NOT NULL,
+      subtitle TEXT NOT NULL,
+      duration_sec SMALLINT UNSIGNED NOT NULL DEFAULT 6,
+      image_url VARCHAR(255) NOT NULL,
+      intent_id VARCHAR(60) NOT NULL DEFAULT 'all',
+      motion_variant ENUM('zoom', 'pan') NOT NULL DEFAULT 'zoom',
+      sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS storefront_media (
+      media_key VARCHAR(64) PRIMARY KEY,
+      label VARCHAR(120) NOT NULL,
+      image_url VARCHAR(255) NOT NULL,
+      category VARCHAR(40) NOT NULL DEFAULT 'general',
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  // Populate initial storefront tailors, logos, services, portfolio photos, designs, categories, promos, localities, scenes & media
+  await seedInitialStorefrontData(p);
 }
 
 export async function ensureDatabaseReady(): Promise<void> {

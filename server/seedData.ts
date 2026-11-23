@@ -6,10 +6,16 @@ import {
   OrderRecord,
   PromoOffer,
   TailorPartner,
-} from '../types';
+} from '../src/types';
 
 export const ASSETS = {
-  heroStudio: '/src/assets/images/hero_tailoring_studio_1795271995709.jpg',
+  heroStudio: '/src/assets/images/hero_boutique_master_1795428314478.jpg',
+  authLoginMannequin: '/src/assets/images/auth_login_mannequin_1795430682920.jpg',
+  authSignupMannequin: '/src/assets/images/auth_signup_mannequin_1795430684572.jpg',
+  bannerIndividuals: '/src/assets/images/banner_individuals_woman_1795428314679.jpg',
+  bannerB2B: '/src/assets/images/banner_b2b_uniforms_1795428306470.jpg',
+  anarkaliSuit: '/src/assets/images/design_anarkali_pastel_1795428315907.jpg',
+  partyGown: '/src/assets/images/design_party_gown_pink_1795428346822.jpg',
   bannerFestive: '/src/assets/images/banner_festive_family_1795272010525.jpg',
   bannerRelax: '/src/assets/images/banner_relax_home_1795271995673.jpg',
   bannerUniforms: '/src/assets/images/banner_uniforms_team_1795272000997.jpg',
@@ -25,6 +31,19 @@ export const ASSETS = {
   atelierMaggamCraft: '/src/assets/images/atelier_maggam_craft_1795279206510.jpg',
   atelierBespokeChalk: '/src/assets/images/atelier_bespoke_chalk_1795279223310.jpg',
   atelierBoutiqueInterior: '/src/assets/images/atelier_boutique_interior_1795279208066.jpg',
+  customStitchingHero: '/src/assets/images/custom_stitching_hero_1795431555405.jpg',
+  customStitchingShears: '/src/assets/images/custom_stitching_shears_1795431558269.jpg',
+  alterationsHeroMannequin: '/src/assets/images/alterations_hero_mannequin_1795431556560.jpg',
+  alterationsCuttingHands: '/src/assets/images/alterations_cutting_hands_1795431556701.jpg',
+  uniformsHeroTeam: '/src/assets/images/uniforms_hero_team_1795431556416.jpg',
+  uniformsTeamFabrics: '/src/assets/images/uniforms_team_fabrics_1795431555260.jpg',
+  uniformSectorSchool: '/src/assets/images/uniform_sector_school_1795431557558.jpg',
+  uniformSectorCorporate: '/src/assets/images/uniform_sector_corporate_1795431554972.jpg',
+  uniformSectorHealthcare: '/src/assets/images/uniform_sector_healthcare_1795431557117.jpg',
+  uniformSectorHospitality: '/src/assets/images/uniform_sector_hospitality_1795431554556.jpg',
+  uniformSectorIndustrial: '/src/assets/images/uniform_sector_industrial_1795431558550.jpg',
+  measurementsHeroFitting: '/src/assets/images/measurements_hero_fitting_1795431557418.jpg',
+  measurementsGuideChest: '/src/assets/images/measurements_guide_chest_1795431555263.jpg',
 };
 
 export const HYDERABAD_LOCALITIES = [
@@ -421,6 +440,44 @@ export const DESIGNS_CATALOG: DesignProduct[] = [
     description:
       'Flattering A-line full-length evening silhouette with scalloped neckline, waist gather detailing, and flowing hem flare.',
     fabricNote: 'Works beautifully with floral organza, chiffon, or silk georgette.',
+  },
+  {
+    id: 'des-13',
+    title: 'Pastel Sage Floral Zari Anarkali Suit',
+    category: 'ANARKALI SUIT',
+    categoryId: 'salwar-kameez',
+    gender: 'women',
+    boutique: 'Ananya Heritage Couture',
+    price: 2190,
+    originalPrice: 2650,
+    image: ASSETS.anarkaliSuit,
+    views: 254,
+    turnaroundDays: 5,
+    trusted: true,
+    rating: 4.9,
+    description:
+      'Floor-length kalidar Anarkali suit crafted with fine gota-patti neckline piping, full cotton lining, concealed back zip, and scalloped organza dupatta finishing.',
+    fabricNote: 'Ideal for Chanderi silk, georgette, or handloom organza (5.5m flare recommended).',
+    isTrending: true,
+  },
+  {
+    id: 'des-14',
+    title: 'Blush Pink Layered Tulle Party Gown',
+    category: 'PARTY GOWN',
+    categoryId: 'gown',
+    gender: 'women',
+    boutique: 'Vastraa Family & Gown Atelier',
+    price: 1850,
+    originalPrice: 2200,
+    image: ASSETS.partyGown,
+    views: 158,
+    turnaroundDays: 4,
+    trusted: true,
+    rating: 4.9,
+    description:
+      'Custom tiered ruffled tulle birthday & festive party gown with soft pure-cotton skin-friendly inner lining, pearl waist detail, and concealed back zip for kids and juniors.',
+    fabricNote: 'Available for kids & junior partywear sizing with 7-day comfort fit check.',
+    isTrending: true,
   },
 ];
 

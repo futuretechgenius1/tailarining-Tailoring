@@ -3,6 +3,14 @@ import { RowDataPacket } from 'mysql2/promise';
 import { z } from 'zod';
 import { AuthedRequest, requireAuth, requireRole } from '../auth';
 import { executeSql, getPlatformSettingsMap, queryRows, withTransaction } from '../db';
+import {
+  ALLOWED_PORTFOLIO_MIMES,
+  buildPaginationMeta,
+  createRateLimiter,
+  parsePagination,
+  signPortfolioPreviewToken,
+  validatePortfolioImageBuffer,
+} from '../security';
 
 const router = Router();
 router.use(requireAuth, requireRole('tailor'));
@@ -90,6 +98,7 @@ router.get('/overview', async (req: AuthedRequest, res: Response, next: NextFunc
         isVerified: Boolean(profile.is_verified),
         rating: Number(profile.rating),
         commissionRate: Number(profile.commission_rate),
+        logoUrl: profile.logo_url ? String(profile.logo_url) : '',
       },
       kpis: {
         totalOrders: Number(oStats.total_orders || 0),
@@ -144,6 +153,10 @@ router.get('/profile', async (req: AuthedRequest, res: Response, next: NextFunct
         commissionRate: Number(profile.commission_rate),
         rating: Number(profile.rating),
         completedOrders: Number(profile.completed_orders),
+        coverImageUrl: profile.cover_image_url ? String(profile.cover_image_url) : '',
+        logoUrl: profile.logo_url ? String(profile.logo_url) : '',
+        turnaroundText: profile.turnaround_text ? String(profile.turnaround_text) : '3–5 Days',
+        turnaroundDays: Number(profile.turnaround_days || 4),
       },
     });
   } catch (err) {
@@ -163,6 +176,17 @@ const updateTailorProfileSchema = z.object({
   homeVisitFee: z.coerce.number().min(0).max(1000).optional(),
   pickupAvailable: z.boolean().optional(),
   isAvailable: z.boolean().optional(),
+  coverImageUrl: z
+    .string()
+    .trim()
+    .max(255)
+    .refine(
+      (v) => v === '' || v.startsWith('/') || v.startsWith('https://') || v.startsWith('http://'),
+      'Cover image must be a valid relative or http(s) URL.',
+    )
+    .optional(),
+  turnaroundText: z.string().trim().min(2).max(60).optional(),
+  turnaroundDays: z.coerce.number().int().min(1).max(60).optional(),
 });
 
 router.put('/profile', async (req: AuthedRequest, res: Response, next: NextFunction) => {
@@ -188,7 +212,10 @@ router.put('/profile', async (req: AuthedRequest, res: Response, next: NextFunct
              experience_years = COALESCE(?, experience_years),
              home_visit_fee = COALESCE(?, home_visit_fee),
              pickup_available = COALESCE(?, pickup_available),
-             is_available = COALESCE(?, is_available)
+             is_available = COALESCE(?, is_available),
+             cover_image_url = CASE WHEN ? THEN ? ELSE cover_image_url END,
+             turnaround_text = COALESCE(?, turnaround_text),
+             turnaround_days = COALESCE(?, turnaround_days)
          WHERE id = ?`,
         [
           d.shopName ?? null,
@@ -202,6 +229,10 @@ router.put('/profile', async (req: AuthedRequest, res: Response, next: NextFunct
           d.homeVisitFee ?? null,
           d.pickupAvailable !== undefined ? (d.pickupAvailable ? 1 : 0) : null,
           d.isAvailable !== undefined ? (d.isAvailable ? 1 : 0) : null,
+          d.coverImageUrl !== undefined ? 1 : 0,
+          d.coverImageUrl || null,
+          d.turnaroundText ?? null,
+          d.turnaroundDays ?? null,
           profile.id,
         ],
       );
@@ -217,18 +248,96 @@ router.put('/profile', async (req: AuthedRequest, res: Response, next: NextFunct
   }
 });
 
-// 3. TAILOR SERVICES & PRICING CRUD
+// 2B. TAILOR SHOP LOGO UPLOAD & REMOVAL (Validated JPEG/PNG/WebP stored in MySQL)
+const shopLogoUploadLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  keyPrefix: 'tailor-logo-upload',
+  message: 'Too many logo upload attempts. Please wait a few minutes and try again.',
+});
+
+const shopLogoUploadSchema = z.object({
+  mimeType: z.enum(ALLOWED_PORTFOLIO_MIMES),
+  imageBase64: z.string().min(32).max(2_200_000),
+});
+
+router.post(
+  '/logo',
+  shopLogoUploadLimiter,
+  async (req: AuthedRequest, res: Response, next: NextFunction) => {
+    try {
+      const profile = await getTailorProfileOrFail(req.user!.id);
+      const tailorId = Number(profile.id);
+      const parsed = shopLogoUploadSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid logo image.' });
+        return;
+      }
+
+      const cleanedBase64 = parsed.data.imageBase64.replace(
+        /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
+        '',
+      );
+      const imageBuffer = Buffer.from(cleanedBase64, 'base64');
+      const check = validatePortfolioImageBuffer(imageBuffer, parsed.data.mimeType);
+      if (!check.valid) {
+        res.status(400).json({ error: check.reason || 'Unsupported logo format.' });
+        return;
+      }
+
+      const logoUrl = `/api/public/tailors/${tailorId}/logo?v=${Date.now()}`;
+      await executeSql(
+        `UPDATE tailor_profiles
+         SET logo_url = ?, logo_mime = ?, logo_data = ?
+         WHERE id = ?`,
+        [logoUrl, parsed.data.mimeType, imageBuffer, tailorId],
+      );
+
+      res.status(200).json({ logoUrl, message: 'Shop logo uploaded and live on storefront.' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.delete('/logo', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const profile = await getTailorProfileOrFail(req.user!.id);
+    await executeSql(
+      `UPDATE tailor_profiles
+       SET logo_url = NULL, logo_mime = NULL, logo_data = NULL
+       WHERE id = ?`,
+      [profile.id],
+    );
+    res.json({ message: 'Shop logo removed.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 3. TAILOR SERVICES & PRICING CRUD (Paginated)
 router.get('/services', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const profile = await getTailorProfileOrFail(req.user!.id);
-    const rows = await queryRows<RowDataPacket[]>(
-      `SELECT id, title, category, description, base_price, turnaround_days, is_active, created_at
-       FROM services
-       WHERE tailor_id = ?
-       ORDER BY created_at DESC`,
-      [profile.id],
-    );
-    res.json({ services: rows });
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
+
+    const [countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM services WHERE tailor_id = ?`,
+        [profile.id],
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT id, title, category, description, base_price, turnaround_days, is_active, created_at
+         FROM services
+         WHERE tailor_id = ?
+         ORDER BY created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        [profile.id],
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    res.json({ services: rows, pagination: buildPaginationMeta(page, limit, total) });
   } catch (err) {
     next(err);
   }
@@ -340,29 +449,44 @@ router.delete('/services/:id', async (req: AuthedRequest, res: Response, next: N
   }
 });
 
-// 4. ASSIGNED ORDERS + OPEN POOL QUEUE
+// 4. ASSIGNED ORDERS + OPEN POOL QUEUE (Paginated + Status filter)
 router.get('/orders', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const profile = await getTailorProfileOrFail(req.user!.id);
     const tailorId = Number(profile.id);
     const settings = await getPlatformSettingsMap();
     const maskAddress = settings.mask_address_until_accepted !== 'false';
+    const status = typeof req.query.status === 'string' ? req.query.status.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 8, 50);
 
-    const [assignedOrders, openOrders] = await Promise.all([
+    const assignedConds: string[] = [`o.tailor_id = ?`];
+    const assignedParams: (string | number)[] = [tailorId];
+    if (status) {
+      assignedConds.push(`o.status = ?`);
+      assignedParams.push(status);
+    }
+
+    const [assignedCountRows, assignedOrders, openOrders] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM orders o WHERE ${assignedConds.join(' AND ')}`,
+        assignedParams,
+      ),
       queryRows<RowDataPacket[]>(
         `SELECT o.*, c.full_name AS customer_name, c.phone AS customer_phone, c.email AS customer_email
          FROM orders o
          JOIN users c ON c.id = o.customer_id
-         WHERE o.tailor_id = ?
-         ORDER BY o.updated_at DESC`,
-        [tailorId],
+         WHERE ${assignedConds.join(' AND ')}
+         ORDER BY o.updated_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        assignedParams,
       ),
       queryRows<RowDataPacket[]>(
         `SELECT o.*, c.full_name AS customer_name
          FROM orders o
          JOIN users c ON c.id = o.customer_id
          WHERE o.tailor_id IS NULL AND o.status = 'Booking Created'
-         ORDER BY o.created_at DESC`,
+         ORDER BY o.created_at DESC
+         LIMIT 20`,
       ),
     ]);
 
@@ -374,11 +498,13 @@ router.get('/orders', async (req: AuthedRequest, res: Response, next: NextFuncti
           : o.pickup_address,
     });
 
+    const total = Number(assignedCountRows[0]?.total || 0);
     res.json({
       assignedOrders: assignedOrders.map((o) =>
         sanitizeOrder(o, String(o.status) === 'Booking Created'),
       ),
       openOrders: openOrders.map((o) => sanitizeOrder(o, true)),
+      pagination: buildPaginationMeta(page, limit, total),
     });
   } catch (err) {
     next(err);
@@ -608,11 +734,13 @@ router.patch('/orders/:id', async (req: AuthedRequest, res: Response, next: Next
   }
 });
 
-// 5. EARNINGS & PAYOUT HISTORY
+// 5. EARNINGS & PAYOUT HISTORY (Paginated)
 router.get('/earnings', async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const profile = await getTailorProfileOrFail(req.user!.id);
-    const [summaryRows, ledger] = await Promise.all([
+    const { page, limit, offset } = parsePagination(req.query, 10, 50);
+
+    const [summaryRows, countRows, ledger] = await Promise.all([
       queryRows<RowDataPacket[]>(
         `SELECT
            COALESCE(SUM(amount), 0) AS gross_billed,
@@ -625,21 +753,278 @@ router.get('/earnings', async (req: AuthedRequest, res: Response, next: NextFunc
         [profile.id],
       ),
       queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM payments WHERE tailor_id = ?`,
+        [profile.id],
+      ),
+      queryRows<RowDataPacket[]>(
         `SELECT p.*, o.order_code, o.service_title, o.status AS order_status, c.full_name AS customer_name
          FROM payments p
          JOIN orders o ON o.id = p.order_id
          JOIN users c ON c.id = p.customer_id
          WHERE p.tailor_id = ?
-         ORDER BY p.created_at DESC`,
+         ORDER BY p.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
         [profile.id],
       ),
     ]);
 
+    const total = Number(countRows[0]?.total || 0);
     res.json({
       commissionRate: Number(profile.commission_rate),
       summary: summaryRows[0] || {},
       ledger,
+      pagination: buildPaginationMeta(page, limit, total),
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 6. TAILOR PORTFOLIO SHOWCASE CRUD (Paginated + Validated Image Uploads)
+const portfolioUploadLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  keyPrefix: 'portfolio-upload',
+  message: 'Upload limit reached temporarily. Please wait a few minutes before adding more photos.',
+});
+
+const createPortfolioSchema = z.object({
+  title: z.string().trim().min(2, 'Title must be at least 2 characters').max(140),
+  category: z.enum(['custom', 'alteration', 'uniform', 'bridal', 'menswear']).default('custom'),
+  caption: z.string().trim().max(500).optional(),
+  priceHint: z.coerce.number().min(20).max(500000).nullable().optional(),
+  turnaroundDays: z.coerce.number().int().min(1).max(60).nullable().optional(),
+  isFeatured: z.boolean().default(false),
+  isVisible: z.boolean().default(true),
+  mimeType: z.enum(ALLOWED_PORTFOLIO_MIMES),
+  imageBase64: z.string().min(32).max(2_200_000),
+});
+
+const updatePortfolioSchema = z.object({
+  title: z.string().trim().min(2).max(140).optional(),
+  category: z.enum(['custom', 'alteration', 'uniform', 'bridal', 'menswear']).optional(),
+  caption: z.string().trim().max(500).nullable().optional(),
+  priceHint: z.coerce.number().min(20).max(500000).nullable().optional(),
+  turnaroundDays: z.coerce.number().int().min(1).max(60).nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isVisible: z.boolean().optional(),
+});
+
+router.get('/portfolio', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const profile = await getTailorProfileOrFail(req.user!.id);
+    const tailorId = Number(profile.id);
+    const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const { page, limit, offset } = parsePagination(req.query, 9, 30);
+
+    const conditions: string[] = [`tailor_id = ?`];
+    const params: (string | number)[] = [tailorId];
+    if (category && ['custom', 'alteration', 'uniform', 'bridal', 'menswear'].includes(category)) {
+      conditions.push(`category = ?`);
+      params.push(category);
+    }
+
+    const whereClause = conditions.join(' AND ');
+    const [statsRows, countRows, rows] = await Promise.all([
+      queryRows<RowDataPacket[]>(
+        `SELECT
+           COUNT(*) AS total_count,
+           SUM(CASE WHEN is_visible = 1 THEN 1 ELSE 0 END) AS visible_count,
+           SUM(CASE WHEN is_featured = 1 THEN 1 ELSE 0 END) AS featured_count
+         FROM tailor_portfolio_items
+         WHERE tailor_id = ?`,
+        [tailorId],
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM tailor_portfolio_items WHERE ${whereClause}`,
+        params,
+      ),
+      queryRows<RowDataPacket[]>(
+        `SELECT id, tailor_id, title, category, caption, price_hint, turnaround_days,
+                mime_type, is_featured, is_visible, created_at, updated_at
+         FROM tailor_portfolio_items
+         WHERE ${whereClause}
+         ORDER BY is_featured DESC, created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params,
+      ),
+    ]);
+
+    const items = rows.map((r) => {
+      const id = Number(r.id);
+      const token = signPortfolioPreviewToken(id, tailorId);
+      const version = r.updated_at ? new Date(String(r.updated_at)).getTime() : id;
+      return {
+        id,
+        title: String(r.title),
+        category: String(r.category),
+        caption: r.caption ? String(r.caption) : '',
+        priceHint: r.price_hint !== null ? Number(r.price_hint) : null,
+        turnaroundDays: r.turnaround_days !== null ? Number(r.turnaround_days) : null,
+        mimeType: String(r.mime_type),
+        isFeatured: Boolean(r.is_featured),
+        isVisible: Boolean(r.is_visible),
+        imageUrl: `/api/public/portfolio/${id}/image?t=${token}&v=${version}`,
+        createdAt: r.created_at,
+      };
+    });
+
+    const stats = statsRows[0] || {};
+    const total = Number(countRows[0]?.total || 0);
+    res.json({
+      items,
+      stats: {
+        totalCount: Number(stats.total_count || 0),
+        visibleCount: Number(stats.visible_count || 0),
+        featuredCount: Number(stats.featured_count || 0),
+      },
+      pagination: buildPaginationMeta(page, limit, total),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/portfolio',
+  portfolioUploadLimiter,
+  async (req: AuthedRequest, res: Response, next: NextFunction) => {
+    try {
+      const profile = await getTailorProfileOrFail(req.user!.id);
+      const tailorId = Number(profile.id);
+
+      const parsed = createPortfolioSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res
+          .status(400)
+          .json({ error: parsed.error.issues[0]?.message || 'Invalid portfolio item payload.' });
+        return;
+      }
+
+      const [existingCountRows] = await Promise.all([
+        queryRows<RowDataPacket[]>(
+          `SELECT COUNT(*) AS cnt FROM tailor_portfolio_items WHERE tailor_id = ?`,
+          [tailorId],
+        ),
+      ]);
+      if (Number(existingCountRows[0]?.cnt || 0) >= 40) {
+        res.status(400).json({
+          error: 'Portfolio limit of 40 photos reached. Delete an older piece to upload a new one.',
+        });
+        return;
+      }
+
+      const d = parsed.data;
+      const cleanedBase64 = d.imageBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+      const imageBuffer = Buffer.from(cleanedBase64, 'base64');
+      const check = validatePortfolioImageBuffer(imageBuffer, d.mimeType);
+      if (!check.valid) {
+        res.status(400).json({ error: check.reason || 'Invalid image upload.' });
+        return;
+      }
+
+      const insertRes = await executeSql(
+        `INSERT INTO tailor_portfolio_items (
+           tailor_id, title, category, caption, price_hint, turnaround_days,
+           mime_type, image_data, is_featured, is_visible
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          tailorId,
+          d.title,
+          d.category,
+          d.caption || null,
+          d.priceHint ?? null,
+          d.turnaroundDays ?? null,
+          d.mimeType,
+          imageBuffer,
+          d.isFeatured ? 1 : 0,
+          d.isVisible ? 1 : 0,
+        ],
+      );
+
+      const id = insertRes.insertId;
+      const token = signPortfolioPreviewToken(id, tailorId);
+      res.status(201).json({
+        id,
+        imageUrl: `/api/public/portfolio/${id}/image?t=${token}&v=${Date.now()}`,
+        message: `"${d.title}" added to your Tailor Portfolio!`,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.patch('/portfolio/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const profile = await getTailorProfileOrFail(req.user!.id);
+    const itemId = Number(req.params.id);
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      res.status(400).json({ error: 'Invalid portfolio item ID.' });
+      return;
+    }
+
+    const parsed = updatePortfolioSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid update payload.' });
+      return;
+    }
+
+    const d = parsed.data;
+    const result = await executeSql(
+      `UPDATE tailor_portfolio_items
+       SET title = COALESCE(?, title),
+           category = COALESCE(?, category),
+           caption = CASE WHEN ? THEN ? ELSE caption END,
+           price_hint = CASE WHEN ? THEN ? ELSE price_hint END,
+           turnaround_days = CASE WHEN ? THEN ? ELSE turnaround_days END,
+           is_featured = COALESCE(?, is_featured),
+           is_visible = COALESCE(?, is_visible)
+       WHERE id = ? AND tailor_id = ?`,
+      [
+        d.title ?? null,
+        d.category ?? null,
+        d.caption !== undefined ? 1 : 0,
+        d.caption ?? null,
+        d.priceHint !== undefined ? 1 : 0,
+        d.priceHint ?? null,
+        d.turnaroundDays !== undefined ? 1 : 0,
+        d.turnaroundDays ?? null,
+        d.isFeatured !== undefined ? (d.isFeatured ? 1 : 0) : null,
+        d.isVisible !== undefined ? (d.isVisible ? 1 : 0) : null,
+        itemId,
+        profile.id,
+      ],
+    );
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Portfolio photo not found.' });
+      return;
+    }
+    res.json({ message: 'Portfolio item updated.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/portfolio/:id', async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const profile = await getTailorProfileOrFail(req.user!.id);
+    const itemId = Number(req.params.id);
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      res.status(400).json({ error: 'Invalid portfolio item ID.' });
+      return;
+    }
+
+    const result = await executeSql(
+      `DELETE FROM tailor_portfolio_items WHERE id = ? AND tailor_id = ?`,
+      [itemId, profile.id],
+    );
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Portfolio photo not found.' });
+      return;
+    }
+    res.json({ message: 'Portfolio photo removed.' });
   } catch (err) {
     next(err);
   }

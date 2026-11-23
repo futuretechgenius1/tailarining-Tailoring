@@ -284,7 +284,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Selected Shop Mini Header (Anchored above Steps 2, 3, 4) */}
-      <div className="px-4 py-3 bg-[#0B1F3A] text-white flex items-center gap-3">
+      <div className="px-4 py-3 bg-[#1A103D] text-white flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 shrink-0 border border-white/15">
           <SafeImage
             src={selectedShop.place.photoUri || getShopFallbackImage(selectedShop.place.id)}
@@ -293,7 +293,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[11px] text-[#5EEAD4] font-semibold tabular-nums">
+          <div className="flex items-center gap-1.5 text-[11px] text-[#C4B5FD] font-semibold tabular-nums">
             <span>
               {selectedShop.rank !== null ? `#${selectedShop.rank} Match` : 'Selected Shop'}
             </span>
@@ -343,7 +343,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-[#0B1F3A]">
+                  <h4 className="text-sm font-bold text-[#1A103D]">
                     Step 2 · Choose Tailoring Service
                   </h4>
                   <p className="text-xs text-[#64748B]">
@@ -353,7 +353,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => onChangeStep(1)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#0B7285] hover:text-[#085463] cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B21D9] hover:text-[#5B21B6] cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Change Shop
@@ -371,8 +371,8 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                       onClick={() => setSelectedServiceId(srv.id)}
                       className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
                         active
-                          ? 'border-[#0B7285] bg-[#F0F9FA] shadow-2xs'
-                          : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'
+                          ? 'border-[#6B21D9] bg-[#F4EEFF] shadow-2xs'
+                          : 'border-[#EAE0FA] bg-white hover:border-[#CBD5E1]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -381,13 +381,13 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                             <span
                               className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                                 active
-                                  ? 'border-[#0B7285] bg-[#0B7285] text-white'
+                                  ? 'border-[#6B21D9] bg-[#6B21D9] text-white'
                                   : 'border-[#CBD5E1]'
                               }`}
                             >
                               {active && <Check className="w-2.5 h-2.5" />}
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-[#0B1F3A] truncate">
+                            <span className="text-xs sm:text-sm font-bold text-[#1A103D] truncate">
                               {srv.label}
                             </span>
                           </div>
@@ -396,7 +396,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                           </p>
                         </div>
                         <div className="text-right shrink-0 tabular-nums">
-                          <span className="block text-sm font-bold text-[#0B1F3A]">
+                          <span className="block text-sm font-bold text-[#1A103D]">
                             ₹{srv.price.toLocaleString('en-IN')}
                           </span>
                           <span className="block text-[10.5px] text-[#64748B]">
@@ -410,20 +410,20 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               </div>
 
               {/* Service Mode Toggle */}
-              <div className="pt-2 border-t border-[#E2E8F0] space-y-2">
-                <span className="block text-xs font-bold text-[#0B1F3A]">Appointment Mode</span>
+              <div className="pt-2 border-t border-[#EAE0FA] space-y-2">
+                <span className="block text-xs font-bold text-[#1A103D]">Appointment Mode</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setAppointmentMode('pickup')}
                     className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                       appointmentMode === 'pickup'
-                        ? 'border-[#0B7285] bg-[#F0F9FA]'
-                        : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'
+                        ? 'border-[#6B21D9] bg-[#F4EEFF]'
+                        : 'border-[#EAE0FA] bg-white hover:border-[#CBD5E1]'
                     }`}
                   >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B1F3A]">
-                      <Truck className="w-3.5 h-3.5 text-[#0B7285]" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1A103D]">
+                      <Truck className="w-3.5 h-3.5 text-[#6B21D9]" />
                       Doorstep Pickup
                     </span>
                     <span className="block text-[11px] text-[#475569] mt-0.5">
@@ -438,12 +438,12 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                     onClick={() => setAppointmentMode('studio')}
                     className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                       appointmentMode === 'studio'
-                        ? 'border-[#0B7285] bg-[#F0F9FA]'
-                        : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'
+                        ? 'border-[#6B21D9] bg-[#F4EEFF]'
+                        : 'border-[#EAE0FA] bg-white hover:border-[#CBD5E1]'
                     }`}
                   >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B1F3A]">
-                      <Store className="w-3.5 h-3.5 text-[#0B7285]" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1A103D]">
+                      <Store className="w-3.5 h-3.5 text-[#6B21D9]" />
                       Visit Tailor Shop
                     </span>
                     <span className="block text-[11px] text-[#475569] mt-0.5 tabular-nums">
@@ -454,17 +454,17 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               </div>
 
               {/* Step 2 Footer CTA */}
-              <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between gap-3">
+              <div className="pt-3 border-t border-[#EAE0FA] flex items-center justify-between gap-3">
                 <div className="tabular-nums">
                   <span className="block text-[11px] text-[#64748B]">Estimated Total</span>
-                  <span className="text-base font-bold text-[#0B1F3A]">
+                  <span className="text-base font-bold text-[#1A103D]">
                     ₹{estimatedTotal.toLocaleString('en-IN')}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => onChangeStep(3)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs"
                 >
                   Schedule Appointment
                   <ArrowRight className="w-4 h-4" />
@@ -486,7 +486,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-[#0B1F3A]">
+                  <h4 className="text-sm font-bold text-[#1A103D]">
                     Step 3 · Schedule Date &amp; Time
                   </h4>
                   <p className="text-xs text-[#64748B]">
@@ -497,7 +497,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => onChangeStep(2)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#0B7285] hover:text-[#085463] cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B21D9] hover:text-[#5B21B6] cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Edit Service
@@ -507,17 +507,17 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               {/* Date Picker Strip */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#0B1F3A]">
+                  <span className="text-xs font-bold text-[#1A103D]">
                     Select {appointmentMode === 'pickup' ? 'Pickup' : 'Appointment'} Date
                   </span>
-                  <label className="text-[11px] font-medium text-[#0B7285] inline-flex items-center gap-1">
+                  <label className="text-[11px] font-medium text-[#6B21D9] inline-flex items-center gap-1">
                     <span>Other:</span>
                     <input
                       type="date"
                       value={selectedDate}
                       min={dateOptions[0].iso}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      className="border border-[#CBD5E1] rounded px-1.5 py-0.5 text-[11px] text-[#0B1F3A]"
+                      className="border border-[#CBD5E1] rounded px-1.5 py-0.5 text-[11px] text-[#1A103D]"
                     />
                   </label>
                 </div>
@@ -532,8 +532,8 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                         onClick={() => setSelectedDate(d.iso)}
                         className={`py-2 px-1 rounded-lg border text-center transition-colors cursor-pointer ${
                           active
-                            ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
-                            : 'border-[#E2E8F0] bg-white text-[#334155] hover:border-[#0B7285]'
+                            ? 'border-[#1A103D] bg-[#1A103D] text-white'
+                            : 'border-[#EAE0FA] bg-white text-[#334155] hover:border-[#6B21D9]'
                         }`}
                       >
                         <span className="block text-[11px] font-semibold">{d.dayLabel}</span>
@@ -552,7 +552,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
 
               {/* Time Slots */}
               <div className="space-y-2">
-                <span className="block text-xs font-bold text-[#0B1F3A]">Preferred Time Window</span>
+                <span className="block text-xs font-bold text-[#1A103D]">Preferred Time Window</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {TIME_SLOTS.map((slot) => {
                     const active = selectedSlot === slot;
@@ -563,8 +563,8 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                         onClick={() => setSelectedSlot(slot)}
                         className={`px-2.5 py-2 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer tabular-nums ${
                           active
-                            ? 'border-[#0B7285] bg-[#F0F9FA] text-[#0B7285]'
-                            : 'border-[#E2E8F0] text-[#334155] hover:border-[#CBD5E1]'
+                            ? 'border-[#6B21D9] bg-[#F4EEFF] text-[#6B21D9]'
+                            : 'border-[#EAE0FA] text-[#334155] hover:border-[#CBD5E1]'
                         }`}
                       >
                         <Clock className="w-3 h-3 shrink-0" />
@@ -577,7 +577,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
 
               {/* Contact & Pickup Address */}
               <div className="space-y-2.5">
-                <span className="block text-xs font-bold text-[#0B1F3A]">Your Contact Details</span>
+                <span className="block text-xs font-bold text-[#1A103D]">Your Contact Details</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="relative">
                     <User className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -587,7 +587,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Full Name"
-                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                     />
                   </div>
                   <div className="relative">
@@ -598,7 +598,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="10-digit Mobile"
-                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                     />
                   </div>
                 </div>
@@ -613,11 +613,11 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                         value={pickupAddress}
                         onChange={(e) => setPickupAddress(e.target.value)}
                         placeholder={`Flat / House No., Street (${locality})`}
-                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#0B1F3A] focus:outline-none focus:border-[#0B7285]"
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs sm:text-sm text-[#1A103D] focus:outline-none focus:border-[#6B21D9]"
                       />
                     </div>
                     {rules.maskAddressUntilAccepted && (
-                      <p className="text-[11px] text-[#0B7285] inline-flex items-center gap-1">
+                      <p className="text-[11px] text-[#6B21D9] inline-flex items-center gap-1">
                         <Lock className="w-3 h-3 shrink-0" />
                         Exact flat/street stays hidden until {selectedShop.place.name} accepts.
                       </p>
@@ -632,7 +632,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                     value={garmentNotes}
                     onChange={(e) => setGarmentNotes(e.target.value)}
                     placeholder="Optional garment notes (fabric type, lining, urgent trial date)..."
-                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs text-[#0B1F3A] focus:outline-none focus:border-[#0B7285] resize-none"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBD5E1] text-xs text-[#1A103D] focus:outline-none focus:border-[#6B21D9] resize-none"
                   />
                 </div>
               </div>
@@ -644,18 +644,18 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               )}
 
               {/* Confirm CTA */}
-              <div className="pt-3 border-t border-[#E2E8F0] space-y-2.5">
+              <div className="pt-3 border-t border-[#EAE0FA] space-y-2.5">
                 <div className="flex items-center justify-between text-xs tabular-nums">
                   <span className="text-[#475569]">
                     {formattedDate} · {selectedSlot}
                   </span>
-                  <span className="text-base font-bold text-[#0B1F3A]">
+                  <span className="text-base font-bold text-[#1A103D]">
                     ₹{estimatedTotal.toLocaleString('en-IN')}
                   </span>
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#0B7285] hover:bg-[#085463] text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                  className="w-full py-3 rounded-xl bg-[#6B21D9] hover:bg-[#5B21B6] text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
                 >
                   <Sparkles className="w-4 h-4" />
                   Confirm {appointmentMode === 'pickup' ? 'Pickup & Appointment' : 'Shop Booking'}
@@ -674,52 +674,52 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               className="space-y-4"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#F0F9FA] text-[#0B7285] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#F4EEFF] text-[#6B21D9] flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-serif-accent text-lg font-bold text-[#0B1F3A]">
+                  <h4 className="font-serif-accent text-lg font-bold text-[#1A103D]">
                     Appointment Confirmed
                   </h4>
                   <p className="text-xs text-[#475569] mt-0.5">
-                    Booked directly with <strong className="text-[#0B1F3A]">{selectedShop.place.name}</strong>{' '}
+                    Booked directly with <strong className="text-[#1A103D]">{selectedShop.place.name}</strong>{' '}
                     and synced to your Orders &amp; Partner Portal.
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 space-y-2 text-xs">
+              <div className="rounded-xl bg-[#FAF8FF] border border-[#EAE0FA] p-3.5 space-y-2 text-xs">
                 <div className="flex justify-between gap-2">
                   <span className="text-[#64748B]">Booking ID</span>
-                  <span className="font-bold text-[#0B1F3A] tabular-nums">{confirmedOrder.id}</span>
+                  <span className="font-bold text-[#1A103D] tabular-nums">{confirmedOrder.id}</span>
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-[#64748B]">Service</span>
-                  <span className="font-semibold text-[#0B1F3A] text-right">
+                  <span className="font-semibold text-[#1A103D] text-right">
                     {confirmedOrder.serviceTitle}
                   </span>
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-[#64748B]">Mode</span>
-                  <span className="font-semibold text-[#0B7285]">
+                  <span className="font-semibold text-[#6B21D9]">
                     {appointmentMode === 'pickup' ? 'Doorstep Pickup' : 'Visit Tailor Shop'}
                   </span>
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-[#64748B]">Scheduled Slot</span>
-                  <span className="font-semibold text-[#0B1F3A] tabular-nums">
+                  <span className="font-semibold text-[#1A103D] tabular-nums">
                     {formattedDate} · {selectedSlot}
                   </span>
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-[#64748B]">Est. Delivery</span>
-                  <span className="font-semibold text-[#0B1F3A] tabular-nums">
+                  <span className="font-semibold text-[#1A103D] tabular-nums">
                     {confirmedOrder.deliveryDate}
                   </span>
                 </div>
-                <div className="pt-2 border-t border-[#E2E8F0] flex justify-between gap-2">
-                  <span className="font-semibold text-[#0B1F3A]">Estimated Total</span>
-                  <span className="font-bold text-[#0B1F3A] tabular-nums">
+                <div className="pt-2 border-t border-[#EAE0FA] flex justify-between gap-2">
+                  <span className="font-semibold text-[#1A103D]">Estimated Total</span>
+                  <span className="font-bold text-[#1A103D] tabular-nums">
                     ₹{confirmedOrder.amount.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -728,7 +728,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
               <div className="rounded-xl bg-[#FBF5E6] border border-[#E8D5A8] p-3 flex items-start gap-2 text-[11px] text-[#475569]">
                 <ShieldCheck className="w-4 h-4 text-[#A67418] shrink-0 mt-0.5" />
                 <span>
-                  <strong className="text-[#0B1F3A]">Quote Approval Active:</strong> Stitching
+                  <strong className="text-[#1A103D]">Quote Approval Active:</strong> Stitching
                   starts only after you review &amp; approve the final written quote in{' '}
                   <strong>Alterations → History</strong>.
                 </span>
@@ -740,7 +740,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                     href={selectedShop.place.googleMapsURI}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#0B1F3A] hover:border-[#0B7285] hover:text-[#0B7285] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#1A103D] hover:border-[#6B21D9] hover:text-[#6B21D9] transition-colors"
                   >
                     <Navigation className="w-3.5 h-3.5" />
                     Directions
@@ -750,7 +750,7 @@ export const MapBookingFlowPanel: React.FC<MapBookingFlowPanelProps> = ({
                 <button
                   type="button"
                   onClick={onResetFlow}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#0B1F3A] hover:bg-[#15325B] text-white text-xs font-semibold transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#1A103D] hover:bg-[#2E1065] text-white text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <Calendar className="w-3.5 h-3.5 inline mr-1.5" />
                   Book Another Tailor
