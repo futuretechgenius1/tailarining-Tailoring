@@ -80,10 +80,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     : `${locality}, Hyderabad`;
 
   const navLinkClass = (page: PageRoute) =>
-    `relative text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D1D9A] rounded-full ${
+    `relative text-[13px] xl:text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D1D9A] rounded-full ${
       activePage === page
-        ? 'bg-gradient-to-r from-[#7B23B5] to-[#5B178E] text-white px-5 py-1.5 shadow-sm shadow-[#6D1D9A]/25'
-        : 'text-[#1B1038] hover:text-[#6D1D9A] px-2.5 py-1.5 hover:bg-[#F5EFFB]'
+        ? 'bg-gradient-to-r from-[#7B23B5] to-[#5B178E] text-white px-4 py-1.5 shadow-sm shadow-[#6D1D9A]/25'
+        : 'text-[#1B1038] hover:text-[#6D1D9A] px-2 xl:px-2.5 py-1.5 hover:bg-[#F5EFFB]'
     }`;
 
   return (
@@ -157,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Zone 2: Clean Single-Line Navigation Links */}
           <nav
-            className="hidden lg:flex items-center gap-3 xl:gap-5"
+            className="hidden lg:flex items-center gap-1.5 xl:gap-3.5"
             aria-label="Primary Navigation"
           >
             <button type="button" onClick={() => onNavigate('home')} className={navLinkClass('home')}>
@@ -249,6 +249,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={navLinkClass('measurements')}
             >
               Measurements
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('nearby-shops')}
+              className={`inline-flex items-center gap-1.5 ${navLinkClass('nearby-shops')}`}
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              Nearby Shops
             </button>
           </nav>
 
@@ -417,7 +425,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     { label: 'Uniforms & Business (B2B)', route: 'uniforms' },
                     { label: 'Saved Measurements', route: 'measurements' },
                     { label: 'Fabric Calculator', route: 'fabric-calculator' },
-                    { label: 'Nearby Tailor Map', route: 'nearby-shops' },
+                    { label: 'Nearby Shops (Map)', route: 'nearby-shops' },
                     { label: 'Become a Tailor Partner', route: 'partner' },
                     {
                       label: user ? 'My Role Dashboard' : 'Dashboard Sign In',

@@ -18,6 +18,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Crosshair,
   Eye,
   Footprints,
   Lock,
@@ -115,6 +116,20 @@ function formatDurationMinutes(durationMillis: number): string {
   const hrs = Math.floor(mins / 60);
   const rem = mins % 60;
   return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
+}
+
+function approxDistanceKm(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLng = Math.sin(dLng / 2);
+  const h =
+    sinLat * sinLat + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * sinLng * sinLng;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
 // --- Map Child: Service Radius Ring ---
@@ -499,7 +514,8 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(
     quickZones[0].center,
   );
-  const [locationSource, setLocationSource] = useState<'zone' | 'gps' | 'search'>('zone');
+  const [locationSource, setLocationSource] = useState<'zone' | 'gps' | 'search' | 'map'>('zone');
+  const [mapPickMode, setMapPickMode] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [liveTracking, setLiveTracking] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -858,6 +874,48 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
     };
   }, []);
 
+  // --- Pick/Move Location Pin Directly on the Google Map ---
+  const handlePickLocationFromMap = useCallback(
+    (coords: { lat: number; lng: number }) => {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+        setLiveTracking(false);
+      }
+
+      let closestName: string | null = null;
+      let closestDist = Infinity;
+      for (const loc of localities) {
+        const lat = Number(loc.lat);
+        const lng = Number(loc.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        const dist = approxDistanceKm(coords, { lat, lng });
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestName = loc.name;
+        }
+      }
+
+      const areaShort = closestName ? closestName.split(',')[0].trim() : null;
+      const label =
+        areaShort && closestDist <= 4.5
+          ? `Near ${areaShort} (Map Pin)`
+          : `Map Pin (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
+
+      setUserLocation(coords);
+      setLocationSource('map');
+      setLocationQuery('');
+      setSuggestions([]);
+      setSuggestionsOpen(false);
+      setSelectedShopId(null);
+      setBookingStep(1);
+      setMapPickMode(false);
+      onUpdateLocality(label);
+      onNotifyToast(`Location pinned on map — scanning nearby tailor shops around ${label}`);
+    },
+    [localities, onNotifyToast, onUpdateLocality],
+  );
+
   // --- Top-3 Broadcast & Auto Re-Route Countdown Timer ---
   useEffect(() => {
     if (dispatchStatus !== 'wave1' && dispatchStatus !== 'wave2') return;
@@ -1153,6 +1211,23 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
 
             <button
               type="button"
+              onClick={() => {
+                setMapPickMode(true);
+                mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                onNotifyToast('Click anywhere on the map to choose your pickup location.');
+              }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                mapPickMode
+                  ? 'bg-[#C8922A] text-white'
+                  : 'text-[#FDE68A] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Crosshair className="w-3.5 h-3.5" />
+              {mapPickMode ? 'Click Map to Pin' : 'Choose on Map'}
+            </button>
+
+            <button
+              type="button"
               onClick={handleToggleLiveTrack}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 liveTracking
@@ -1328,7 +1403,13 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
           {/* LEFT COLUMN: Real-Time Map + Selected Shop Action Spotlight */}
           <div className="lg:col-span-7 space-y-4">
             {/* Explicit CSS height container to guarantee zero map collapse */}
-            <div className="relative w-full h-[390px] sm:h-[480px] lg:h-[560px] rounded-2xl overflow-hidden border border-[#EAE0FA] shadow-md bg-[#F1F5F9]">
+            <div
+              className={`relative w-full h-[390px] sm:h-[480px] lg:h-[560px] rounded-2xl overflow-hidden border shadow-md bg-[#F1F5F9] transition-all ${
+                mapPickMode
+                  ? 'border-[#6B21D9] ring-2 ring-[#6B21D9]/35'
+                  : 'border-[#EAE0FA]'
+              }`}
+            >
               <GoogleMap
                 defaultCenter={quickZones[0].center}
                 defaultZoom={13}
@@ -1337,6 +1418,16 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 streetViewControl={false}
                 mapTypeControl={false}
                 internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
+                onClick={(event) => {
+                  const latLng = event.detail.latLng;
+                  if (!latLng) return;
+                  if (mapPickMode) {
+                    event.stop();
+                    handlePickLocationFromMap(latLng);
+                  } else if (!event.detail.placeId) {
+                    handlePickLocationFromMap(latLng);
+                  }
+                }}
                 style={{ width: '100%', height: '100%' }}
               >
                 <MapCameraController center={userLocation} radiusKm={rules.maxRadiusKm} />
@@ -1350,13 +1441,25 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                   onRouteError={setRouteError}
                 />
 
-                {/* Customer Real-Time Position Pin */}
+                {/* Customer Real-Time / Draggable Map Position Pin */}
                 <AdvancedMarker
                   position={userLocation}
-                  title={locationSource === 'gps' ? 'Your Real-Time GPS Location' : locality}
+                  draggable
+                  onDragEnd={(event) => {
+                    const pos = event.latLng;
+                    if (!pos) return;
+                    handlePickLocationFromMap({ lat: pos.lat(), lng: pos.lng() });
+                  }}
+                  title={
+                    locationSource === 'gps'
+                      ? 'Your Real-Time GPS Location (Drag to adjust)'
+                      : locationSource === 'map'
+                        ? 'Pinned Location on Map (Drag to move)'
+                        : `${locality} (Drag pin to move)`
+                  }
                   zIndex={100}
                 >
-                  <div className="relative flex items-center justify-center">
+                  <div className="relative flex items-center justify-center cursor-grab active:cursor-grabbing">
                     <span className="absolute w-8 h-8 rounded-full bg-[#6B21D9]/25 animate-ping" />
                     <span className="relative w-4 h-4 rounded-full bg-[#1A103D] border-2 border-white shadow-md" />
                   </div>
@@ -1380,10 +1483,31 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
                 ))}
               </GoogleMap>
 
+              {/* Top-Left Interactive Pin Picker Control */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMapPickMode((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold shadow-md border transition-all cursor-pointer ${
+                    mapPickMode
+                      ? 'bg-[#6B21D9] text-white border-[#5B21B6]'
+                      : 'bg-white/95 backdrop-blur-xs text-[#1A103D] border-[#EAE0FA] hover:border-[#6B21D9] hover:text-[#6B21D9]'
+                  }`}
+                >
+                  <Crosshair className={`w-3.5 h-3.5 ${mapPickMode ? 'animate-pulse' : ''}`} />
+                  {mapPickMode ? 'Click Map to Place Pin' : 'Pick Location on Map'}
+                </button>
+                {!mapPickMode && (
+                  <span className="hidden sm:inline-flex items-center bg-white/90 backdrop-blur-xs border border-[#EAE0FA] rounded-xl px-2.5 py-1.5 text-[11px] font-medium text-[#475569] shadow-xs">
+                    Click anywhere on map or drag your pin
+                  </span>
+                )}
+              </div>
+
               {/* Map Legend Overlay */}
               <div className="absolute bottom-3 left-3 z-10 bg-white/95 backdrop-blur-xs border border-[#EAE0FA] rounded-xl px-3 py-2 shadow-md flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#334155]">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#1A103D]" /> You
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#1A103D]" /> You (Drag)
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#6B21D9]" /> Top{' '}
@@ -1398,9 +1522,9 @@ const NearbyShopsWorkbench: React.FC<InnerLocatorProps> = ({
               </div>
 
               {searchingPlaces && (
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-[#1A103D]/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
+                <div className="absolute top-3 right-3 z-10 bg-[#1A103D]/95 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-2">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C4B5FD]" />
-                  Scanning live tailor shops on Google Maps...
+                  Scanning nearby tailors...
                 </div>
               )}
             </div>

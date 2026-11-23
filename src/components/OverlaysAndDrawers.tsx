@@ -3,6 +3,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Compass,
   Copy,
   Gift,
   Heart,
@@ -30,8 +31,9 @@ export const LocationModal: React.FC<{
   currentLocality: string;
   localities: ServiceLocality[];
   onSelect: (loc: string) => void;
+  onChooseFromMap?: () => void;
   onClose: () => void;
-}> = ({ open, currentLocality, localities, onSelect, onClose }) => {
+}> = ({ open, currentLocality, localities, onSelect, onChooseFromMap, onClose }) => {
   const [query, setQuery] = useState('');
   if (!open) return null;
 
@@ -70,6 +72,32 @@ export const LocationModal: React.FC<{
               className="w-full border border-[#DDD0FA] rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-[#1A103D] placeholder:text-[#746894] focus:outline-none focus:border-[#6B21D9]"
             />
           </div>
+
+          {onChooseFromMap && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onChooseFromMap();
+              }}
+              className="w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl bg-gradient-to-r from-[#F6F0FF] to-[#EFE5FF] border border-[#D8C5FA] hover:border-[#6B21D9] text-left transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-[#6B21D9] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Compass className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-[#1A103D] group-hover:text-[#6B21D9] transition-colors">
+                    Choose Location &amp; Shops on Live Map
+                  </p>
+                  <p className="text-[11px] text-[#645588] truncate">
+                    Drop a pin anywhere on Google Maps to find nearby tailors
+                  </p>
+                </div>
+              </div>
+              <MapPin className="w-4 h-4 text-[#6B21D9] shrink-0" />
+            </button>
+          )}
 
           <div className="max-h-72 overflow-y-auto space-y-1.5">
             {filtered.length === 0 ? (

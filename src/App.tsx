@@ -867,6 +867,10 @@ export default function App() {
           setLocality(loc);
           showToast(`Service location updated to ${loc}`);
         }}
+        onChooseFromMap={() => {
+          setLocationModalOpen(false);
+          handleNavigate('nearby-shops');
+        }}
         onClose={() => setLocationModalOpen(false)}
       />
 
